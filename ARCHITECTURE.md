@@ -15,26 +15,7 @@ A web-based tool that parses Tableau workbook files (`.twb` / `.twbx`) and expor
 
 ---
 
-## 2. Monetization
-
-- **Free:** ≤10 fields translated per workbook (email gate before download)
-- **Paid:** $19/workbook (Stripe Checkout, unlimited fields)
-
----
-
-## 3. Architecture
-
-### Stack (current, deployed)
-
-```
-Frontend:     React (Vite) — src/App.jsx, src/lib/engine.js, src/lib/zip.js
-Backend:      Vercel serverless functions — api/ directory
-AI layer:     Anthropic API via /api/translate proxy (claude-sonnet-4-6)
-Payments:     Stripe Checkout — api/create-checkout.js, api/verify-session.js
-Email:        Resend — api/capture-email.js (email gate + welcome email)
-Deployment:   Vercel (auto-deploy from GitHub main)
-Storage:      None — stateless, upload → process → download
-```
+## 2. Architecture
 
 ### Data Flow
 
@@ -61,7 +42,7 @@ User downloads .zip
 
 ---
 
-## 4. App Stages / UX Flow
+## 3. App Stages / UX Flow
 
 | Stage | Trigger | What Happens |
 |---|---|---|
@@ -74,15 +55,15 @@ User downloads .zip
 
 ---
 
-## 5. Core Engine Logic (`src/lib/engine.js`)
+## 4. Core Engine Logic (`src/lib/engine.js`)
 
-### 6a. Parsing (`parseTWB`)
+### 4a. Parsing (`parseTWB`)
 
 Reads the TWB XML and extracts all `<column caption="...">` elements containing a `<calculation formula="...">` child. Deduplicates by `caption + formula[:100]`.
 
 Builds the **internal ID map**: Tableau auto-generates IDs like `Calculation_1634806716618883078` for calculated fields referenced by other calcs. The parser maps these to human-readable captions so they can be resolved downstream.
 
-### 6b. Complexity Classification (`classify`)
+### 4b. Complexity Classification (`classify`)
 
 | Class | Criteria | Action |
 |---|---|---|
@@ -92,7 +73,7 @@ Builds the **internal ID map**: Tableau auto-generates IDs like `Calculation_163
 | `complex` | LOD expressions (FIXED, INCLUDE, EXCLUDE) | Rule-based CTE + optional AI for inner expression |
 | `untranslatable` | Table calcs: INDEX, WINDOW_*, RUNNING_*, RANK, SIZE, FIRST, LAST | Window function hints in report, no SQL generated |
 
-### 6c. Rule-Based Translation (`ruleBasedTranslate`)
+### 4c. Rule-Based Translation (`ruleBasedTranslate`)
 
 Dialect-aware regex substitutions. Accepts `dialect = "Snowflake" | "BigQuery"`.
 
@@ -107,7 +88,7 @@ Dialect-aware regex substitutions. Accepts `dialect = "Snowflake" | "BigQuery"`.
 | `LEN(` | `LENGTH(` | `LENGTH(` |
 | `[Field Name]` | `field_name` (slugified) | `field_name` (slugified) |
 
-### 6d. LOD Expression Translation (`parseLOD`, `translateLOD`)
+### 4d. LOD Expression Translation (`parseLOD`, `translateLOD`)
 
 LOD expressions are handled rule-based before the AI pass. `parseLOD()` extracts type, dimension list, and inner expression from the Tableau LOD syntax.
 
@@ -131,7 +112,7 @@ lod_customer_id as (
 
 LOD calcs with a rule-based CTE are not sent to Claude for the LOD itself — only if other signals (unresolved refs, long formula, etc.) also apply.
 
-### 6e. AI Refinement Layer (`claudeTranslate` / `needsClaude`)
+### 4e. AI Refinement Layer (`claudeTranslate` / `needsClaude`)
 
 AI pass triggers on calcs with any of these signals:
 
@@ -146,7 +127,7 @@ Batched in groups of 8. Prompt includes: original formula, rule-based attempt, c
 
 **API model:** `claude-sonnet-4-6`
 
-### 6f. Aggregate Detection + Datasource Grouping (`isAggregate`, `groupByDatasource`)
+### 4f. Aggregate Detection + Datasource Grouping (`isAggregate`, `groupByDatasource`)
 
 After all translation passes, calcs are grouped by datasource and split into two buckets:
 - **aggregates** — SQL contains `SUM(`, `COUNT(`, `AVG(`, `MIN(`, `MAX(`, etc.
@@ -156,7 +137,7 @@ Uses SQL-based detection (`isAggregate()`) rather than Tableau's `role` attribut
 
 ---
 
-## 6. Output Files
+## 5. Output Files
 
 All outputs are bundled into a `.zip` download:
 
@@ -196,7 +177,7 @@ Requires: fill in `TODO_primary_entity` and `TODO_ID_COLUMN`, then run `dbt sl v
 
 ---
 
-## 7. Privacy Scan Feature
+## 6. Privacy Scan Feature
 
 Between the `parsing` stage and `preview`, the app shows a disclosure screen:
 
@@ -208,7 +189,7 @@ All sensitive metadata extraction happens in the browser via `DOMParser`. No add
 
 ---
 
-## 8. UI / Design
+## 7. UI / Design
 
 **Emerald / Teal dark theme** — monospace throughout.
 
@@ -224,7 +205,7 @@ Font: `'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace`
 
 ---
 
-## 9. Known Limitations
+## 8. Known Limitations
 
 ### Technical Limitations
 
@@ -249,7 +230,7 @@ Font: `'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace`
 
 ---
 
-## 10. Current File Inventory
+## 9. Current File Inventory
 
 | File | Description |
 |---|---|
@@ -269,7 +250,7 @@ Font: `'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace`
 
 ---
 
-## 11. Next Development Priorities
+## 10. Next Development Priorities
 
 1. **Redshift dialect** — similar to Snowflake with DATEDIFF/DATEADD differences; lower effort than BigQuery was
 2. **Primary key detection** — parse join relationships from the workbook XML to pre-populate MetricFlow entity fields
