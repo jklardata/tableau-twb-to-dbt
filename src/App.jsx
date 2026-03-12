@@ -469,18 +469,47 @@ export default function App() {
         {stage === "upload" && (
           <div>
             {/* Hero */}
-            <div style={{ marginBottom: "36px" }}>
+            <div style={{ marginBottom: "32px" }}>
               <div style={{ fontSize: "28px", fontWeight: 700, color: "#f0f0f0", marginBottom: "12px", lineHeight: 1.2 }}>
-                Migrate Tableau to a<br />
-                <span style={{ color: "#34d399" }}>reusable dbt semantic layer</span>
+                You're not starting from scratch —<br />
+                <span style={{ color: "#34d399" }}>you're starting from 80% done</span>
               </div>
               <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: 1.8, maxWidth: "680px" }}>
-                Analytics engineers spend days manually rewriting Tableau business logic into SQL.
                 Upload a <span style={{ color: "#9ca3af" }}>.twb</span> or <span style={{ color: "#9ca3af" }}>.twbx</span> file
                 and get a complete, layered dbt package — staging models, fct_ and dim_ marts, LOD-to-CTE translation,
-                a MetricFlow semantic layer, schema tests, and source definitions — in Snowflake or BigQuery SQL,
-                structured for reuse across any report.
+                a MetricFlow semantic layer, schema tests, and source definitions — in Snowflake or BigQuery SQL.
+                With a clear list of what still needs your judgment.
               </div>
+            </div>
+
+            {/* Benefits row */}
+            <div style={{ display: "flex", gap: "0", marginBottom: "32px" }}>
+              {[
+                {
+                  headline: "Migrate logic, not memory",
+                  body: "Every field shows the original Tableau formula alongside the translated SQL and an AI description. You're not reconstructing intent from scratch — it's all there.",
+                },
+                {
+                  headline: "The dirty work is done",
+                  body: "Dependency chains resolved. LOD expressions converted to CTE templates. Complexity badges on every field. You're reviewing and validating, not drafting.",
+                },
+                {
+                  headline: "A foundation, not a one-off",
+                  body: "Staging + fct_ + dim_ structure means the models you build for this workbook are reusable for the next one. You're building the semantic layer, not a report clone.",
+                },
+              ].map((b, i, arr) => (
+                <div key={b.headline} style={{
+                  flex: 1,
+                  padding: "16px 20px",
+                  background: "#0a1f15",
+                  border: "1px solid #0d2b1e",
+                  borderRight: i < arr.length - 1 ? "none" : "1px solid #0d2b1e",
+                  borderRadius: i === 0 ? "8px 0 0 8px" : i === arr.length - 1 ? "0 8px 8px 0" : "0",
+                }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#d1d5db", marginBottom: "6px" }}>{b.headline}</div>
+                  <div style={{ fontSize: "11px", color: "#4b5563", lineHeight: 1.6 }}>{b.body}</div>
+                </div>
+              ))}
             </div>
 
             {/* Dialect selector */}
