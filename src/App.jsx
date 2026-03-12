@@ -365,7 +365,14 @@ export default function App() {
 
     setCalcs(updatedCalcs);
     addLog("Generating output files...", "info");
-    const files = await buildZip(updatedCalcs, xmlString, selectedFile?.replace(/\.(twb|twbx)$/i, ""), grainConfig, dialect);
+    let files;
+    try {
+      files = await buildZip(updatedCalcs, xmlString, selectedFile?.replace(/\.(twb|twbx)$/i, ""), grainConfig, dialect);
+    } catch (err) {
+      addLog(`Output generation failed: ${err.message}`, "error");
+      setStage("preview");
+      return;
+    }
     if (files["sources.yml"]) addLog("sources.yml generated ✓", "success");
     setOutputFiles(files);
 

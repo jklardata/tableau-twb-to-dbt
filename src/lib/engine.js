@@ -1124,7 +1124,7 @@ export function generateSourcesYaml(_, xmlString, dialect = "Snowflake") {
 export function generateSetupMd(calcs, workbookName, dialect = "Snowflake") {
   const datasources = groupByDatasource(calcs);
   const untranslatable = calcs.filter((c) => c.complexity === "untranslatable");
-  const totalCalcs = datasources.reduce((n, ds) => n + ds.measures.length + ds.dimensions.length, 0);
+  const totalCalcs = datasources.reduce((n, ds) => n + (ds.aggregates?.length || 0) + (ds.rowLevel?.length || 0), 0);
 
   const fileTree = datasources.flatMap((ds) => [
     `│   ├── staging/`,
