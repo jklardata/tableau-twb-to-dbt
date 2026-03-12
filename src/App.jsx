@@ -506,8 +506,8 @@ export default function App() {
                   borderRight: i < arr.length - 1 ? "none" : "1px solid #0d2b1e",
                   borderRadius: i === 0 ? "8px 0 0 8px" : i === arr.length - 1 ? "0 8px 8px 0" : "0",
                 }}>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#d1d5db", marginBottom: "6px" }}>{b.headline}</div>
-                  <div style={{ fontSize: "11px", color: "#4b5563", lineHeight: 1.6 }}>{b.body}</div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#e2ede8", marginBottom: "6px" }}>{b.headline}</div>
+                  <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.7 }}>{b.body}</div>
                 </div>
               ))}
             </div>
@@ -610,9 +610,9 @@ export default function App() {
                   <div key={item.file} style={{ background: "#0a1f15", border: "1px solid #0d2b1e", borderRadius: "8px", padding: "18px 20px", display: "flex", gap: "14px" }}>
                     <div style={{ fontSize: "22px", flexShrink: 0, marginTop: "2px" }}>{item.icon}</div>
                     <div>
-                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#d1d5db", marginBottom: "4px" }}>{item.label}</div>
-                      <div style={{ fontSize: "10px", fontFamily: "monospace", color: "#34d399", marginBottom: "6px" }}>{item.file}</div>
-                      <div style={{ fontSize: "11px", color: "#4b5563", lineHeight: 1.6 }}>{item.desc}</div>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#e2ede8", marginBottom: "4px" }}>{item.label}</div>
+                      <div style={{ fontSize: "11px", fontFamily: "monospace", color: "#34d399", marginBottom: "6px" }}>{item.file}</div>
+                      <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.7 }}>{item.desc}</div>
                     </div>
                   </div>
                 ))}
@@ -628,9 +628,9 @@ export default function App() {
                   { step: "04", label: "Structure", desc: "Aggregates go into fct_ models with GROUP BY. Row-level expressions go into dim_ models. LOD CTEs are injected into the WITH clause. MetricFlow metrics.yml is generated for a queryable semantic layer." },
                 ].map((s, i, arr) => (
                   <div key={s.step} style={{ flex: 1, padding: "18px 20px", background: "#0a1f15", border: "1px solid #0d2b1e", borderRight: i < arr.length - 1 ? "none" : "1px solid #0d2b1e", borderRadius: i === 0 ? "8px 0 0 8px" : i === arr.length - 1 ? "0 8px 8px 0" : "0" }}>
-                    <div style={{ fontSize: "10px", fontWeight: 700, color: "#34d399", letterSpacing: "0.1em", marginBottom: "6px" }}>{s.step}</div>
-                    <div style={{ fontSize: "12px", fontWeight: 700, color: "#d1d5db", marginBottom: "6px" }}>{s.label}</div>
-                    <div style={{ fontSize: "11px", color: "#4b5563", lineHeight: 1.6 }}>{s.desc}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 700, color: "#34d399", letterSpacing: "0.1em", marginBottom: "6px" }}>{s.step}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "8px" }}>{s.label}</div>
+                    <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.7 }}>{s.desc}</div>
                   </div>
                 ))}
               </div>
