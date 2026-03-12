@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import posthog from "posthog-js";
 
 export default function PaywallBanner({ fieldCount }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  useEffect(() => {
+    posthog.capture("paywall_hit", { trigger: "field_limit", field_count: fieldCount });
+  }, []);
+
   const handleCheckout = async () => {
+    posthog.capture("checkout_started", { trigger: "field_limit", field_count: fieldCount });
     setLoading(true);
     setError(null);
     try {

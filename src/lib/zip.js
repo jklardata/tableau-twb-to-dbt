@@ -10,9 +10,10 @@ import {
   generateSourcesYaml,
   generateSetupMd,
   generateDbtProjectYml,
+  generateConflictReport,
 } from "./engine.js";
 
-export async function buildZip(calcs, xmlString, workbookName, grainConfig = {}, dialect = "Snowflake") {
+export async function buildZip(calcs, xmlString, workbookName, grainConfig = {}, dialect = "Snowflake", conflictData = null) {
   const datasources = groupByDatasource(calcs);
   const files = {};
 
@@ -39,6 +40,11 @@ export async function buildZip(calcs, xmlString, workbookName, grainConfig = {},
   if (xmlString) {
     const sourcesYaml = generateSourcesYaml([], xmlString, dialect);
     if (sourcesYaml) files["sources.yml"] = sourcesYaml;
+  }
+
+  if (conflictData) {
+    const { conflicts, matches, workbookNames } = conflictData;
+    files["conflict_report.md"] = generateConflictReport(conflicts, matches, workbookNames);
   }
 
   return files;

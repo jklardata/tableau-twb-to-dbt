@@ -930,6 +930,130 @@ function suggestWindowRewrite(formula, caption) {
   };
 }
 
+// ================================================================
+// MULTI-WORKBOOK MERGE
+// ================================================================
+
+export function mergeWorkbooks(workbooks) {
+  // workbooks: [{ name, calcs }]
+  const fieldMap = new Map(); // key: `${dsSlug}::${slug}` → [{workbookName, calc}]
+
+  workbooks.forEach(({ name, calcs }) => {
+    calcs
+      .filter((c) => !["skip", "untranslatable"].includes(c.complexity))
+      .forEach((calc) => {
+        const key = `${calc.datasourceSlug || "unknown"}::${calc.slug}`;
+        if (!fieldMap.has(key)) fieldMap.set(key, []);
+        fieldMap.get(key).push({ workbookName: name, calc });
+      });
+  });
+
+  const mergedCalcs = [];
+  const conflicts = [];
+  const matches = [];
+
+  fieldMap.forEach((entries, key) => {
+    if (entries.length === 1) {
+      mergedCalcs.push(entries[0].calc);
+    } else {
+      const formulas = [...new Set(entries.map((e) => e.calc.formula.trim()))];
+      if (formulas.length === 1) {
+        matches.push({
+          key,
+          slug: entries[0].calc.slug,
+          caption: entries[0].calc.caption,
+          datasource: entries[0].calc.datasourceSlug,
+          workbooks: entries.map((e) => e.workbookName),
+        });
+        mergedCalcs.push(entries[0].calc);
+      } else {
+        conflicts.push({
+          key,
+          slug: entries[0].calc.slug,
+          caption: entries[0].calc.caption,
+          datasource: entries[0].calc.datasourceSlug,
+          versions: entries.map((e) => ({
+            workbookName: e.workbookName,
+            formula: e.calc.formula,
+            calc: e.calc,
+          })),
+        });
+        // Use first definition, flag it
+        mergedCalcs.push({ ...entries[0].calc, hasConflict: true, conflictVersions: entries });
+      }
+    }
+  });
+
+  // Deduplicate untranslatables across workbooks
+  const untranslatableMap = new Map();
+  workbooks.forEach(({ calcs }) => {
+    calcs
+      .filter((c) => c.complexity === "untranslatable")
+      .forEach((calc) => {
+        const key = `${calc.datasourceSlug || "unknown"}::${calc.slug}`;
+        if (!untranslatableMap.has(key)) untranslatableMap.set(key, calc);
+      });
+  });
+  untranslatableMap.forEach((calc) => mergedCalcs.push(calc));
+
+  return { mergedCalcs, conflicts, matches };
+}
+
+export function generateConflictReport(conflicts, matches, workbookNames) {
+  const lines = [
+    "# Cross-Workbook Conflict Report",
+    `Generated: ${new Date().toLocaleString()}`,
+    `Workbooks analyzed: ${workbookNames.join(", ")}`,
+    "",
+    "## Summary",
+    "| Category | Count |",
+    "|---|---|",
+    `| Fields with exact matches (auto-merged) | ${matches.length} |`,
+    `| Fields with conflicts (flagged for review) | ${conflicts.length} |`,
+    "",
+  ];
+
+  if (matches.length > 0) {
+    lines.push("## Auto-Merged Fields");
+    lines.push(
+      "These fields had identical formulas across workbooks and were safely merged into one definition."
+    );
+    lines.push("");
+    matches.forEach((m) => {
+      lines.push(
+        `- **${m.caption}** (\`${m.slug}\`) · datasource: \`${m.datasource}\` · found in: ${m.workbooks.join(", ")}`
+      );
+    });
+    lines.push("");
+  }
+
+  if (conflicts.length > 0) {
+    lines.push("## Conflicts — Review Required");
+    lines.push(
+      "These fields share the same name across workbooks but have different formulas. " +
+        "The first version was used in the generated models. Review each and update with the authoritative definition."
+    );
+    lines.push("");
+    conflicts.forEach((c) => {
+      lines.push(`### \`${c.slug}\` · datasource: \`${c.datasource}\``);
+      lines.push(`**Caption:** ${c.caption}`);
+      lines.push("");
+      c.versions.forEach((v, i) => {
+        lines.push(`**Version ${i + 1} — ${v.workbookName}${i === 0 ? " (used)" : ""}:**`);
+        lines.push("```");
+        lines.push(v.formula.slice(0, 400));
+        lines.push("```");
+      });
+      lines.push(
+        `> Update \`${c.slug}\` in your model with the authoritative definition, then remove this flag.`
+      );
+      lines.push("");
+    });
+  }
+
+  return lines.join("\n");
+}
+
 export function generateReport(calcs, dialect = "Snowflake") {
   const translatable = calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity));
   const untranslatable = calcs.filter((c) => c.complexity === "untranslatable");

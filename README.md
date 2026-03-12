@@ -25,7 +25,8 @@ dbt_export/
 ├── sources.yml                        ← source definitions
 ├── dbt_project.yml
 ├── SETUP.md                           ← step-by-step wiring guide
-└── translation_report.md              ← formula → SQL side by side, LOD CTEs, window hints
+├── translation_report.md              ← formula → SQL side by side, LOD CTEs, window hints
+└── conflict_report.md                 ← multi-workbook merge summary (if applicable)
 ```
 
 **Key capabilities:**
@@ -35,27 +36,9 @@ dbt_export/
 - AI refinement pass (Claude) for complex calcs — returns dialect-specific SQL, field descriptions, and AE recommendations
 - Window function rewrite hints for untranslatable table calcs (`RUNNING_SUM`, `RANK`, `INDEX`, etc.)
 - Privacy scan before any data leaves the browser — server URLs and connection metadata stay local
-
----
-
-## Running locally
-
-```bash
-npm install
-cp .env.example .env.local   # add your API keys
-npm run dev
-```
-
-Requires Node 18+. The dev server runs at `http://localhost:5173`.
-
-### Environment variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | Powers the AI translation pass |
-| `STRIPE_SECRET_KEY` | Yes | Stripe Checkout for paid tier |
-| `RESEND_API_KEY` | Yes | Email capture + welcome email |
-| `RESEND_AUDIENCE_ID` | No | Resend audience for mailing list |
+- **Multi-workbook merge mode** — upload 2+ workbooks, auto-deduplicate identical fields, flag formula conflicts, generate a `conflict_report.md`
+- **Models breakdown preview** — see the full STG / FCT / DIM output structure before running, with grain status per model
+- **PostHog analytics** — usage events tracked for product iteration
 
 ---
 
@@ -65,7 +48,9 @@ Requires Node 18+. The dev server runs at `http://localhost:5173`.
 - **Serverless functions:** Vercel (`api/`)
 - **AI:** Anthropic Claude via `/api/translate` proxy
 - **Payments:** Stripe Checkout
-- **Email:** Resend
+- **Email / Audience:** Resend
+- **Database:** Supabase (`email_captures` table)
+- **Analytics:** PostHog
 - **Deployment:** Vercel (auto-deploys from `main`)
 
 ---
@@ -88,7 +73,7 @@ api/
 ├── translate.js          # Anthropic proxy
 ├── create-checkout.js    # Stripe Checkout session
 ├── verify-session.js     # Stripe payment verification
-└── capture-email.js      # Resend email capture
+└── capture-email.js      # Supabase + Resend email capture
 ```
 
 See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for full engine design, translation logic, LOD handling, and known limitations.
@@ -101,4 +86,4 @@ See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for full engine design, translation l
 vercel --prod
 ```
 
-Set the four environment variables in the Vercel dashboard. The `vercel.json` handles SPA routing and API function paths automatically.
+Set environment variables in the Vercel dashboard. The `vercel.json` handles SPA routing and API function paths automatically.

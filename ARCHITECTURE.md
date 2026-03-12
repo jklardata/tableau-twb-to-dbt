@@ -11,7 +11,7 @@ A web-based tool that parses Tableau workbook files (`.twb` / `.twbx`) and expor
 
 **The one-line pitch:** *"Turn your Tableau workbook's business logic into a documented, reusable dbt semantic layer."*
 
-**Target persona:** Analytics engineers (AEs) and BI engineers migrating business logic out of Tableau and into a dbt project. This is the person who inherits a workbook with 100+ calculated fields and needs to reconstruct that logic in SQL — documented, version-controlled, and maintainable — not just for the one dashboard they're migrating, but as a reusable foundation for other reports.
+**Target persona:** Analytics engineers (AEs) and BI engineers migrating business logic out of Tableau and into a dbt project. Typically a small team (1–3 AEs) setting up dbt for the first time. This is the person who inherits a workbook with 100+ calculated fields and needs to reconstruct that logic in SQL — documented, version-controlled, and maintainable — not just for the one dashboard they're migrating, but as a reusable foundation for other reports.
 
 ---
 
@@ -20,7 +20,7 @@ A web-based tool that parses Tableau workbook files (`.twb` / `.twbx`) and expor
 ### Data Flow
 
 ```
-User selects .twb or .twbx
+User selects .twb or .twbx (single or multi-workbook mode)
         ↓
 [BROWSER] .twbx? → JSZip extracts inner .twb XML
         ↓
@@ -31,9 +31,11 @@ User selects .twb or .twbx
 [BROWSER] Classify + rule-based translate — classify(), ruleBasedTranslate()
           LOD expressions → translateLOD() generates CTE templates rule-based
         ↓
-[API /api/translate] AI refinement pass (Claude) — complex + flagged calcs, batched 8
+[BROWSER] Multi-workbook mode? → mergeWorkbooks() deduplicates + flags conflicts
         ↓
-[BROWSER] Grain config applied — user-specified GROUP BY columns for fct_ models
+[BROWSER] Preview — models breakdown (STG/FCT/DIM tree), grain config
+        ↓
+[API /api/translate] AI refinement pass (Claude) — complex + flagged calcs, batched 8
         ↓
 [BROWSER] Output file assembly — buildZip() via JSZip
         ↓
@@ -46,12 +48,13 @@ User downloads .zip
 
 | Stage | Trigger | What Happens |
 |---|---|---|
-| `upload` | Default | Dialect selector + drop zone + feature cards |
+| `upload` | Default | Dialect selector + drop zone + feature cards + multi-workbook toggle |
 | `parsing` | File selected | .twbx unzip if needed, XML parse, classify, rule-based translate, LOD CTE generation |
 | `scan` | Parse complete | Privacy disclosure screen |
-| `preview` | User approves scan | Field breakdown + grain config inputs per datasource |
+| `conflicts` | Multi-workbook merge | Auto-merged count + conflict list, continue button |
+| `preview` | User approves scan | Models breakdown (STG/FCT/DIM per datasource) + grain config + field list |
 | `translating` | User clicks Run | AI pass on flagged calcs, live progress log |
-| `results` | Translation done | 5-tab output (Report / SQL Models / schema.yml / metrics.yml / sources.yml) |
+| `results` | Translation done | 6-tab output (Report / SQL Models / schema.yml / metrics.yml / sources.yml / Conflicts) |
 
 ---
 
@@ -135,6 +138,16 @@ After all translation passes, calcs are grouped by datasource and split into two
 
 Uses SQL-based detection (`isAggregate()`) rather than Tableau's `role` attribute, which is unreliable.
 
+### 4g. Multi-Workbook Merge (`mergeWorkbooks`, `generateConflictReport`)
+
+Groups calcs across multiple workbooks by `datasourceSlug::slug` key.
+
+- **Exact formula match** → auto-merged, one canonical definition used, listed in `conflict_report.md` as confirmed matches
+- **Different formula** → conflict flagged, first version used in output, all versions shown in conflict report
+- **Untranslatables** → deduplicated separately
+
+`generateConflictReport()` produces a markdown file included in the zip summarising auto-merged fields and detailing each conflict with all formula versions side by side.
+
 ---
 
 ## 5. Output Files
@@ -154,7 +167,8 @@ dbt_export/
 ├── sources.yml                        ← source definitions (TODOs to fill in)
 ├── dbt_project.yml                    ← project scaffold
 ├── SETUP.md                           ← step-by-step wiring guide
-└── translation_report.md              ← original formula → SQL, LOD CTEs, window hints
+├── translation_report.md              ← original formula → SQL, LOD CTEs, window hints
+└── conflict_report.md                 ← multi-workbook merge summary (only in multi mode)
 ```
 
 ### Staging model (`stg_{slug}.sql`)
@@ -177,7 +191,30 @@ Requires: fill in `TODO_primary_entity` and `TODO_ID_COLUMN`, then run `dbt sl v
 
 ---
 
-## 6. Privacy Scan Feature
+## 6. Preview Stage — Models Breakdown
+
+Before running the AI pass, the preview stage shows a full models breakdown:
+
+```
+MODELS TO BE GENERATED
+
+STG  stg_orders.sql          12 fields
+  └  FCT  fct_orders.sql     8 aggregates    GROUP BY date_day, customer_id
+  └  DIM  dim_orders.sql     4 row-level     2 LOD CTEs
+
+STG  stg_customers.sql       6 fields
+  └  DIM  dim_customers.sql  6 row-level
+```
+
+- FCT rows show grain badge (green if set, amber warning if not configured)
+- DIM rows show LOD CTE count if any
+- Summary footer: total datasources, total models, LOD CTEs to wire up, table calcs needing manual rewrite
+
+This gives the AE a structural preview of the output before committing to the full translation run.
+
+---
+
+## 7. Privacy Scan Feature
 
 Between the `parsing` stage and `preview`, the app shows a disclosure screen:
 
@@ -189,7 +226,23 @@ All sensitive metadata extraction happens in the browser via `DOMParser`. No add
 
 ---
 
-## 7. UI / Design
+## 8. Analytics (PostHog)
+
+PostHog initialized in `main.jsx`. Events captured:
+
+| Event | Key Properties |
+|---|---|
+| `workbook_uploaded` | dialect, field_count, translatable_count, claude_count, has_lod |
+| `translation_completed` | dialect, field_count, claude_count, multi_workbook, conflict_count, paid |
+| `download_triggered` | field_count, paid, multi_workbook, trigger |
+| `paywall_hit` | trigger (field_limit \| multi_workbook) |
+| `checkout_started` | trigger |
+| `merge_completed` | workbook_count, conflict_count, auto_merged_count |
+| `email_captured` | source |
+
+---
+
+## 9. UI / Design
 
 **Emerald / Teal dark theme** — monospace throughout.
 
@@ -205,7 +258,7 @@ Font: `'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace`
 
 ---
 
-## 8. Known Limitations
+## 10. Known Limitations
 
 ### Technical Limitations
 
@@ -226,16 +279,15 @@ Font: `'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace`
 - [ ] `dbt source()` macro substitution — currently staging models use `source('slug', 'TODO_TABLE')`, which is correct; sources.yml must be filled in first
 - [ ] Tableau Server / Cloud API mode — pull workbooks directly instead of uploading a file
 - [ ] Power BI DAX → dbt exporter (same concept, different parser)
-- [ ] dbt Slack launch post (`#tools-and-extensions` channel)
 
 ---
 
-## 9. Current File Inventory
+## 11. Current File Inventory
 
 | File | Description |
 |---|---|
 | `src/App.jsx` | Main React SPA — all UI stages, state management, file handling |
-| `src/lib/engine.js` | Core engine — parsing, classification, translation, LOD handling, output generation |
+| `src/lib/engine.js` | Core engine — parsing, classification, translation, LOD handling, multi-workbook merge, output generation |
 | `src/lib/zip.js` | Output assembly — calls engine generators, bundles into JSZip |
 | `src/components/Badge.jsx` | Complexity badge component |
 | `src/components/ProgressBar.jsx` | Translation progress bar |
@@ -244,13 +296,13 @@ Font: `'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace`
 | `api/translate.js` | Vercel function — Anthropic API proxy |
 | `api/create-checkout.js` | Vercel function — Stripe Checkout session ($19) |
 | `api/verify-session.js` | Vercel function — Stripe payment verification on redirect |
-| `api/capture-email.js` | Vercel function — Resend audience add + welcome email |
+| `api/capture-email.js` | Vercel function — Supabase insert + Resend audience add |
 | `vercel.json` | SPA rewrites + API routing |
-| `.env.example` | Required env vars: ANTHROPIC_API_KEY, STRIPE_SECRET_KEY, RESEND_API_KEY |
+| `.env.example` | Required env vars |
 
 ---
 
-## 10. Next Development Priorities
+## 12. Next Development Priorities
 
 1. **Redshift dialect** — similar to Snowflake with DATEDIFF/DATEADD differences; lower effort than BigQuery was
 2. **Primary key detection** — parse join relationships from the workbook XML to pre-populate MetricFlow entity fields

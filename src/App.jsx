@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import posthog from "posthog-js";
 import JSZip from "jszip";
 import {
   parseTWB,
@@ -11,6 +12,7 @@ import {
   isAggregate,
   groupByDatasource,
   translateLOD,
+  mergeWorkbooks,
 } from "./lib/engine.js";
 import { buildZip, downloadAllAsZip } from "./lib/zip.js";
 import Badge from "./components/Badge.jsx";
@@ -183,10 +185,174 @@ const styles = {
 const logColors = { info: "#6b7280", success: "#34d399", error: "#f87171", warning: "#fbbf24" };
 
 // ================================================================
+// STATIC PAGES
+// ================================================================
+
+function PrivacyPage() {
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #030f0a 0%, #071a12 55%, #071e2a 100%)", color: "#e2ede8", fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}>
+      <div style={{ padding: "40px 32px", maxWidth: "720px", margin: "0 auto" }}>
+        <a href="/" style={{ fontSize: "11px", color: "#34d399", textDecoration: "none", letterSpacing: "0.06em" }}>← Back</a>
+        <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#f0f0f0", margin: "24px 0 8px" }}>Privacy Policy</h1>
+        <p style={{ fontSize: "11px", color: "#4b5563", marginBottom: "32px" }}>Last updated March 2026</p>
+        {[
+          ["Your workbook data never leaves your browser", "Parsing, classification, and rule-based translation happen entirely in your browser. Your .twb or .twbx file is never uploaded to our servers. Server URLs, database names, connection strings, and Tableau site paths extracted from your workbook are processed locally and never transmitted."],
+          ["What is sent to AI", "When you run the export, Tableau formula expressions (the logic only — no connection metadata, no server names, no data values) are sent to Anthropic's Claude API for translation. These are batched and sent over HTTPS. Anthropic's data handling policies apply to this data."],
+          ["Analytics", "We use PostHog to collect anonymous product usage events — which features are used, field counts, dialect selection, and export completions. No personally identifiable information is collected unless you voluntarily provide your email address."],
+          ["Email capture", "If you provide your email address for updates, it is stored in Resend. You can unsubscribe at any time. We do not sell or share your email address."],
+          ["Contact", "Questions? Email justin@klardata.com"],
+        ].map(([title, body]) => (
+          <div key={title} style={{ marginBottom: "24px" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "8px" }}>{title}</div>
+            <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.8 }}>{body}</div>
+          </div>
+        ))}
+        <p style={{ fontSize: "10px", color: "#374151", marginTop: "40px" }}>Not affiliated with or endorsed by Salesforce or Tableau.</p>
+      </div>
+    </div>
+  );
+}
+
+function TermsPage() {
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #030f0a 0%, #071a12 55%, #071e2a 100%)", color: "#e2ede8", fontFamily: "'IBM Plex Mono', 'Fira Code', monospace" }}>
+      <div style={{ padding: "40px 32px", maxWidth: "720px", margin: "0 auto" }}>
+        <a href="/" style={{ fontSize: "11px", color: "#34d399", textDecoration: "none", letterSpacing: "0.06em" }}>← Back</a>
+        <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#f0f0f0", margin: "24px 0 8px" }}>Terms of Service</h1>
+        <p style={{ fontSize: "11px", color: "#4b5563", marginBottom: "32px" }}>Last updated March 2026</p>
+        {[
+          ["Use of the service", "tableautodbt.com is a tool that parses Tableau workbook files and generates dbt SQL models. You may use it for personal or commercial projects. You are responsible for reviewing and validating all generated SQL before using it in production."],
+          ["No warranty", "The generated SQL, YAML, and documentation files are provided as a starting point. We make no guarantees about correctness, completeness, or fitness for any particular purpose. Always review the output before deploying to production."],
+          ["Intellectual property", "You retain full ownership of your Tableau workbooks and all generated output files. We claim no rights over the SQL or YAML files generated from your workbooks."],
+          ["Limitations", "We are not liable for any damages arising from the use of generated SQL in production systems. You are responsible for testing and validating all output."],
+          ["Changes", "We may update these terms at any time. Continued use of the service constitutes acceptance of the current terms."],
+          ["Contact", "Questions? Email justin@klardata.com"],
+        ].map(([title, body]) => (
+          <div key={title} style={{ marginBottom: "24px" }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "8px" }}>{title}</div>
+            <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.8 }}>{body}</div>
+          </div>
+        ))}
+        <p style={{ fontSize: "10px", color: "#374151", marginTop: "40px" }}>Not affiliated with or endorsed by Salesforce or Tableau.</p>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// EMAIL CAPTURE
+// ================================================================
+
+function EmailCapture() {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState(null); // null | "loading" | "done" | "error"
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email.includes("@")) return;
+    setStatus("loading");
+    try {
+      await fetch("/api/capture-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "newsletter" }),
+      });
+      posthog.capture("email_captured", { source: "newsletter" });
+      setStatus("done");
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  return (
+    <div style={{ borderTop: "1px solid #0d2b1e", padding: "32px", display: "flex", justifyContent: "center" }}>
+      <div style={{ maxWidth: "480px", width: "100%", textAlign: "center" }}>
+        <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "4px" }}>Get updates</div>
+        <div style={{ fontSize: "11px", color: "#4b5563", marginBottom: "16px" }}>New dialects, features, and migration guides.</div>
+        {status === "done" ? (
+          <div style={{ fontSize: "12px", color: "#34d399" }}>You're on the list ✓</div>
+        ) : (
+          <form onSubmit={handleSubmit} style={{ display: "flex", gap: "8px" }}>
+            <input
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              style={{ flex: 1, background: "#040d08", border: "1px solid #0d4a2e", borderRadius: "6px", padding: "8px 12px", fontSize: "12px", color: "#e2ede8", fontFamily: "monospace", outline: "none" }}
+            />
+            <button
+              type="submit"
+              disabled={status === "loading"}
+              style={{ ...styles.btnSecondary, whiteSpace: "nowrap", opacity: status === "loading" ? 0.6 : 1 }}
+            >
+              {status === "loading" ? "..." : "Subscribe"}
+            </button>
+          </form>
+        )}
+        {status === "error" && <div style={{ fontSize: "11px", color: "#f87171", marginTop: "6px" }}>Something went wrong — try again.</div>}
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// MULTI-WORKBOOK PAYWALL
+// ================================================================
+
+function MultiWorkbookPaywall() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    posthog.capture("paywall_hit", { trigger: "multi_workbook" });
+  }, []);
+
+  const handleCheckout = async () => {
+    posthog.capture("checkout_started", { trigger: "multi_workbook" });
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fieldCount: 999 }),
+      });
+      if (!res.ok) throw new Error("Failed to start checkout");
+      const { url } = await res.json();
+      window.location.href = url;
+    } catch (err) {
+      setError("Could not start checkout. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", background: "linear-gradient(135deg, rgba(5,150,105,0.08), rgba(8,145,178,0.08))", border: "1px solid rgba(8,145,178,0.3)", borderRadius: "8px" }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: "12px", fontWeight: 700, color: "#f0f0f0", marginBottom: "2px" }}>Unlock multi-workbook merge — $19</div>
+        <div style={{ fontSize: "11px", color: "#6b7280" }}>Same price as a single workbook export. Includes deduplication, conflict report, and all SQL models.</div>
+        {error && <div style={{ fontSize: "11px", color: "#f87171", marginTop: "4px" }}>{error}</div>}
+      </div>
+      <button
+        onClick={handleCheckout}
+        disabled={loading}
+        style={{ ...styles.btn, whiteSpace: "nowrap", opacity: loading ? 0.7 : 1 }}
+      >
+        {loading ? "Redirecting..." : "Unlock — $19"}
+      </button>
+    </div>
+  );
+}
+
+// ================================================================
 // MAIN APP
 // ================================================================
 
 export default function App() {
+  const path = window.location.pathname;
+  if (path === "/privacy") return <PrivacyPage />;
+  if (path === "/terms") return <TermsPage />;
+
   const [stage, setStage] = useState("upload");
   const [calcs, setCalcs] = useState([]);
   const [log, setLog] = useState([]);
@@ -200,11 +366,15 @@ export default function App() {
   const [zipping, setZipping] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
-  const [paidSession, setPaidSession] = useState(false);
+  const [paidSession, setPaidSession] = useState(() => localStorage.getItem("paid") === "1");
   const [grainConfig, setGrainConfig] = useState({});
   const [dialect, setDialect] = useState("Snowflake");
   const [previewModel, setPreviewModel] = useState(null);
+  const [multiMode, setMultiMode] = useState(false);
+  const [workbooks, setWorkbooks] = useState([]); // [{ name, calcs, xmlString }]
+  const [conflictResult, setConflictResult] = useState(null);
   const fileRef = useRef();
+  const multiFileRef = useRef();
 
   // Check for Stripe success redirect
   useEffect(() => {
@@ -217,6 +387,7 @@ export default function App() {
         .then((data) => {
           if (data.paid) {
             setPaidSession(true);
+            localStorage.setItem("paid", "1");
             // Clean up URL
             window.history.replaceState({}, "", window.location.pathname);
           }
@@ -229,7 +400,8 @@ export default function App() {
 
   const translatableCalcs = calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity));
   const isFreeTier = translatableCalcs.length <= FREE_TIER_LIMIT;
-  const needsPayment = translatableCalcs.length > FREE_TIER_LIMIT && !paidSession;
+  // const needsPayment = translatableCalcs.length > FREE_TIER_LIMIT && !paidSession;
+  const needsPayment = false; // paywalls off during feedback period
 
   const handleFile = useCallback(async (file) => {
     if (!file) return;
@@ -285,6 +457,16 @@ export default function App() {
 
       const needsClaudeCount = withRuleTranslation.filter((c) => c.needsClaude).length;
       addLog(`Rule-based translation complete. ${needsClaudeCount} calcs flagged for AI refinement.`, "info");
+
+      const translatableCount = withRuleTranslation.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length;
+      posthog.capture("workbook_uploaded", {
+        dialect,
+        field_count: parsed.length,
+        translatable_count: translatableCount,
+        claude_count: needsClaudeCount,
+        has_lod: withRuleTranslation.some((c) => c.lodCte),
+        untranslatable_count: withRuleTranslation.filter((c) => c.complexity === "untranslatable").length,
+      });
 
       const scan = scanTWB(xmlText);
       setScanResults(scan);
@@ -367,7 +549,10 @@ export default function App() {
     addLog("Generating output files...", "info");
     let files;
     try {
-      files = await buildZip(updatedCalcs, xmlString, selectedFile?.replace(/\.(twb|twbx)$/i, ""), grainConfig, dialect);
+      const conflictData = conflictResult
+        ? { conflicts: conflictResult.conflicts, matches: conflictResult.matches, workbookNames: workbooks.map((w) => w.name) }
+        : null;
+      files = await buildZip(updatedCalcs, xmlString, selectedFile?.replace(/\.(twb|twbx)$/i, ""), grainConfig, dialect, conflictData);
     } catch (err) {
       addLog(`Output generation failed: ${err.message}`, "error");
       setStage("preview");
@@ -379,10 +564,21 @@ export default function App() {
     const translatedCount = updatedCalcs.filter(
       (c) => c.finalSql && !["skip", "untranslatable"].includes(c.complexity)
     ).length;
+    const claudeCount = updatedCalcs.filter((c) => c.translatedByClaude).length;
+    posthog.capture("translation_completed", {
+      dialect,
+      field_count: updatedCalcs.length,
+      translatable_count: translatedCount,
+      claude_count: claudeCount,
+      multi_workbook: !!conflictResult,
+      conflict_count: conflictResult?.conflicts.length || 0,
+      auto_merged_count: conflictResult?.matches.length || 0,
+      paid: paidSession,
+    });
     addLog(`Done! ${translatedCount} models ready for dbt.`, "success");
     setActiveTab("report");
     setStage("results");
-  }, [calcs, xmlString, grainConfig, dialect]);
+  }, [calcs, xmlString, grainConfig, dialect, conflictResult, workbooks]);
 
   const downloadFile = (filename, content) => {
     const blob = new Blob([content], { type: "text/plain" });
@@ -395,10 +591,16 @@ export default function App() {
   };
 
   const handleDownloadAll = async () => {
-    if (isFreeTier && !emailCaptured) {
-      setShowEmailModal(true);
-      return;
-    }
+    // if (isFreeTier && !emailCaptured) {
+    //   setShowEmailModal(true);
+    //   return;
+    // }
+    posthog.capture("download_triggered", {
+      field_count: calcs.length,
+      paid: paidSession,
+      multi_workbook: !!conflictResult,
+      trigger: "direct",
+    });
     setZipping(true);
     const ok = await downloadAllAsZip(outputFiles, selectedFile?.replace(/\.(twb|twbx)$/i, ""));
     if (!ok) alert("Zip failed — use individual file downloads below.");
@@ -413,6 +615,12 @@ export default function App() {
   };
 
   const handleDownloadAllDirect = async () => {
+    posthog.capture("download_triggered", {
+      field_count: calcs.length,
+      paid: paidSession,
+      multi_workbook: !!conflictResult,
+      trigger: "email_gate",
+    });
     setZipping(true);
     const ok = await downloadAllAsZip(outputFiles, selectedFile?.replace(/\.(twb|twbx)$/i, ""));
     if (!ok) alert("Zip failed — use individual file downloads below.");
@@ -430,7 +638,85 @@ export default function App() {
     setExpandedCalc(null);
     setGrainConfig({});
     setPreviewModel(null);
-    setPaidSession(false);
+    setWorkbooks([]);
+    setConflictResult(null);
+  };
+
+  // Parse a single file into { name, calcs, xmlString } without advancing the stage
+  const parseWorkbookFile = async (file) => {
+    let xmlText;
+    if (file.name.toLowerCase().endsWith(".twbx")) {
+      const zip = await JSZip.loadAsync(file);
+      const twbEntry = Object.values(zip.files).find((f) => f.name.endsWith(".twb") && !f.dir);
+      if (!twbEntry) throw new Error(`No .twb found inside ${file.name}`);
+      xmlText = await twbEntry.async("string");
+    } else {
+      xmlText = await file.text();
+    }
+    const { calcs: parsed, internalIdMap } = parseTWB(xmlText);
+    const classified = parsed.map((c) => ({
+      ...c,
+      complexity: classify(c.formula, c.calcClass),
+      dependsOn: findDependencies(c.formula, internalIdMap),
+      _idMap: internalIdMap,
+    }));
+    const withRuleTranslation = classified.map((c) => {
+      if (["skip", "untranslatable"].includes(c.complexity)) return c;
+      const ruleSql = ruleBasedTranslate(c.formula, internalIdMap, dialect);
+      const lodResult = c.complexity === "complex" ? translateLOD(c.formula, internalIdMap, dialect) : null;
+      const calcWithLod = {
+        ...c,
+        ruleSql: lodResult ? lodResult.sql : ruleSql,
+        lodCte: lodResult?.cteTemplate || null,
+        lodNote: lodResult?.note || null,
+      };
+      const { needs, reasons } = needsClaude(calcWithLod, calcWithLod.ruleSql);
+      return { ...calcWithLod, needsClaude: needs, claudeReasons: reasons };
+    });
+    return { name: file.name.replace(/\.(twb|twbx)$/i, ""), calcs: withRuleTranslation, xmlString: xmlText };
+  };
+
+  const addWorkbookFile = async (file) => {
+    setStage("parsing");
+    setLog([]);
+    addLog(`Parsing ${file.name}...`);
+    try {
+      const wb = await parseWorkbookFile(file);
+      setWorkbooks((prev) => {
+        const updated = [...prev.filter((w) => w.name !== wb.name), wb];
+        addLog(`${wb.name}: ${wb.calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length} translatable fields`, "success");
+        return updated;
+      });
+      setStage("upload");
+    } catch (err) {
+      addLog(`Error parsing ${file.name}: ${err.message}`, "error");
+      setStage("upload");
+    }
+  };
+
+  const analyzeWorkbooks = () => {
+    if (workbooks.length < 2) return;
+    const result = mergeWorkbooks(workbooks);
+    posthog.capture("merge_completed", {
+      workbook_count: workbooks.length,
+      total_fields: workbooks.reduce((n, w) => n + w.calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length, 0),
+      merged_count: result.mergedCalcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length,
+      conflict_count: result.conflicts.length,
+      auto_merged_count: result.matches.length,
+    });
+    setConflictResult(result);
+    // Use the first workbook's xmlString for sources.yml generation
+    setXmlString(workbooks[0].xmlString);
+    setSelectedFile(workbooks.map((w) => w.name).join(" + "));
+    setStage("conflicts");
+  };
+
+  const proceedFromConflicts = () => {
+    // Set up merged calcs and run the standard scan → preview → translating flow
+    const scan = scanTWB(workbooks[0].xmlString);
+    setScanResults(scan);
+    setCalcs(conflictResult.mergedCalcs);
+    setStage("scan");
   };
 
   const translatable = calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity));
@@ -541,12 +827,14 @@ export default function App() {
             {/* Dropzone */}
             <div
               style={styles.dropzone}
-              onDrop={handleDrop}
+              onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) multiMode ? addWorkbookFile(f) : handleFile(f); }}
               onDragOver={(e) => e.preventDefault()}
-              onClick={() => fileRef.current?.click()}
+              onClick={() => multiMode ? multiFileRef.current?.click() : fileRef.current?.click()}
             >
               <div style={{ fontSize: "32px", marginBottom: "12px" }}>⬆</div>
-              <div style={styles.dropTitle}>Drop .twb or .twbx here</div>
+              <div style={styles.dropTitle}>
+                {multiMode ? "Drop workbooks here to add" : "Drop .twb or .twbx here"}
+              </div>
               <div style={styles.dropSub}>or click to browse — workbook data never leaves your browser</div>
             </div>
             <input
@@ -557,12 +845,85 @@ export default function App() {
               onChange={(e) => handleFile(e.target.files[0])}
             />
 
-            {/* Pricing note */}
-            <div style={{ marginTop: "16px", padding: "12px 18px", background: "#071a12", border: "1px solid #0d2b1e", borderRadius: "8px", fontSize: "12px", color: "#6b7280", display: "flex", gap: "24px", alignItems: "center" }}>
-              <div><span style={{ color: "#34d399", fontWeight: 700 }}>Free</span> — up to {FREE_TIER_LIMIT} calculated fields</div>
-              <div><span style={{ color: "#fbbf24", fontWeight: 700 }}>$19</span> — unlimited fields, full export</div>
-              <div style={{ marginLeft: "auto" }}>No account required</div>
+            {/* Multi-workbook mode toggle */}
+            <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "12px" }}>
+              <button
+                onClick={() => { setMultiMode((m) => !m); setWorkbooks([]); setLog([]); }}
+                style={{
+                  padding: "6px 14px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  fontFamily: "inherit",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  letterSpacing: "0.04em",
+                  border: multiMode ? "1px solid #fbbf24" : "1px solid #0d2b1e",
+                  background: multiMode ? "#d9770612" : "transparent",
+                  color: multiMode ? "#fbbf24" : "#4b5563",
+                  transition: "all 0.15s",
+                }}
+              >
+                {multiMode ? "✓ Multi-workbook mode" : "Compare multiple workbooks"}
+              </button>
+              {multiMode && (
+                <span style={{ fontSize: "11px", color: "#6b7280" }}>
+                  Upload 2+ workbooks to deduplicate fields and generate a conflict report
+                </span>
+              )}
             </div>
+
+            {/* Multi-workbook file list */}
+            {multiMode && (
+              <div style={{ marginTop: "16px", padding: "18px 20px", background: "#0a1f15", border: "1px solid #0d4a2e", borderRadius: "8px" }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "12px" }}>
+                  Workbooks ({workbooks.length})
+                </div>
+                {workbooks.length === 0 && (
+                  <div style={{ fontSize: "12px", color: "#4b5563", marginBottom: "12px" }}>
+                    No workbooks added yet — drop files above or use the button below
+                  </div>
+                )}
+                {workbooks.map((wb) => (
+                  <div key={wb.name} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", background: "#071a12", border: "1px solid #0d2b1e", borderRadius: "6px", marginBottom: "6px" }}>
+                    <span style={{ fontSize: "12px", color: "#34d399" }}>✓</span>
+                    <span style={{ flex: 1, fontSize: "12px", color: "#9ca3af", fontFamily: "monospace" }}>{wb.name}</span>
+                    <span style={{ fontSize: "10px", color: "#4b5563" }}>
+                      {wb.calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length} fields
+                    </span>
+                    <button
+                      style={{ fontSize: "10px", color: "#f87171", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
+                      onClick={() => setWorkbooks((prev) => prev.filter((w) => w.name !== wb.name))}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {log.filter((l) => l.type === "error").map((l, i) => (
+                  <div key={i} style={{ fontSize: "11px", color: "#f87171", marginBottom: "4px" }}>{l.msg}</div>
+                ))}
+                <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+                  <button
+                    style={{ ...styles.btnSecondary, fontSize: "12px" }}
+                    onClick={() => multiFileRef.current?.click()}
+                  >
+                    + Add workbook
+                  </button>
+                  {workbooks.length >= 2 && (
+                    <button style={styles.btn} onClick={analyzeWorkbooks}>
+                      Analyze & Merge →
+                    </button>
+                  )}
+                </div>
+                <input
+                  ref={multiFileRef}
+                  type="file"
+                  accept=".twb,.twbx"
+                  style={{ display: "none" }}
+                  onChange={(e) => { if (e.target.files[0]) addWorkbookFile(e.target.files[0]); e.target.value = ""; }}
+                />
+              </div>
+            )}
+
 
             {/* What you get */}
             <div style={{ marginTop: "48px" }}>
@@ -593,6 +954,18 @@ export default function App() {
                     icon: "🔗",
                     label: "LOD expressions translated to CTE patterns",
                     desc: "Tableau LOD expressions are the hardest part of any migration. FIXED LODs are converted to SQL CTE templates and injected directly into your fct_ model's WITH clause — no manual rewrite required.",
+                  },
+                  {
+                    file: "STG / FCT / DIM preview before you run",
+                    icon: "🗺️",
+                    label: "Models breakdown before you commit",
+                    desc: "Before running the AI pass, see the full output structure: every staging model, which datasources get a fct_ vs dim_ model, field counts, grain status, and LOD CTE count. No surprises after translation.",
+                  },
+                  {
+                    file: "conflict_report.md",
+                    icon: "🔀",
+                    label: "Multi-workbook merge mode",
+                    desc: "Upload 2+ workbooks. Identical fields across workbooks are auto-merged into one canonical definition. Formula conflicts are flagged with both versions side by side so you decide which to use.",
                   },
                   {
                     file: "sources.yml + schema.yml",
@@ -774,6 +1147,78 @@ export default function App() {
               ))}
             </div>
 
+            {/* Models breakdown */}
+            {(() => {
+              // Preview uses ruleSql (finalSql not set until after translation)
+              const previewCalcs = calcs.map((c) => ({ ...c, finalSql: c.ruleSql || c.formula }));
+              const datasources = groupByDatasource(previewCalcs);
+              if (datasources.length === 0) return null;
+              const totalLods = calcs.filter((c) => c.lodCte).length;
+              const totalUntranslatable = calcs.filter((c) => c.complexity === "untranslatable").length;
+              return (
+                <div style={{ marginBottom: "24px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
+                    Models to be generated
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {datasources.map((ds) => {
+                      const lodCount = [...(ds.aggregates || []), ...(ds.rowLevel || [])].filter((c) => c.lodCte).length;
+                      const grain = grainConfig[ds.slug]?.cols;
+                      return (
+                        <div key={ds.slug} style={{ background: "#0a1f15", border: "1px solid #0d2b1e", borderRadius: "8px", padding: "14px 18px" }}>
+                          {/* Staging */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: ds.aggregates?.length > 0 || ds.rowLevel?.length > 0 ? "10px" : "0" }}>
+                            <span style={{ fontSize: "10px", fontWeight: 700, color: "#34d399", background: "#05966918", border: "1px solid #05966930", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>STG</span>
+                            <code style={{ fontSize: "12px", color: "#d1d5db" }}>stg_{ds.slug}.sql</code>
+                            <span style={{ fontSize: "11px", color: "#4b5563", marginLeft: "auto" }}>
+                              {(ds.aggregates?.length || 0) + (ds.rowLevel?.length || 0)} fields
+                            </span>
+                          </div>
+                          {/* Fct */}
+                          {ds.aggregates?.length > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "20px", marginBottom: ds.rowLevel?.length > 0 ? "6px" : "0" }}>
+                              <span style={{ fontSize: "10px", color: "#0d2b1e" }}>└</span>
+                              <span style={{ fontSize: "10px", fontWeight: 700, color: "#67e8f9", background: "#0891b218", border: "1px solid #0891b230", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>FCT</span>
+                              <code style={{ fontSize: "12px", color: "#d1d5db" }}>fct_{ds.slug}.sql</code>
+                              <span style={{ fontSize: "11px", color: "#4b5563" }}>{ds.aggregates.length} aggregates</span>
+                              {grain ? (
+                                <span style={{ fontSize: "10px", color: "#34d399", background: "#05966912", border: "1px solid #05966930", borderRadius: "4px", padding: "2px 7px", marginLeft: "auto" }}>
+                                  GROUP BY {grain}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: "10px", color: "#fbbf24", background: "#d9770612", border: "1px solid #d9770630", borderRadius: "4px", padding: "2px 7px", marginLeft: "auto" }}>
+                                  ⚠ grain not set
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          {/* Dim */}
+                          {ds.rowLevel?.length > 0 && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "20px" }}>
+                              <span style={{ fontSize: "10px", color: "#0d2b1e" }}>└</span>
+                              <span style={{ fontSize: "10px", fontWeight: 700, color: "#fbbf24", background: "#d9770612", border: "1px solid #d9770630", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>DIM</span>
+                              <code style={{ fontSize: "12px", color: "#d1d5db" }}>dim_{ds.slug}.sql</code>
+                              <span style={{ fontSize: "11px", color: "#4b5563" }}>{ds.rowLevel.length} row-level</span>
+                              {lodCount > 0 && (
+                                <span style={{ fontSize: "10px", color: "#2dd4bf", marginLeft: "auto" }}>{lodCount} LOD CTE{lodCount !== 1 ? "s" : ""}</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Summary footer */}
+                  <div style={{ display: "flex", gap: "20px", marginTop: "10px", padding: "10px 14px", background: "#071a12", borderRadius: "6px", fontSize: "11px", color: "#4b5563" }}>
+                    <span><span style={{ color: "#34d399" }}>{datasources.length}</span> datasource{datasources.length !== 1 ? "s" : ""}</span>
+                    <span><span style={{ color: "#34d399" }}>{datasources.filter(ds => ds.aggregates?.length > 0).length * 2 + datasources.filter(ds => !ds.aggregates?.length && ds.rowLevel?.length > 0).length + datasources.length}</span> models total</span>
+                    {totalLods > 0 && <span><span style={{ color: "#2dd4bf" }}>{totalLods}</span> LOD CTEs to wire up</span>}
+                    {totalUntranslatable > 0 && <span><span style={{ color: "#f87171" }}>{totalUntranslatable}</span> table calcs need manual rewrite</span>}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Grain config per datasource */}
             {(() => {
               const datasources = groupByDatasource(calcs);
@@ -897,6 +1342,88 @@ export default function App() {
           </div>
         )}
 
+        {/* ── CONFLICTS ── */}
+        {stage === "conflicts" && conflictResult && (
+          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+            <div style={{ marginBottom: "28px" }}>
+              <div style={{ fontSize: "22px", fontWeight: 700, color: "#f0fdf4", marginBottom: "8px" }}>Merge Analysis</div>
+              <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                {workbooks.map((w) => w.name).join(" · ")} — {conflictResult.mergedCalcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length} unique translatable fields
+              </div>
+            </div>
+
+            {/* Auto-merged */}
+            <div style={{ background: "rgba(5,150,105,0.07)", border: "1px solid rgba(5,150,105,0.2)", borderRadius: "12px", padding: "18px 20px", marginBottom: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: conflictResult.matches.length > 0 ? "14px" : "0" }}>
+                <div style={{ width: "28px", height: "28px", background: "#05966922", border: "1px solid #05966955", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>✓</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#ecfdf5" }}>Auto-merged: {conflictResult.matches.length} identical field{conflictResult.matches.length !== 1 ? "s" : ""}</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280" }}>Same formula across workbooks — one canonical definition used</div>
+                </div>
+                <div style={{ fontSize: "9px", fontWeight: 700, color: "#34d399", background: "#05966918", border: "1px solid #05966940", borderRadius: "4px", padding: "2px 8px", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>AUTO-MERGED</div>
+              </div>
+              {conflictResult.matches.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {conflictResult.matches.map((m) => (
+                    <div key={m.key} style={{ fontSize: "11px", color: "#34d399", background: "#05966912", border: "1px solid #05966930", borderRadius: "4px", padding: "3px 8px", fontFamily: "monospace" }}>
+                      {m.caption}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Conflicts */}
+            {conflictResult.conflicts.length > 0 ? (
+              <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "12px", padding: "18px 20px", marginBottom: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                  <div style={{ width: "28px", height: "28px", background: "#d9770622", border: "1px solid #d9770655", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>⚠️</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#fcd34d" }}>{conflictResult.conflicts.length} field conflict{conflictResult.conflicts.length !== 1 ? "s" : ""} — different formulas</div>
+                    <div style={{ fontSize: "11px", color: "#6b7280" }}>First version used. Full details in <code style={{ color: "#fbbf24" }}>conflict_report.md</code> in your zip.</div>
+                  </div>
+                </div>
+                {conflictResult.conflicts.map((cf) => (
+                  <div key={cf.key} style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid rgba(245,158,11,0.1)" }}>
+                    <div style={{ fontSize: "12px", fontWeight: 600, color: "#fcd34d", marginBottom: "8px", fontFamily: "monospace" }}>
+                      {cf.caption} <span style={{ color: "#6b7280", fontWeight: 400 }}>({cf.datasource})</span>
+                    </div>
+                    {cf.versions.map((v, vi) => (
+                      <div key={vi} style={{ marginBottom: "4px" }}>
+                        <div style={{ fontSize: "10px", color: "#6b7280", marginBottom: "2px" }}>
+                          {v.workbookName}{vi === 0 ? " · used" : ""}
+                        </div>
+                        <div style={{ fontSize: "11px", color: vi === 0 ? "#fcd34d" : "#4b5563", fontFamily: "monospace", background: "#040d08", padding: "6px 10px", borderRadius: "4px", opacity: vi === 0 ? 1 : 0.6 }}>
+                          {v.formula.length > 160 ? v.formula.slice(0, 160) + "…" : v.formula}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ padding: "14px 18px", background: "rgba(5,150,105,0.05)", border: "1px solid rgba(5,150,105,0.15)", borderRadius: "8px", marginBottom: "20px", fontSize: "12px", color: "#34d399" }}>
+                No conflicts — all shared fields are identical across workbooks ✓
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                style={{ flex: 1, padding: "14px", background: "linear-gradient(135deg, #059669, #0891b2)", border: "none", borderRadius: "10px", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em", boxShadow: "0 4px 20px #05966944" }}
+                onClick={proceedFromConflicts}
+              >
+                Continue to preview →
+              </button>
+              <button
+                style={{ padding: "14px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", color: "#6b7280", fontSize: "13px", cursor: "pointer" }}
+                onClick={resetApp}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── RESULTS ── */}
         {stage === "results" && outputFiles && (
           <div>
@@ -944,7 +1471,7 @@ export default function App() {
             </div>
 
             <div style={styles.tabs}>
-              {["report", "models", "schema", "metrics", "sources"].map((t) => (
+              {["report", "models", "schema", "metrics", "sources", ...(outputFiles["conflict_report.md"] ? ["conflicts"] : [])].map((t) => (
                 <button
                   key={t}
                   style={{ ...styles.tab, ...(activeTab === t ? styles.tabActive : {}) }}
@@ -954,6 +1481,7 @@ export default function App() {
                     : t === "models" ? "SQL Models"
                     : t === "schema" ? "schema.yml"
                     : t === "metrics" ? "metrics.yml"
+                    : t === "conflicts" ? "⚠ Conflicts"
                     : "sources.yml"}
                 </button>
               ))}
@@ -1045,6 +1573,17 @@ export default function App() {
               </div>
             )}
 
+            {activeTab === "conflicts" && outputFiles["conflict_report.md"] && (
+              <div>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+                  <button style={styles.btnSecondary} onClick={() => downloadFile("conflict_report.md", outputFiles["conflict_report.md"])}>
+                    Download conflict_report.md
+                  </button>
+                </div>
+                <div style={styles.code}>{outputFiles["conflict_report.md"]}</div>
+              </div>
+            )}
+
             {activeTab === "sources" && (
               <div>
                 <div style={{ marginBottom: "16px", padding: "12px 16px", background: "#071e2a", border: "1px solid #0891b230", borderRadius: "6px", borderLeft: "3px solid #0891b2" }}>
@@ -1073,6 +1612,16 @@ export default function App() {
             )}
           </div>
         )}
+      </div>
+
+      {/* Email capture */}
+      <EmailCapture />
+
+      {/* Footer */}
+      <div style={{ borderTop: "1px solid #0d2b1e", padding: "16px 32px", textAlign: "center", fontSize: "10px", color: "#374151", letterSpacing: "0.04em", display: "flex", justifyContent: "center", gap: "24px" }}>
+        <span>Not affiliated with or endorsed by Salesforce or Tableau.</span>
+        <a href="/privacy" style={{ color: "#374151", textDecoration: "none" }}>Privacy</a>
+        <a href="/terms" style={{ color: "#374151", textDecoration: "none" }}>Terms</a>
       </div>
 
       <style>{`
