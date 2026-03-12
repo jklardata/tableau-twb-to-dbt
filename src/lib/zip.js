@@ -12,7 +12,7 @@ import {
   generateDbtProjectYml,
 } from "./engine.js";
 
-export async function buildZip(calcs, xmlString, workbookName, grainConfig = {}) {
+export async function buildZip(calcs, xmlString, workbookName, grainConfig = {}, dialect = "Snowflake") {
   const datasources = groupByDatasource(calcs);
   const files = {};
 
@@ -20,24 +20,24 @@ export async function buildZip(calcs, xmlString, workbookName, grainConfig = {})
     const allCalcs = [...(ds.aggregates || []), ...(ds.rowLevel || [])];
     const grain = grainConfig[ds.slug] || null;
 
-    files[`staging/stg_${ds.slug}.sql`] = generateStagingModel(ds, allCalcs);
+    files[`staging/stg_${ds.slug}.sql`] = generateStagingModel(ds, allCalcs, dialect);
 
     if (ds.aggregates?.length > 0) {
-      files[`marts/fct_${ds.slug}.sql`] = generateFctModel(ds, ds.aggregates, grain);
+      files[`marts/fct_${ds.slug}.sql`] = generateFctModel(ds, ds.aggregates, grain, dialect);
     }
     if (ds.rowLevel?.length > 0) {
-      files[`marts/dim_${ds.slug}.sql`] = generateDimModel(ds, ds.rowLevel);
+      files[`marts/dim_${ds.slug}.sql`] = generateDimModel(ds, ds.rowLevel, dialect);
     }
   });
 
   files["schema.yml"] = generateSchemaYaml(datasources);
   files["metrics.yml"] = generateMetricsYml(datasources);
-  files["translation_report.md"] = generateReport(calcs);
-  files["SETUP.md"] = generateSetupMd(calcs, workbookName);
+  files["translation_report.md"] = generateReport(calcs, dialect);
+  files["SETUP.md"] = generateSetupMd(calcs, workbookName, dialect);
   files["dbt_project.yml"] = generateDbtProjectYml(calcs, workbookName);
 
   if (xmlString) {
-    const sourcesYaml = generateSourcesYaml([], xmlString);
+    const sourcesYaml = generateSourcesYaml([], xmlString, dialect);
     if (sourcesYaml) files["sources.yml"] = sourcesYaml;
   }
 

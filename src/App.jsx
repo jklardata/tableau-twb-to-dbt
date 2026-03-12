@@ -10,6 +10,7 @@ import {
   claudeTranslate,
   isAggregate,
   groupByDatasource,
+  translateLOD,
 } from "./lib/engine.js";
 import { buildZip, downloadAllAsZip } from "./lib/zip.js";
 import Badge from "./components/Badge.jsx";
@@ -201,6 +202,8 @@ export default function App() {
   const [emailCaptured, setEmailCaptured] = useState(false);
   const [paidSession, setPaidSession] = useState(false);
   const [grainConfig, setGrainConfig] = useState({});
+  const [dialect, setDialect] = useState("Snowflake");
+  const [previewModel, setPreviewModel] = useState(null);
   const fileRef = useRef();
 
   // Check for Stripe success redirect
@@ -267,9 +270,17 @@ export default function App() {
 
       const withRuleTranslation = classified.map((c) => {
         if (["skip", "untranslatable"].includes(c.complexity)) return c;
-        const ruleSql = ruleBasedTranslate(c.formula, internalIdMap);
-        const { needs, reasons } = needsClaude(c, ruleSql);
-        return { ...c, ruleSql, needsClaude: needs, claudeReasons: reasons };
+        const ruleSql = ruleBasedTranslate(c.formula, internalIdMap, dialect);
+        // For LOD expressions, generate a CTE template rule-based
+        const lodResult = c.complexity === "complex" ? translateLOD(c.formula, internalIdMap, dialect) : null;
+        const calcWithLod = {
+          ...c,
+          ruleSql: lodResult ? lodResult.sql : ruleSql,
+          lodCte: lodResult?.cteTemplate || null,
+          lodNote: lodResult?.note || null,
+        };
+        const { needs, reasons } = needsClaude(calcWithLod, calcWithLod.ruleSql);
+        return { ...calcWithLod, needsClaude: needs, claudeReasons: reasons };
       });
 
       const needsClaudeCount = withRuleTranslation.filter((c) => c.needsClaude).length;
@@ -283,7 +294,7 @@ export default function App() {
       addLog(`Error: ${err.message}`, "error");
       setStage("upload");
     }
-  }, []);
+  }, [dialect]);
 
   const handleDrop = useCallback(
     (e) => {
@@ -291,7 +302,7 @@ export default function App() {
       const file = e.dataTransfer.files[0];
       if (file) handleFile(file);
     },
-    [handleFile]
+    [handleFile, dialect]
   );
 
   const runTranslation = useCallback(async () => {
@@ -325,7 +336,7 @@ export default function App() {
         addLog(`AI batch ${bi + 1}/${batches.length} (${batch.length} calcs)...`, "info");
 
         try {
-          const results = await claudeTranslate(batch, "Snowflake");
+          const results = await claudeTranslate(batch, dialect);
           results.forEach((r) => {
             const origCalc = batch[r.calc_index];
             if (!origCalc) return;
@@ -354,7 +365,7 @@ export default function App() {
 
     setCalcs(updatedCalcs);
     addLog("Generating output files...", "info");
-    const files = await buildZip(updatedCalcs, xmlString, selectedFile?.replace(/\.(twb|twbx)$/i, ""), grainConfig);
+    const files = await buildZip(updatedCalcs, xmlString, selectedFile?.replace(/\.(twb|twbx)$/i, ""), grainConfig, dialect);
     if (files["sources.yml"]) addLog("sources.yml generated ✓", "success");
     setOutputFiles(files);
 
@@ -364,7 +375,7 @@ export default function App() {
     addLog(`Done! ${translatedCount} models ready for dbt.`, "success");
     setActiveTab("report");
     setStage("results");
-  }, [calcs, xmlString, grainConfig]);
+  }, [calcs, xmlString, grainConfig, dialect]);
 
   const downloadFile = (filename, content) => {
     const blob = new Blob([content], { type: "text/plain" });
@@ -411,6 +422,7 @@ export default function App() {
     setLog([]);
     setExpandedCalc(null);
     setGrainConfig({});
+    setPreviewModel(null);
     setPaidSession(false);
   };
 
@@ -461,6 +473,32 @@ export default function App() {
                 and get a complete, layered dbt package — staging models, consolidated mart models, a MetricFlow semantic layer,
                 schema tests, and source definitions — structured for reuse across any report, not just the one you're migrating.
               </div>
+            </div>
+
+            {/* Dialect selector */}
+            <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={{ fontSize: "11px", color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase" }}>Target warehouse</span>
+              {["Snowflake", "BigQuery"].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDialect(d)}
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    fontFamily: "inherit",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    letterSpacing: "0.04em",
+                    border: dialect === d ? "1px solid #34d399" : "1px solid #0d2b1e",
+                    background: dialect === d ? "#05966918" : "transparent",
+                    color: dialect === d ? "#34d399" : "#4b5563",
+                    transition: "all 0.15s",
+                  }}
+                >
+                  {d}
+                </button>
+              ))}
             </div>
 
             {/* Dropzone */}
@@ -896,29 +934,49 @@ export default function App() {
             )}
 
             {activeTab === "models" && (
-              <div style={styles.fileList}>
-                {/* Staging models */}
-                <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "4px" }}>Staging</div>
-                {Object.entries(outputFiles)
-                  .filter(([k]) => k.startsWith("staging/"))
-                  .map(([filename, content]) => (
-                    <div key={filename} style={styles.fileItem}>
-                      <span style={styles.fileName}>{filename}</span>
-                      <Badge type="simple" label="STAGING" />
-                      <button style={styles.btnSecondary} onClick={() => downloadFile(filename.split("/").pop(), content)}>Download</button>
-                    </div>
-                  ))}
-                {/* Mart models */}
-                <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "16px" }}>Marts</div>
-                {Object.entries(outputFiles)
-                  .filter(([k]) => k.startsWith("marts/"))
-                  .map(([filename, content]) => (
-                    <div key={filename} style={styles.fileItem}>
-                      <span style={styles.fileName}>{filename}</span>
-                      <Badge type="moderate" label="MART" />
-                      <button style={styles.btnSecondary} onClick={() => downloadFile(filename.split("/").pop(), content)}>Download</button>
-                    </div>
-                  ))}
+              <div>
+                <div style={styles.fileList}>
+                  {/* Staging models */}
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "4px" }}>Staging</div>
+                  {Object.entries(outputFiles)
+                    .filter(([k]) => k.startsWith("staging/"))
+                    .map(([filename, content]) => (
+                      <div key={filename}>
+                        <div
+                          style={{ ...styles.fileItem, cursor: "pointer", borderColor: previewModel === filename ? "#34d399" : "#0d2b1e" }}
+                          onClick={() => setPreviewModel(previewModel === filename ? null : filename)}
+                        >
+                          <span style={styles.fileName}>{filename}</span>
+                          <Badge type="simple" label="STAGING" />
+                          <span style={{ fontSize: "10px", color: "#4b5563" }}>{previewModel === filename ? "▲ hide" : "▼ preview"}</span>
+                          <button style={styles.btnSecondary} onClick={(e) => { e.stopPropagation(); downloadFile(filename.split("/").pop(), content); }}>Download</button>
+                        </div>
+                        {previewModel === filename && (
+                          <div style={{ ...styles.code, marginTop: "2px", borderTop: "none", borderRadius: "0 0 6px 6px" }}>{content}</div>
+                        )}
+                      </div>
+                    ))}
+                  {/* Mart models */}
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "16px" }}>Marts</div>
+                  {Object.entries(outputFiles)
+                    .filter(([k]) => k.startsWith("marts/"))
+                    .map(([filename, content]) => (
+                      <div key={filename}>
+                        <div
+                          style={{ ...styles.fileItem, cursor: "pointer", borderColor: previewModel === filename ? "#34d399" : "#0d2b1e" }}
+                          onClick={() => setPreviewModel(previewModel === filename ? null : filename)}
+                        >
+                          <span style={styles.fileName}>{filename}</span>
+                          <Badge type="moderate" label={filename.includes("/fct_") ? "FCT" : "DIM"} />
+                          <span style={{ fontSize: "10px", color: "#4b5563" }}>{previewModel === filename ? "▲ hide" : "▼ preview"}</span>
+                          <button style={styles.btnSecondary} onClick={(e) => { e.stopPropagation(); downloadFile(filename.split("/").pop(), content); }}>Download</button>
+                        </div>
+                        {previewModel === filename && (
+                          <div style={{ ...styles.code, marginTop: "2px", borderTop: "none", borderRadius: "0 0 6px 6px" }}>{content}</div>
+                        )}
+                      </div>
+                    ))}
+                </div>
               </div>
             )}
 

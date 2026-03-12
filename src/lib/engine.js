@@ -207,23 +207,37 @@ export function annotateParams(formula) {
   });
 }
 
-export function ruleBasedTranslate(formula, idMap) {
+export function ruleBasedTranslate(formula, idMap, dialect = "Snowflake") {
   let sql = formula;
   sql = sql.replace(/\/\/[^\n\r]*/g, "");
   sql = sql.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
   sql = resolveInternalRefs(sql, idMap);
   sql = annotateParams(sql);
   sql = sql.replace(/\[([^\]]+)\]/g, (_, f) => slugify(f));
-  sql = sql.replace(/\bDateTRUNC\b/gi, "DATE_TRUNC");
-  sql = sql.replace(/\bDATETRUNC\b/gi, "DATE_TRUNC");
-  sql = sql.replace(/\bTODAY\(\)/gi, "CURRENT_DATE");
-  sql = sql.replace(/\bNOW\(\)/gi, "CURRENT_TIMESTAMP");
   sql = sql.replace(/\bCOUNTD\(/gi, "COUNT(DISTINCT ");
-  sql = sql.replace(/\bIIF\(/gi, "IFF(");
   sql = sql.replace(/\bLEN\(/gi, "LENGTH(");
   sql = sql.replace(/\bISNULL\(([^)]+)\)/gi, "($1 IS NULL)");
   sql = sql.replace(/"([^"]*)"/g, "'$1'");
-  sql = sql.replace(/#(\d{4}-\d{2}-\d{2})#/g, "'$1'::DATE");
+
+  if (dialect === "BigQuery") {
+    sql = sql.replace(/\bTODAY\(\)/gi, "CURRENT_DATE()");
+    sql = sql.replace(/\bNOW\(\)/gi, "CURRENT_TIMESTAMP()");
+    sql = sql.replace(/#(\d{4}-\d{2}-\d{2})#/g, "DATE('$1')");
+    sql = sql.replace(/\bIIF\(/gi, "IF(");
+    // DATE_TRUNC: Tableau DATETRUNC('month', field) → BigQuery DATE_TRUNC(field, MONTH)
+    sql = sql.replace(/\bDATETRUNC\b/gi, "DATE_TRUNC");
+    sql = sql.replace(/DATE_TRUNC\s*\(\s*'([^']+)'\s*,\s*([^)]+?)\s*\)/gi, (_, unit, col) =>
+      `DATE_TRUNC(${col.trim()}, ${unit.toUpperCase()})`
+    );
+  } else {
+    // Snowflake (default)
+    sql = sql.replace(/\bTODAY\(\)/gi, "CURRENT_DATE");
+    sql = sql.replace(/\bNOW\(\)/gi, "CURRENT_TIMESTAMP");
+    sql = sql.replace(/#(\d{4}-\d{2}-\d{2})#/g, "'$1'::DATE");
+    sql = sql.replace(/\bIIF\(/gi, "IFF(");
+    sql = sql.replace(/\bDATETRUNC\b/gi, "DATE_TRUNC");
+  }
+
   sql = sql.replace(/\n\s*\n/g, "\n").replace(/[ \t]+/g, " ").trim();
   return sql;
 }
@@ -241,6 +255,92 @@ export function findDependencies(formula, idMap) {
 }
 
 // ================================================================
+// LOD EXPRESSION PARSER & TRANSLATOR
+// ================================================================
+
+export function parseLOD(formula) {
+  const match = formula.match(
+    /\{\s*(FIXED|INCLUDE|EXCLUDE)\s*((?:\[[^\]]*\](?:\s*,\s*)?)*)\s*:\s*([\s\S]+?)\s*\}/i
+  );
+  if (!match) return null;
+  const type = match[1].toUpperCase();
+  const dimsPart = match[2].trim();
+  const exprPart = match[3].trim();
+  const dims = dimsPart
+    ? dimsPart.split(",").map((d) => d.trim().replace(/^\[|\]$/g, "")).filter(Boolean)
+    : [];
+  return { type, dims, exprPart };
+}
+
+export function translateLOD(formula, idMap = {}, dialect = "Snowflake") {
+  const lod = parseLOD(formula);
+  if (!lod) return null;
+
+  const { type, dims, exprPart } = lod;
+  const dimsSlug = dims.map((d) => slugify(resolveInternalRefs(d, idMap)));
+  const innerSql = ruleBasedTranslate(exprPart, idMap, dialect);
+
+  if (type === "FIXED") {
+    if (dimsSlug.length === 0) {
+      // Table-scoped FIXED — simple scalar aggregate, no CTE needed
+      return {
+        sql: innerSql,
+        cteTemplate: null,
+        note: "Table-scoped FIXED LOD (no dimensions) — scalar aggregate over entire table",
+      };
+    }
+    const cteName = `lod_${dimsSlug.join("_")}`;
+    const dimList = dimsSlug.join(", ");
+    const groupByNums = dimsSlug.map((_, i) => i + 1).join(", ");
+    const cteLines = [
+      `-- FIXED LOD: aggregated at [${dims.join(", ")}] grain`,
+      `${cteName} as (`,
+      `    select`,
+      `        ${dimList},`,
+      `        ${innerSql} as lod_value`,
+      `    from {{ ref('stg_TODO') }}`,
+      `    group by ${groupByNums}`,
+      `)`,
+    ].join("\n");
+    return {
+      sql: `${cteName}.lod_value  -- FIXED LOD: LEFT JOIN ${cteName} ON t.${dimsSlug[0]} = ${cteName}.${dimsSlug[0]}`,
+      cteTemplate: cteLines,
+      note: `FIXED LOD aggregated at [${dims.join(", ")}] grain`,
+    };
+  }
+
+  if (type === "INCLUDE") {
+    const dimList = dimsSlug.join(", ");
+    return {
+      sql: `${innerSql}  -- INCLUDE LOD: add ${dimList} to GROUP BY`,
+      cteTemplate: null,
+      note: `INCLUDE LOD — add [${dims.join(", ")}] to fct_ GROUP BY`,
+    };
+  }
+
+  if (type === "EXCLUDE") {
+    const cteName = `lod_excl_${dimsSlug.join("_") || "coarse"}`;
+    const cteLines = [
+      `-- EXCLUDE LOD: aggregate WITHOUT [${dims.join(", ")}]`,
+      `${cteName} as (`,
+      `    select`,
+      `        /* TODO: remaining grain columns */,`,
+      `        ${innerSql} as lod_value`,
+      `    from {{ ref('stg_TODO') }}`,
+      `    group by 1  -- exclude [${dims.join(", ")}] from grain`,
+      `)`,
+    ].join("\n");
+    return {
+      sql: `${cteName}.lod_value  -- EXCLUDE LOD: coarser grain, wire CTE + join`,
+      cteTemplate: cteLines,
+      note: `EXCLUDE LOD — aggregates without [${dims.join(", ")}]. Wire ${cteName} CTE.`,
+    };
+  }
+
+  return null;
+}
+
+// ================================================================
 // PHASE 4: NEEDS CLAUDE?
 // ================================================================
 
@@ -250,7 +350,7 @@ export function needsClaude(calc, ruleSql) {
   if (/unresolved:/.test(ruleSql)) reasons.push("Unresolved internal refs");
   if (calc.formula.length > 300) reasons.push("Complex multi-step formula");
   if (/queue_duration\s*\/\s*queue_duration/i.test(ruleSql)) reasons.push("Self-division pattern (count trick)");
-  if (calc.complexity === "complex") reasons.push("LOD expression");
+  if (calc.complexity === "complex" && !calc.lodNote) reasons.push("LOD expression — needs manual CTE wiring");
   if ((ruleSql.match(/🔧 PARAM/g) || []).length > 2) reasons.push("Heavy parameter dependency");
   return { needs: reasons.length > 0, reasons };
 }
@@ -370,21 +470,26 @@ function extractRawRefs(calcs) {
 }
 
 // staging/stg_{slug}.sql
-export function generateStagingModel(ds, calcs) {
+export function generateStagingModel(ds, calcs, dialect = "Snowflake") {
   const rawRefs = extractRawRefs(calcs);
   const colList = rawRefs.length
     ? rawRefs.map((r) => `        ${r},`).join("\n")
     : "        *  -- TODO: replace with explicit column list";
+
+  const tableNote = dialect === "BigQuery"
+    ? "-- [ ] Replace TODO_TABLE with your BigQuery table name (project.dataset.table)"
+    : "-- [ ] Replace TODO_TABLE with your actual Snowflake table name";
 
   return `{{ config(materialized='view') }}
 
 -- ============================================================
 -- Staging model: stg_${ds.slug}
 -- Source: ${ds.caption}
+-- Dialect: ${dialect}
 -- Generated: ${new Date().toISOString().slice(0, 10)}
 -- ============================================================
 -- ⚠️  REVIEW CHECKLIST:
--- [ ] Replace TODO_TABLE with your actual Snowflake table name
+${tableNote}
 -- [ ] Replace * with explicit column list
 -- [ ] Add type casting for dates, booleans, and IDs
 -- [ ] Add renamed/cleaned column aliases where needed
@@ -411,27 +516,41 @@ select * from final
 }
 
 // marts/fct_{slug}.sql — aggregate calcs only, requires grain to generate valid SQL
-export function generateFctModel(ds, aggregates, grain) {
+export function generateFctModel(ds, aggregates, grain, dialect = "Snowflake") {
   const grainCols = grain?.cols?.trim();
   const grainComment = grain?.note?.trim();
 
+  // Collect LOD CTEs from aggregate calcs, replacing stg_TODO placeholder
+  const lodCteClauses = aggregates
+    .filter((c) => c.lodCte)
+    .map((c) => c.lodCte.replace(/stg_TODO/g, `stg_${ds.slug}`));
+
   const columnLines = aggregates.map((c) => {
     const sql = c.finalSql || c.ruleSql || "-- translation failed";
-    const aiNote = c.translatedByClaude ? " -- ✨ AI-refined" : "";
+    const aiNote = c.translatedByClaude ? " -- AI-refined" : "";
     const grainHint = c.suggestedGrain ? ` -- suggested grain: ${c.suggestedGrain}` : "";
-    return `        -- ${c.caption}\n        ${sql} as ${c.slug},${aiNote}${grainHint}`;
+    const lodHint = c.lodNote ? ` -- ${c.lodNote}` : "";
+    return `        -- ${c.caption}\n        ${sql} as ${c.slug},${aiNote}${grainHint}${lodHint}`;
   });
 
   const paramCalcs = aggregates.filter((c) => c.finalSql?.includes("🔧 PARAM"));
 
-  // Build GROUP BY from grain config
+  const grainPlaceholder = dialect === "BigQuery"
+    ? `        -- TODO: add grain columns, e.g. DATE_TRUNC(order_date, MONTH), region`
+    : `        -- TODO: add grain columns, e.g. date_trunc('month', order_date), region`;
+
   const grainLines = grainCols
     ? grainCols.split(",").map((g) => `        ${g.trim()},`).join("\n")
-    : `        -- TODO: add grain columns, e.g. date_trunc('month', order_date), region`;
+    : grainPlaceholder;
 
   const groupByNums = grainCols
     ? Array.from({ length: grainCols.split(",").length }, (_, i) => i + 1).join(", ")
     : "/* column numbers */";
+
+  const withClauses = [
+    `stg as (\n    select * from {{ ref('stg_${ds.slug}') }}\n)`,
+    ...lodCteClauses,
+  ].join(",\n\n");
 
   return `{{ config(materialized='table') }}
 
@@ -439,6 +558,7 @@ export function generateFctModel(ds, aggregates, grain) {
 -- Model: fct_${ds.slug}
 -- Source: ${ds.caption}
 -- Type: Aggregate fact model — ${aggregates.length} metrics
+-- Dialect: ${dialect}
 -- Grain: ${grainComment || grainCols || "NOT SET — add grain columns before running"}
 -- Generated: ${new Date().toISOString().slice(0, 10)}
 -- ============================================================
@@ -446,12 +566,11 @@ export function generateFctModel(ds, aggregates, grain) {
 -- [ ] Confirm grain columns match your intended aggregation level
 -- [ ] Remove trailing comma from the last metric column
 ${paramCalcs.map((c) => `-- [ ] Resolve 🔧 PARAM in: ${c.slug}`).join("\n")}
+${lodCteClauses.length ? `-- [ ] Review ${lodCteClauses.length} LOD CTE(s) above — update stg references as needed` : ""}
 -- [ ] Validate each metric against your Tableau dashboard
 -- ============================================================
 
-with stg as (
-    select * from {{ ref('stg_${ds.slug}') }}
-),
+with ${withClauses},
 
 final as (
     select
@@ -470,14 +589,25 @@ select * from final
 }
 
 // marts/dim_{slug}.sql — row-level expressions only, no GROUP BY needed
-export function generateDimModel(ds, rowLevel) {
+export function generateDimModel(ds, rowLevel, dialect = "Snowflake") {
+  // Collect any LOD CTEs (rare in dim_ but possible for INCLUDE LODs)
+  const lodCteClauses = rowLevel
+    .filter((c) => c.lodCte)
+    .map((c) => c.lodCte.replace(/stg_TODO/g, `stg_${ds.slug}`));
+
   const columnLines = rowLevel.map((c) => {
     const sql = c.finalSql || c.ruleSql || "-- translation failed";
-    const aiNote = c.translatedByClaude ? " -- ✨ AI-refined" : "";
-    return `        -- ${c.caption}\n        ${sql} as ${c.slug},${aiNote}`;
+    const aiNote = c.translatedByClaude ? " -- AI-refined" : "";
+    const lodHint = c.lodNote ? ` -- ${c.lodNote}` : "";
+    return `        -- ${c.caption}\n        ${sql} as ${c.slug},${aiNote}${lodHint}`;
   });
 
   const paramCalcs = rowLevel.filter((c) => c.finalSql?.includes("🔧 PARAM"));
+
+  const withClauses = [
+    `stg as (\n    select * from {{ ref('stg_${ds.slug}') }}\n)`,
+    ...lodCteClauses,
+  ].join(",\n\n");
 
   return `{{ config(materialized='view') }}
 
@@ -485,6 +615,7 @@ export function generateDimModel(ds, rowLevel) {
 -- Model: dim_${ds.slug}
 -- Source: ${ds.caption}
 -- Type: Row-level dimension model — ${rowLevel.length} expressions
+-- Dialect: ${dialect}
 -- No aggregation — safe to join to any grain
 -- Generated: ${new Date().toISOString().slice(0, 10)}
 -- ============================================================
@@ -495,9 +626,7 @@ ${paramCalcs.map((c) => `-- [ ] Resolve 🔧 PARAM in: ${c.slug}`).join("\n")}
 -- [ ] Validate expressions match Tableau calculated field output
 -- ============================================================
 
-with stg as (
-    select * from {{ ref('stg_${ds.slug}') }}
-),
+with ${withClauses},
 
 final as (
     select
@@ -801,7 +930,7 @@ function suggestWindowRewrite(formula, caption) {
   };
 }
 
-export function generateReport(calcs) {
+export function generateReport(calcs, dialect = "Snowflake") {
   const translatable = calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity));
   const untranslatable = calcs.filter((c) => c.complexity === "untranslatable");
   const claudeRefined = calcs.filter((c) => c.translatedByClaude);
@@ -839,7 +968,9 @@ export function generateReport(calcs) {
       `### \`${c.slug}\` — ${c.complexity.toUpperCase()}${c.translatedByClaude ? " ✨" : ""}`,
       `**Original:** ${c.caption}`,
       `**Tableau:**\n\`\`\`\n${c.formula.slice(0, 300)}\n\`\`\``,
-      `**Snowflake SQL:**\n\`\`\`sql\n${c.finalSql || "-- failed"}\n\`\`\``,
+      `**${dialect} SQL:**\n\`\`\`sql\n${c.finalSql || "-- failed"}\n\`\`\``,
+      c.lodNote ? `**LOD:** ${c.lodNote}` : "",
+      c.lodCte ? `**LOD CTE template:**\n\`\`\`sql\n${c.lodCte}\n\`\`\`` : "",
       c.dbtDescription ? `**Description:** ${c.dbtDescription}` : "",
       c.aeRecommendations?.length ? `**AE Notes:**\n${c.aeRecommendations.map((r) => `- ${r}`).join("\n")}` : "",
       c.dependsOn?.length ? `**Depends on:** ${c.dependsOn.join(", ")}` : "",
@@ -858,7 +989,7 @@ export function generateReport(calcs) {
         c.formula.slice(0, 300),
         `\`\`\``,
         `**Why untranslatable:** ${hint.reason}`,
-        `**Suggested Snowflake rewrite:**`,
+        `**Suggested ${dialect} rewrite:**`,
         `\`\`\`sql`,
         hint.sql,
         `\`\`\``,
@@ -927,17 +1058,24 @@ export function parseSources(xmlString) {
   return sources;
 }
 
-export function generateSourcesYaml(_, xmlString) {
+export function generateSourcesYaml(_, xmlString, dialect = "Snowflake") {
   const parsed = parseSources(xmlString);
   if (!parsed.length) return null;
 
+  const dbNote = dialect === "BigQuery"
+    ? "# 1. Replace TODO_DATABASE with your GCP project ID"
+    : "# 1. Replace TODO_DATABASE with your Snowflake database name";
+  const schemaNote = dialect === "BigQuery"
+    ? "# 2. Replace TODO_SCHEMA with your BigQuery dataset name"
+    : "# 2. Replace TODO_SCHEMA with your Snowflake schema name";
+
   const lines = [
     "# ============================================================",
-    "# sources.yml — generated by Tableau → dbt Exporter",
+    `# sources.yml — generated by Tableau → dbt Exporter (${dialect})`,
     "# ============================================================",
     "# SETUP REQUIRED:",
-    "# 1. Replace TODO_DATABASE with your Snowflake database name",
-    "# 2. Replace TODO_SCHEMA with your Snowflake schema name",
+    dbNote,
+    schemaNote,
     "# 3. Replace TODO_TABLE with your actual table name(s)",
     "# 4. Run: dbt source freshness  (to validate connection)",
     "# ============================================================",
@@ -983,7 +1121,7 @@ export function generateSourcesYaml(_, xmlString) {
 // SETUP.md — workbook-specific setup instructions
 // ================================================================
 
-export function generateSetupMd(calcs, workbookName) {
+export function generateSetupMd(calcs, workbookName, dialect = "Snowflake") {
   const datasources = groupByDatasource(calcs);
   const untranslatable = calcs.filter((c) => c.complexity === "untranslatable");
   const totalCalcs = datasources.reduce((n, ds) => n + ds.measures.length + ds.dimensions.length, 0);
@@ -1042,7 +1180,7 @@ export function generateSetupMd(calcs, workbookName) {
     "```sql",
     `select * from {{ source('${datasources[0]?.slug || "your_source"}', 'TODO_TABLE') }}`,
     "```",
-    "Replace `TODO_TABLE` with the actual Snowflake table name you set in sources.yml.",
+    `Replace \`TODO_TABLE\` with the actual ${dialect} table name you set in sources.yml.`,
     "",
     "---",
     "",
