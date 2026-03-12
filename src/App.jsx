@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import JSZip from "jszip";
 import {
   parseTWB,
   scanTWB,
@@ -7,6 +8,8 @@ import {
   findDependencies,
   needsClaude,
   claudeTranslate,
+  isAggregate,
+  groupByDatasource,
 } from "./lib/engine.js";
 import { buildZip, downloadAllAsZip } from "./lib/zip.js";
 import Badge from "./components/Badge.jsx";
@@ -197,6 +200,7 @@ export default function App() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailCaptured, setEmailCaptured] = useState(false);
   const [paidSession, setPaidSession] = useState(false);
+  const [grainConfig, setGrainConfig] = useState({});
   const fileRef = useRef();
 
   // Check for Stripe success redirect
@@ -232,7 +236,17 @@ export default function App() {
     addLog(`Parsing ${file.name}...`);
 
     try {
-      const xmlText = await file.text();
+      let xmlText;
+      if (file.name.toLowerCase().endsWith(".twbx")) {
+        addLog("Detected .twbx — extracting inner workbook...", "info");
+        const zip = await JSZip.loadAsync(file);
+        const twbEntry = Object.values(zip.files).find((f) => f.name.endsWith(".twb") && !f.dir);
+        if (!twbEntry) throw new Error("No .twb found inside .twbx archive");
+        xmlText = await twbEntry.async("string");
+        addLog("Extracted .twb from .twbx ✓", "success");
+      } else {
+        xmlText = await file.text();
+      }
       const { calcs: parsed, internalIdMap } = parseTWB(xmlText);
       setXmlString(xmlText);
       addLog(`Found ${parsed.length} unique calculated fields`, "success");
@@ -325,6 +339,8 @@ export default function App() {
                     aeRecommendations: r.ae_recommendations || [],
                     claudeConfidence: r.confidence,
                     whatChanged: r.what_changed,
+                    calcType: r.calc_type || null,
+                    suggestedGrain: r.suggested_grain || null,
                   }
                 : c
             );
@@ -338,7 +354,7 @@ export default function App() {
 
     setCalcs(updatedCalcs);
     addLog("Generating output files...", "info");
-    const files = await buildZip(updatedCalcs, xmlString, selectedFile?.replace(/\.(twb|twbx)$/i, ""));
+    const files = await buildZip(updatedCalcs, xmlString, selectedFile?.replace(/\.(twb|twbx)$/i, ""), grainConfig);
     if (files["sources.yml"]) addLog("sources.yml generated ✓", "success");
     setOutputFiles(files);
 
@@ -348,7 +364,7 @@ export default function App() {
     addLog(`Done! ${translatedCount} models ready for dbt.`, "success");
     setActiveTab("report");
     setStage("results");
-  }, [calcs, xmlString]);
+  }, [calcs, xmlString, grainConfig]);
 
   const downloadFile = (filename, content) => {
     const blob = new Blob([content], { type: "text/plain" });
@@ -394,6 +410,7 @@ export default function App() {
     setScanResults(null);
     setLog([]);
     setExpandedCalc(null);
+    setGrainConfig({});
     setPaidSession(false);
   };
 
@@ -435,14 +452,14 @@ export default function App() {
             {/* Hero */}
             <div style={{ marginBottom: "36px" }}>
               <div style={{ fontSize: "28px", fontWeight: 700, color: "#f0f0f0", marginBottom: "12px", lineHeight: 1.2 }}>
-                Turn Tableau calculated fields into<br />
-                <span style={{ color: "#34d399" }}>production-ready dbt models</span>
+                Migrate Tableau to a<br />
+                <span style={{ color: "#34d399" }}>reusable dbt semantic layer</span>
               </div>
-              <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: 1.8, maxWidth: "640px" }}>
+              <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: 1.8, maxWidth: "680px" }}>
                 Analytics engineers spend days manually rewriting Tableau business logic into SQL.
                 Upload a <span style={{ color: "#9ca3af" }}>.twb</span> or <span style={{ color: "#9ca3af" }}>.twbx</span> file
-                and get a complete dbt package — Snowflake SQL, schema tests, source definitions, and a review checklist —
-                ready to drop into your project.
+                and get a complete, layered dbt package — staging models, consolidated mart models, a MetricFlow semantic layer,
+                schema tests, and source definitions — structured for reuse across any report, not just the one you're migrating.
               </div>
             </div>
 
@@ -479,48 +496,46 @@ export default function App() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "32px" }}>
                 {[
                   {
-                    file: "models/*.sql",
-                    icon: "📄",
-                    label: "One SQL model per calculated field",
-                    desc: "Each Tableau formula is converted to Snowflake SQL and wrapped in a dbt model with {{ source() }} refs already pointing to your datasource. Just fill in the table name.",
+                    file: "staging/stg_*.sql",
+                    icon: "🗂️",
+                    label: "Staging layer — one per datasource",
+                    desc: "A clean, typed view over your raw Snowflake source. Referenced by all downstream models. Source column names from your Tableau workbook are pre-populated as comments.",
+                  },
+                  {
+                    file: "marts/fct_*.sql",
+                    icon: "📐",
+                    label: "Consolidated mart model — all metrics in one place",
+                    desc: "Every translated calculated field lands in a single fct_ model per datasource — not 40 separate files. Add your grain columns and GROUP BY, and it's ready to serve any report or dashboard.",
+                  },
+                  {
+                    file: "metrics.yml",
+                    icon: "📡",
+                    label: "MetricFlow semantic layer (dbt ≥ 1.6)",
+                    desc: "A semantic_model and metric definition for every measure field. Wire up your primary key, run dbt sl validate, and your metrics are queryable across any tool connected to dbt Cloud.",
                   },
                   {
                     file: "schema.yml",
                     icon: "🧪",
-                    label: "Schema file with auto-generated tests",
-                    desc: "Every model gets a description and a not_null test. Run dbt test immediately after import to catch issues before they hit production.",
+                    label: "Schema tests for staging and marts",
+                    desc: "not_null tests on every measure column, unique + not_null on staging primary keys. Run dbt test immediately after import to validate translations before they hit production.",
                   },
                   {
                     file: "sources.yml",
                     icon: "🔌",
                     label: "Source definitions pre-filled",
-                    desc: "Datasource names are extracted from your workbook and pre-populated. You only need to add your database, schema, and table names.",
+                    desc: "Datasource names are extracted directly from your workbook XML and pre-populated. You only need to fill in database, schema, and table names.",
                   },
                   {
-                    file: "dbt_project.yml",
-                    icon: "⚙️",
-                    label: "dbt project scaffold",
-                    desc: "A ready-to-use dbt_project.yml named after your workbook, with materialization set to view and the correct model paths configured.",
-                  },
-                  {
-                    file: "SETUP.md",
+                    file: "SETUP.md + translation_report.md",
                     icon: "📋",
-                    label: "Workbook-specific setup guide",
-                    desc: "Step-by-step instructions listing every datasource detected, exactly what to fill in, and the dbt commands to run — specific to your workbook, not generic docs.",
-                  },
-                  {
-                    file: "translation_report.md",
-                    icon: "📊",
-                    label: "Full translation report",
-                    desc: "Every field documented: original Tableau formula, translated SQL, AI refinement notes, dependency chains, and a checklist of decisions the engineer needs to make.",
+                    label: "Workbook-specific docs",
+                    desc: "A step-by-step setup guide listing every datasource, grain instructions, and dbt commands — plus a full translation report with the original formula, SQL output, AI notes, and window function rewrites for untranslatable fields.",
                   },
                 ].map((item) => (
                   <div key={item.file} style={{ background: "#0a1f15", border: "1px solid #0d2b1e", borderRadius: "8px", padding: "18px 20px", display: "flex", gap: "14px" }}>
                     <div style={{ fontSize: "22px", flexShrink: 0, marginTop: "2px" }}>{item.icon}</div>
                     <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "#d1d5db" }}>{item.label}</div>
-                      </div>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#d1d5db", marginBottom: "4px" }}>{item.label}</div>
                       <div style={{ fontSize: "10px", fontFamily: "monospace", color: "#34d399", marginBottom: "6px" }}>{item.file}</div>
                       <div style={{ fontSize: "11px", color: "#4b5563", lineHeight: 1.6 }}>{item.desc}</div>
                     </div>
@@ -532,10 +547,10 @@ export default function App() {
               <div style={{ ...styles.h2, marginBottom: "20px" }}>How it works</div>
               <div style={{ display: "flex", gap: "0", marginBottom: "16px" }}>
                 {[
-                  { step: "01", label: "Parse", desc: "Reads every calculated field from the workbook XML. Resolves internal Calculation_XXXX references to human-readable names. Maps each field to its datasource." },
-                  { step: "02", label: "Classify", desc: "Sorts fields by complexity: simple expressions, date/conditional logic, LOD expressions (FIXED/INCLUDE/EXCLUDE), and table calcs that can't be translated." },
-                  { step: "03", label: "Translate", desc: "Rule-based pass converts Tableau syntax to Snowflake SQL. Complex fields go through an AI refinement pass to resolve intent, not just syntax." },
-                  { step: "04", label: "Export", desc: "Generates the full dbt package as a .zip — SQL models, YAML files, setup guide, and report. Drop it into your project and run dbt." },
+                  { step: "01", label: "Parse", desc: "Reads every calculated field from the workbook XML. Resolves Calculation_XXXX internal references to human-readable names. Maps each field to its datasource." },
+                  { step: "02", label: "Classify", desc: "Categorises fields by complexity: simple expressions, date/conditional logic, LOD expressions (FIXED/INCLUDE/EXCLUDE), and table calcs that need window function rewrites." },
+                  { step: "03", label: "Translate", desc: "Rule-based pass converts Tableau syntax to Snowflake SQL. Complex calcs go through an AI refinement pass to resolve intent, not just syntax. Dependency chains are mapped and resolved." },
+                  { step: "04", label: "Structure", desc: "Groups fields into a staging + marts layer by datasource. Generates MetricFlow metrics.yml for a queryable semantic layer. Exports everything as a .zip ready to drop into your dbt project." },
                 ].map((s, i, arr) => (
                   <div key={s.step} style={{ flex: 1, padding: "18px 20px", background: "#0a1f15", border: "1px solid #0d2b1e", borderRight: i < arr.length - 1 ? "none" : "1px solid #0d2b1e", borderRadius: i === 0 ? "8px 0 0 8px" : i === arr.length - 1 ? "0 8px 8px 0" : "0" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#34d399", letterSpacing: "0.1em", marginBottom: "6px" }}>{s.step}</div>
@@ -684,6 +699,65 @@ export default function App() {
               ))}
             </div>
 
+            {/* Grain config per datasource */}
+            {(() => {
+              const datasources = groupByDatasource(calcs);
+              const aggregateDatasources = datasources.filter((ds) => ds.aggregates?.length > 0);
+              if (aggregateDatasources.length === 0) return null;
+              return (
+                <div style={{ marginBottom: "24px", padding: "18px 20px", background: "#071e2a", border: "1px solid #0891b230", borderRadius: "8px", borderLeft: "3px solid #0891b2" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#67e8f9", marginBottom: "4px" }}>Grain configuration</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", lineHeight: 1.6, marginBottom: "14px" }}>
+                    For each datasource with aggregate metrics, specify the grain columns (comma-separated).
+                    These become the GROUP BY in your <code style={{ color: "#2dd4bf" }}>fct_</code> models.
+                    Leave blank to use a TODO placeholder.
+                  </div>
+                  {aggregateDatasources.map((ds) => {
+                    const suggestedGrains = ds.aggregates
+                      .filter((c) => c.suggestedGrain)
+                      .map((c) => c.suggestedGrain)
+                      .filter(Boolean);
+                    const hint = suggestedGrains.length > 0 ? suggestedGrains[0] : null;
+                    return (
+                      <div key={ds.slug} style={{ marginBottom: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                          <code style={{ fontSize: "12px", color: "#34d399" }}>fct_{ds.slug}</code>
+                          <span style={{ fontSize: "10px", color: "#4b5563" }}>· {ds.aggregates.length} aggregate fields</span>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder={hint ? `e.g. ${hint}` : "e.g. date_day, customer_id"}
+                          value={grainConfig[ds.slug]?.cols || ""}
+                          onChange={(e) =>
+                            setGrainConfig((prev) => ({
+                              ...prev,
+                              [ds.slug]: { ...prev[ds.slug], cols: e.target.value },
+                            }))
+                          }
+                          style={{
+                            width: "100%",
+                            background: "#040d08",
+                            border: "1px solid #0d4a2e",
+                            borderRadius: "6px",
+                            padding: "8px 12px",
+                            fontSize: "12px",
+                            color: "#e2ede8",
+                            fontFamily: "monospace",
+                            outline: "none",
+                          }}
+                        />
+                        {hint && !grainConfig[ds.slug]?.cols && (
+                          <div style={{ fontSize: "10px", color: "#34d39966", marginTop: "4px" }}>
+                            AI suggested: {hint}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             <div style={styles.h2}>Calculated Fields</div>
             {calcs
               .filter((c) => c.complexity !== "skip")
@@ -782,9 +856,9 @@ export default function App() {
 
             <div style={styles.statsRow}>
               {[
-                { num: calcs.filter((c) => c.finalSql).length, label: "Models generated", color: "#34d399" },
-                { num: calcs.filter((c) => c.translatedByClaude).length, label: "AI-refined", color: "#34d399" },
-                { num: calcs.filter((c) => c.dependsOn?.length).length, label: "Dep chains resolved", color: "#fbbf24" },
+                { num: [...new Set(calcs.filter((c) => c.datasourceSlug).map((c) => c.datasourceSlug))].length * 2, label: "Models generated", color: "#34d399" },
+                { num: calcs.filter((c) => c.finalSql).length, label: "Fields translated", color: "#34d399" },
+                { num: calcs.filter((c) => c.translatedByClaude).length, label: "AI-refined", color: "#2dd4bf" },
                 { num: calcs.filter((c) => c.complexity === "untranslatable").length, label: "Untranslatable", color: "#f87171" },
               ].map((s) => (
                 <div key={s.label} style={styles.statCard}>
@@ -795,13 +869,17 @@ export default function App() {
             </div>
 
             <div style={styles.tabs}>
-              {["report", "models", "schema", "sources"].map((t) => (
+              {["report", "models", "schema", "metrics", "sources"].map((t) => (
                 <button
                   key={t}
                   style={{ ...styles.tab, ...(activeTab === t ? styles.tabActive : {}) }}
                   onClick={() => setActiveTab(t)}
                 >
-                  {t === "report" ? "Translation Report" : t === "models" ? "SQL Models" : t === "schema" ? "schema.yml" : "sources.yml"}
+                  {t === "report" ? "Translation Report"
+                    : t === "models" ? "SQL Models"
+                    : t === "schema" ? "schema.yml"
+                    : t === "metrics" ? "metrics.yml"
+                    : "sources.yml"}
                 </button>
               ))}
             </div>
@@ -819,28 +897,28 @@ export default function App() {
 
             {activeTab === "models" && (
               <div style={styles.fileList}>
+                {/* Staging models */}
+                <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "4px" }}>Staging</div>
                 {Object.entries(outputFiles)
-                  .filter(([k]) => k.endsWith(".sql"))
-                  .map(([filename, content]) => {
-                    const calc = calcs.find((c) => `models/${c.slug}.sql` === filename);
-                    return (
-                      <div key={filename}>
-                        <div style={styles.fileItem}>
-                          <span style={styles.fileName}>{filename}</span>
-                          {calc?.translatedByClaude && <Badge type="complex" label="✨ AI" />}
-                          {calc?.complexity && <Badge type={calc.complexity} />}
-                          <button style={styles.btnSecondary} onClick={() => downloadFile(filename.split("/")[1], content)}>
-                            Download
-                          </button>
-                        </div>
-                        {calc?.translatedByClaude && calc.aeRecommendations?.length > 0 && (
-                          <div style={{ padding: "8px 14px", background: "#071a12", borderLeft: "2px solid #059669", marginBottom: "6px", fontSize: "11px", color: "#34d399" }}>
-                            AE Notes: {calc.aeRecommendations.join(" · ")}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                  .filter(([k]) => k.startsWith("staging/"))
+                  .map(([filename, content]) => (
+                    <div key={filename} style={styles.fileItem}>
+                      <span style={styles.fileName}>{filename}</span>
+                      <Badge type="simple" label="STAGING" />
+                      <button style={styles.btnSecondary} onClick={() => downloadFile(filename.split("/").pop(), content)}>Download</button>
+                    </div>
+                  ))}
+                {/* Mart models */}
+                <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "16px" }}>Marts</div>
+                {Object.entries(outputFiles)
+                  .filter(([k]) => k.startsWith("marts/"))
+                  .map(([filename, content]) => (
+                    <div key={filename} style={styles.fileItem}>
+                      <span style={styles.fileName}>{filename}</span>
+                      <Badge type="moderate" label="MART" />
+                      <button style={styles.btnSecondary} onClick={() => downloadFile(filename.split("/").pop(), content)}>Download</button>
+                    </div>
+                  ))}
               </div>
             )}
 
@@ -852,6 +930,23 @@ export default function App() {
                   </button>
                 </div>
                 <div style={styles.code}>{outputFiles["schema.yml"]}</div>
+              </div>
+            )}
+
+            {activeTab === "metrics" && (
+              <div>
+                <div style={{ marginBottom: "16px", padding: "12px 16px", background: "#071e2a", border: "1px solid #0891b230", borderRadius: "6px", borderLeft: "3px solid #0891b2" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#67e8f9", marginBottom: "4px" }}>MetricFlow semantic layer</div>
+                  <div style={{ fontSize: "11px", color: "#6b7280", lineHeight: 1.6 }}>
+                    Compatible with dbt &gt;= 1.6. Update <code style={{ color: "#2dd4bf" }}>TODO_ENTITY</code> and <code style={{ color: "#2dd4bf" }}>TODO_ID_COLUMN</code> with your primary key, then run <code style={{ color: "#2dd4bf" }}>dbt sl validate</code>.
+                  </div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
+                  <button style={styles.btnSecondary} onClick={() => downloadFile("metrics.yml", outputFiles["metrics.yml"])}>
+                    Download metrics.yml
+                  </button>
+                </div>
+                <div style={styles.code}>{outputFiles["metrics.yml"]}</div>
               </div>
             )}
 

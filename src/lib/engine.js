@@ -11,6 +11,21 @@ export function parseXML(xmlString) {
   return parser.parseFromString(xmlString, "text/xml");
 }
 
+// Returns true if the SQL expression contains an aggregate function
+export function isAggregate(sql = "") {
+  return /\b(SUM|COUNT|AVG|MIN|MAX|MEDIAN|LISTAGG|ARRAY_AGG|STDDEV|VARIANCE|APPROX_COUNT_DISTINCT)\s*\(/i.test(sql);
+}
+
+// Tries to extract a simple aggregation like SUM(col) or COUNT(DISTINCT col)
+// Returns { fn, col } or null for complex derived expressions
+function extractSimpleAgg(sql = "") {
+  const s = sql.trim();
+  const m = s.match(/^(SUM|AVG|MIN|MAX|COUNT)\s*\(\s*(?:DISTINCT\s+)?([a-z0-9_]+)\s*\)$/i);
+  if (m) return { fn: m[1].toUpperCase(), col: m[2] };
+  if (/^COUNT\s*\(\s*\*\s*\)$/i.test(s)) return { fn: "COUNT", col: "*" };
+  return null;
+}
+
 // ================================================================
 // PRIVACY SCAN
 // ================================================================
@@ -268,6 +283,10 @@ For each CALC below you are given:
 
 Return a JSON array. Each object:
 - calc_index: integer
+- calc_type: "aggregate" | "row_level"
+  - "aggregate" = expression contains SUM/COUNT/AVG/MIN/MAX or similar — must be in a GROUP BY model
+  - "row_level" = expression operates on individual rows — safe in a non-aggregated model
+- suggested_grain: for aggregates, the natural grain this metric implies (e.g. "per order_id", "per customer per month") — null for row_level
 - sql_expression: refined ${dialect} SQL expression (expression only, no SELECT/FROM)
   - Fix any issues in the rule-based attempt
   - Replace self-division tricks (x/x) with literal 1
@@ -301,62 +320,89 @@ ${formatted}`;
 }
 
 // ================================================================
-// PHASE 6: OUTPUT GENERATION
+// PHASE 6: OUTPUT GENERATION — consolidated semantic layer structure
 // ================================================================
 
-export function generateDbtModel(calc) {
-  const sql = calc.finalSql || calc.ruleSql || "-- Translation failed";
-  const depNote = calc.dependsOn?.length
-    ? `-- Dependencies: ${calc.dependsOn.join(", ")}\n    `
-    : "";
+// Group translatable calcs by datasource.
+// Splits into aggregates (SUM/COUNT/etc — need GROUP BY) and rowLevel (safe without GROUP BY).
+// NOTE: We use SQL-based detection rather than Tableau's role attribute,
+// which is unreliable and often wrong.
+export function groupByDatasource(calcs) {
+  const map = {};
+  calcs
+    .filter((c) => !["skip", "untranslatable"].includes(c.complexity) && c.finalSql)
+    .forEach((c) => {
+      const key = c.datasourceSlug || "unknown";
+      if (!map[key]) {
+        map[key] = {
+          slug: key,
+          caption: c.datasourceCaption || key,
+          aggregates: [],
+          rowLevel: [],
+        };
+      }
+      // Use calc_type from AI pass if available; otherwise detect from SQL
+      const isAgg = c.calcType === "aggregate" || (c.calcType !== "row_level" && isAggregate(c.finalSql));
+      if (isAgg) map[key].aggregates.push(c);
+      else map[key].rowLevel.push(c);
+    });
+  return Object.values(map);
+}
 
-  const cteBlock = (calc.dependsOn || [])
-    .filter((d) => d)
-    .map(
-      (dep) =>
-        `${dep} as (\n    -- Inlined dependency\n    select * from {{ ref('${dep}') }}\n)`
-    )
-    .join(",\n\n");
+// Extract raw (non-calc) field refs from formulas for a set of calcs
+function extractRawRefs(calcs) {
+  const refs = new Set();
+  calcs.forEach((c) => {
+    const matches = c.formula.matchAll(/\[([^\]]+)\]/g);
+    for (const m of matches) {
+      const ref = m[1];
+      if (
+        !ref.startsWith("Calculation_") &&
+        !ref.startsWith("Parameters") &&
+        !ref.includes("copy)_") &&
+        ref.length < 60
+      ) {
+        refs.add(slugify(ref));
+      }
+    }
+  });
+  return [...refs].slice(0, 30);
+}
 
-  const sourceRef = calc.datasourceSlug
-    ? `{{ source('${calc.datasourceSlug}', 'TODO_TABLE') }}  -- TODO: replace TODO_TABLE with your actual table`
-    : `{{ source('TODO_SOURCE', 'TODO_TABLE') }}             -- TODO: fill in source and table names`;
+// staging/stg_{slug}.sql
+export function generateStagingModel(ds, calcs) {
+  const rawRefs = extractRawRefs(calcs);
+  const colList = rawRefs.length
+    ? rawRefs.map((r) => `        ${r},`).join("\n")
+    : "        *  -- TODO: replace with explicit column list";
 
-  const reviewItems = [
-    `[ ] In sources.yml: fill in database, schema, and table name for '${calc.datasourceSlug || "TODO_SOURCE"}'`,
-    "[ ] Resolve any 🔧 PARAM placeholders (hardcode, dbt var, or seed)",
-    "[ ] Validate output matches Tableau dashboard values",
-    ...(calc.aeRecommendations || []).map((r) => `[ ] ${r}`),
-  ];
+  return `{{ config(materialized='view') }}
 
-  return `-- ============================================================
--- dbt model: ${calc.slug}
--- Source Tableau calc: ${calc.caption}
--- Tableau datasource: ${calc.datasourceCaption || "unknown"}
--- Complexity: ${calc.complexity}
+-- ============================================================
+-- Staging model: stg_${ds.slug}
+-- Source: ${ds.caption}
 -- Generated: ${new Date().toISOString().slice(0, 10)}
 -- ============================================================
--- Original Tableau formula:
-${calc.formula
-  .replace(/\r\n/g, "\n")
-  .split("\n")
-  .map((l) => `-- ${l}`)
-  .join("\n")
-  .slice(0, 600)}
--- ============================================================
 -- ⚠️  REVIEW CHECKLIST:
-${reviewItems.map((r) => `-- ${r}`).join("\n")}
+-- [ ] Replace TODO_TABLE with your actual Snowflake table name
+-- [ ] Replace * with explicit column list
+-- [ ] Add type casting for dates, booleans, and IDs
+-- [ ] Add renamed/cleaned column aliases where needed
 -- ============================================================
-
-{{ config(materialized='view') }}
 
 with source as (
-    select * from ${sourceRef}
+    select * from {{ source('${ds.slug}', 'TODO_TABLE') }}
 ),
-${cteBlock ? "\n" + cteBlock + ",\n" : ""}
+
 final as (
     select
-        ${depNote}${sql} as ${calc.slug}
+        -- TODO: add your primary key first, e.g.:
+        -- id,
+
+        -- Columns referenced by calculated fields:
+${colList}
+
+        -- Add any other columns needed downstream
     from source
 )
 
@@ -364,32 +410,273 @@ select * from final
 `;
 }
 
-export function generateSchemaYaml(calcs) {
-  const models = calcs
-    .filter((c) => c.finalSql && !["skip", "untranslatable"].includes(c.complexity))
-    .map((c) => ({
-      name: c.slug,
-      description: c.dbtDescription || `Migrated from Tableau: ${c.caption}`,
-      columns: [
-        {
-          name: c.slug,
-          description: `Original Tableau formula: ${c.formula.slice(0, 100)}`,
-          ...(c.role === "measure" ? { tests: ["not_null"] } : {}),
-        },
-      ],
-    }));
+// marts/fct_{slug}.sql — aggregate calcs only, requires grain to generate valid SQL
+export function generateFctModel(ds, aggregates, grain) {
+  const grainCols = grain?.cols?.trim();
+  const grainComment = grain?.note?.trim();
 
+  const columnLines = aggregates.map((c) => {
+    const sql = c.finalSql || c.ruleSql || "-- translation failed";
+    const aiNote = c.translatedByClaude ? " -- ✨ AI-refined" : "";
+    const grainHint = c.suggestedGrain ? ` -- suggested grain: ${c.suggestedGrain}` : "";
+    return `        -- ${c.caption}\n        ${sql} as ${c.slug},${aiNote}${grainHint}`;
+  });
+
+  const paramCalcs = aggregates.filter((c) => c.finalSql?.includes("🔧 PARAM"));
+
+  // Build GROUP BY from grain config
+  const grainLines = grainCols
+    ? grainCols.split(",").map((g) => `        ${g.trim()},`).join("\n")
+    : `        -- TODO: add grain columns, e.g. date_trunc('month', order_date), region`;
+
+  const groupByNums = grainCols
+    ? Array.from({ length: grainCols.split(",").length }, (_, i) => i + 1).join(", ")
+    : "/* column numbers */";
+
+  return `{{ config(materialized='table') }}
+
+-- ============================================================
+-- Model: fct_${ds.slug}
+-- Source: ${ds.caption}
+-- Type: Aggregate fact model — ${aggregates.length} metrics
+-- Grain: ${grainComment || grainCols || "NOT SET — add grain columns before running"}
+-- Generated: ${new Date().toISOString().slice(0, 10)}
+-- ============================================================
+-- ⚠️  REVIEW CHECKLIST:
+-- [ ] Confirm grain columns match your intended aggregation level
+-- [ ] Remove trailing comma from the last metric column
+${paramCalcs.map((c) => `-- [ ] Resolve 🔧 PARAM in: ${c.slug}`).join("\n")}
+-- [ ] Validate each metric against your Tableau dashboard
+-- ============================================================
+
+with stg as (
+    select * from {{ ref('stg_${ds.slug}') }}
+),
+
+final as (
+    select
+        -- Grain / grouping columns:
+${grainLines}
+
+        -- Aggregated metrics:
+${columnLines.join("\n\n")}
+
+    from stg
+    group by ${groupByNums}
+)
+
+select * from final
+`;
+}
+
+// marts/dim_{slug}.sql — row-level expressions only, no GROUP BY needed
+export function generateDimModel(ds, rowLevel) {
+  const columnLines = rowLevel.map((c) => {
+    const sql = c.finalSql || c.ruleSql || "-- translation failed";
+    const aiNote = c.translatedByClaude ? " -- ✨ AI-refined" : "";
+    return `        -- ${c.caption}\n        ${sql} as ${c.slug},${aiNote}`;
+  });
+
+  const paramCalcs = rowLevel.filter((c) => c.finalSql?.includes("🔧 PARAM"));
+
+  return `{{ config(materialized='view') }}
+
+-- ============================================================
+-- Model: dim_${ds.slug}
+-- Source: ${ds.caption}
+-- Type: Row-level dimension model — ${rowLevel.length} expressions
+-- No aggregation — safe to join to any grain
+-- Generated: ${new Date().toISOString().slice(0, 10)}
+-- ============================================================
+-- ⚠️  REVIEW CHECKLIST:
+-- [ ] Add your primary/join key column before the expressions
+-- [ ] Remove trailing comma from the last column
+${paramCalcs.map((c) => `-- [ ] Resolve 🔧 PARAM in: ${c.slug}`).join("\n")}
+-- [ ] Validate expressions match Tableau calculated field output
+-- ============================================================
+
+with stg as (
+    select * from {{ ref('stg_${ds.slug}') }}
+),
+
+final as (
+    select
+        -- TODO: add your primary key / join key here, e.g.:
+        -- id,
+
+        -- Row-level expressions:
+${columnLines.join("\n\n")}
+
+    from stg
+)
+
+select * from final
+`;
+}
+
+export function generateSchemaYaml(datasources) {
   const lines = ["version: 2", "", "models:"];
-  models.forEach((m) => {
-    lines.push(`  - name: ${m.name}`);
-    lines.push(`    description: "${m.description.replace(/"/g, "'")}"`);
+
+  datasources.forEach((ds) => {
+    // Staging model
+    lines.push(`  - name: stg_${ds.slug}`);
+    lines.push(`    description: "Staging layer for Tableau datasource: ${ds.caption}. Provides a clean, typed view over the raw source for downstream models."`);
     lines.push(`    columns:`);
-    m.columns.forEach((col) => {
-      lines.push(`      - name: ${col.name}`);
-      lines.push(`        description: "${col.description.replace(/"/g, "'")}"`);
-      if (col.tests) lines.push(`        tests:\n          - not_null`);
+    lines.push(`      - name: TODO_ID_COLUMN  # replace with your actual primary key`);
+    lines.push(`        description: "Primary key"`);
+    lines.push(`        tests:`);
+    lines.push(`          - not_null`);
+    lines.push(`          - unique`);
+    lines.push("");
+
+    // Fact model — aggregates
+    if (ds.aggregates?.length > 0) {
+      lines.push(`  - name: fct_${ds.slug}`);
+      lines.push(`    description: "Aggregate fact model for ${ds.caption}. Contains ${ds.aggregates.length} metrics. Grain must be set before use — see SETUP.md."`);
+      lines.push(`    columns:`);
+      ds.aggregates.forEach((c) => {
+        const desc = c.dbtDescription || `Aggregated metric migrated from Tableau: ${c.caption}`;
+        lines.push(`      - name: ${c.slug}`);
+        lines.push(`        description: "${desc.replace(/"/g, "'")}"`);
+        lines.push(`        tests:`);
+        lines.push(`          - not_null`);
+      });
+      lines.push("");
+    }
+
+    // Dimension model — row-level
+    if (ds.rowLevel?.length > 0) {
+      lines.push(`  - name: dim_${ds.slug}`);
+      lines.push(`    description: "Row-level dimension model for ${ds.caption}. Contains ${ds.rowLevel.length} expressions — no aggregation, safe to join to any grain."`);
+      lines.push(`    columns:`);
+      ds.rowLevel.forEach((c) => {
+        const desc = c.dbtDescription || `Row-level expression migrated from Tableau: ${c.caption}`;
+        lines.push(`      - name: ${c.slug}`);
+        lines.push(`        description: "${desc.replace(/"/g, "'")}"`);
+      });
+      lines.push("");
+    }
+  });
+
+  return lines.join("\n");
+}
+
+export function generateMetricsYml(datasources) {
+  // Separate simple aggs (SUM(col)) from derived (SUM(a)/COUNT(b)) for proper MetricFlow output
+  const lines = [
+    "# ============================================================",
+    "# metrics.yml — dbt MetricFlow semantic layer starter",
+    "# Compatible with dbt >= 1.6 (dbt Core or dbt Cloud)",
+    "# Docs: https://docs.getdbt.com/docs/build/metrics-overview",
+    "# ============================================================",
+    "# STATUS: Starter template — requires manual review before dbt sl validate",
+    "#",
+    "# Simple aggregations (SUM/COUNT/AVG of a single column) are generated",
+    "# as proper semantic model measures.",
+    "# Derived expressions (e.g. SUM(a) / COUNT(b)) are generated as",
+    "# derived metrics — update type_params.expr to reference base measure names.",
+    "# ============================================================",
+    "",
+    "version: 2",
+    "",
+    "semantic_models:",
+  ];
+
+  const allDerivedMetrics = [];
+
+  datasources.forEach((ds) => {
+    if (!ds.aggregates?.length) return;
+
+    // Separate simple vs derived
+    const simpleMeasures = [];
+    const derivedCalcs = [];
+    ds.aggregates.forEach((c) => {
+      const simple = extractSimpleAgg(c.finalSql);
+      if (simple) simpleMeasures.push({ calc: c, simple });
+      else derivedCalcs.push(c);
+    });
+
+    lines.push(`  - name: ${ds.slug}_semantic`);
+    lines.push(`    description: "Semantic model for ${ds.caption} — migrated from Tableau. Set primary entity before use."`);
+    lines.push(`    model: ref('fct_${ds.slug}')`);
+    lines.push(`    entities:`);
+    lines.push(`      - name: TODO_primary_entity`);
+    lines.push(`        type: primary`);
+    lines.push(`        expr: TODO_ID_COLUMN  # replace with your grain/primary key column`);
+    lines.push(`    measures:`);
+
+    if (simpleMeasures.length === 0) {
+      lines.push(`      # No simple aggregations detected — add measures manually`);
+      lines.push(`      # Format: { name, agg: sum|count|average|min|max|count_distinct, expr: column_name }`);
+    }
+    simpleMeasures.forEach(({ calc: c, simple }) => {
+      const agg = simple.fn === "COUNT" ? (c.finalSql.toUpperCase().includes("DISTINCT") ? "count_distinct" : "count")
+        : simple.fn === "AVG" ? "average"
+        : simple.fn.toLowerCase();
+      lines.push(`      - name: ${c.slug}`);
+      lines.push(`        description: "${(c.dbtDescription || c.caption).replace(/"/g, "'")}"`);
+      lines.push(`        agg: ${agg}`);
+      lines.push(`        expr: ${simple.col}`);
+    });
+
+    // Derived calcs reference the fct_ model column directly
+    if (derivedCalcs.length > 0) {
+      lines.push(`    # Derived expressions — referenced as metrics below, not semantic model measures`);
+    }
+
+    lines.push(`    dimensions:`);
+    if (ds.rowLevel?.length > 0) {
+      ds.rowLevel.slice(0, 10).forEach((c) => {
+        lines.push(`      - name: ${c.slug}`);
+        lines.push(`        type: categorical`);
+        lines.push(`        description: "${(c.dbtDescription || c.caption).replace(/"/g, "'")}"`);
+        lines.push(`        expr: ${c.slug}  # references dim_${ds.slug}`);
+      });
+    } else {
+      lines.push(`      # TODO: add dimension columns from dim_${ds.slug} or your staging model`);
+      lines.push(`      # Example: { name: region, type: categorical, expr: region }`);
+    }
+    lines.push("");
+
+    // Collect derived metrics for the metrics section
+    derivedCalcs.forEach((c) => allDerivedMetrics.push({ ds, c }));
+
+    // Simple metrics
+    simpleMeasures.forEach(({ calc: c }) => {
+      lines.push(`  # simple metric — generated from SUM/COUNT/AVG of a single column`);
     });
   });
+
+  lines.push("metrics:");
+  datasources.forEach((ds) => {
+    if (!ds.aggregates?.length) return;
+
+    ds.aggregates.forEach((c) => {
+      const simple = extractSimpleAgg(c.finalSql);
+      if (simple) {
+        lines.push(`  - name: ${c.slug}`);
+        lines.push(`    label: "${c.caption}"`);
+        lines.push(`    description: "${(c.dbtDescription || c.caption).replace(/"/g, "'")}"`);
+        lines.push(`    type: simple`);
+        lines.push(`    type_params:`);
+        lines.push(`      measure: ${c.slug}`);
+      } else {
+        // Derived metric — engineer needs to decompose into base measures
+        lines.push(`  - name: ${c.slug}`);
+        lines.push(`    label: "${c.caption}"`);
+        lines.push(`    description: "${(c.dbtDescription || c.caption).replace(/"/g, "'")}"`);
+        lines.push(`    type: derived`);
+        lines.push(`    type_params:`);
+        lines.push(`      expr: "TODO_EXPR"  # decompose: ${c.finalSql.slice(0, 80)}`);
+        lines.push(`      metrics:`);
+        lines.push(`        # TODO: list base measures this metric depends on`);
+        lines.push(`        # - name: base_measure_1`);
+        lines.push(`        # - name: base_measure_2`);
+      }
+      lines.push("");
+    });
+  });
+
   return lines.join("\n");
 }
 
@@ -697,80 +984,108 @@ export function generateSourcesYaml(_, xmlString) {
 // ================================================================
 
 export function generateSetupMd(calcs, workbookName) {
-  const translatable = calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity) && c.finalSql);
+  const datasources = groupByDatasource(calcs);
   const untranslatable = calcs.filter((c) => c.complexity === "untranslatable");
+  const totalCalcs = datasources.reduce((n, ds) => n + ds.measures.length + ds.dimensions.length, 0);
 
-  // Collect unique datasources from calcs
-  const datasourceMap = {};
-  translatable.forEach((c) => {
-    if (c.datasourceSlug && !datasourceMap[c.datasourceSlug]) {
-      datasourceMap[c.datasourceSlug] = c.datasourceCaption || c.datasourceSlug;
-    }
-  });
-  const datasources = Object.entries(datasourceMap);
+  const fileTree = datasources.flatMap((ds) => [
+    `│   ├── staging/`,
+    `│   │   └── stg_${ds.slug}.sql`,
+    `│   └── marts/`,
+    ...(ds.aggregates?.length ? [`│       ├── fct_${ds.slug}.sql   ← ${ds.aggregates.length} aggregate metrics`] : []),
+    ...(ds.rowLevel?.length ? [`│       └── dim_${ds.slug}.sql   ← ${ds.rowLevel.length} row-level expressions`] : []),
+  ]);
 
   const lines = [
     `# dbt Export Setup Guide`,
     `**Workbook:** ${workbookName || "Tableau export"}`,
     `**Generated:** ${new Date().toLocaleDateString()}`,
-    `**Models:** ${translatable.length} SQL files ready to drop into dbt`,
+    `**Structure:** ${datasources.length} datasource(s) → staging + marts layers · ${totalCalcs} calculated fields`,
     "",
     "---",
     "",
-    "## Step 1 — Copy files into your dbt project",
+    "## Output structure",
     "",
     "```",
     "your-dbt-project/",
     "├── models/",
-    translatable.slice(0, 5).map((c) => `│   ├── ${c.slug}.sql`).join("\n"),
-    translatable.length > 5 ? `│   └── ... (${translatable.length - 5} more)` : "",
-    "├── sources.yml      ← add to your project root",
-    "├── schema.yml       ← add to your project root",
-    "└── dbt_project.yml  ← use as a starting point or merge into existing",
+    ...fileTree,
+    "├── metrics.yml      ← MetricFlow semantic layer (dbt >= 1.6)",
+    "├── schema.yml       ← model documentation and tests",
+    "├── sources.yml      ← source definitions",
+    "└── dbt_project.yml  ← project scaffold",
     "```",
     "",
     "---",
     "",
-    "## Step 2 — Fill in sources.yml",
+    "## Step 1 — Fill in sources.yml",
     "",
-    `${datasources.length} datasource(s) were detected in this workbook:`,
+    `${datasources.length} datasource(s) detected:`,
     "",
-    ...datasources.map(([slug, caption]) => [
-      `### \`${slug}\` _(${caption})_`,
-      "",
-      "Open `sources.yml` and replace the placeholders for this source:",
+    ...datasources.map((ds) => [
+      `### \`${ds.slug}\` _(${ds.caption})_`,
       "",
       "```yaml",
-      `  - name: ${slug}`,
+      `  - name: ${ds.slug}`,
       `    database: YOUR_DATABASE   # e.g. PROD_DB`,
       `    schema: YOUR_SCHEMA       # e.g. ANALYTICS`,
       `    tables:`,
-      `      - name: YOUR_TABLE      # the actual Snowflake table name`,
+      `      - name: YOUR_TABLE`,
       "```",
       "",
     ].join("\n")),
     "---",
     "",
-    "## Step 3 — Update source() refs in SQL models",
+    "## Step 2 — Update TODO_TABLE in staging models",
     "",
-    "Each model references its source like this:",
+    "Each staging model references:",
+    "```sql",
+    `select * from {{ source('${datasources[0]?.slug || "your_source"}', 'TODO_TABLE') }}`,
+    "```",
+    "Replace `TODO_TABLE` with the actual Snowflake table name you set in sources.yml.",
+    "",
+    "---",
+    "",
+    "## Step 3 — Confirm grain in fct_ models",
+    "",
+    "Each `fct_` model contains only aggregate metrics (SUM/COUNT/AVG expressions).",
+    "The grain columns you provided during export are already in the SELECT and GROUP BY.",
+    "If you left grain blank, open the file and fill in the grain columns before running.",
     "",
     "```sql",
-    `select * from {{ source('${datasources[0]?.[0] || "your_source"}', 'TODO_TABLE') }}`,
+    "final as (",
+    "    select",
+    "        date_trunc('month', order_date) as order_month,  -- grain",
+    "        region,                                           -- grain",
+    "        SUM(revenue) as total_revenue,",
+    "        COUNT(DISTINCT user_id) as unique_users",
+    "    from stg",
+    "    group by 1, 2",
+    ")",
     "```",
     "",
-    "Replace `TODO_TABLE` with the actual table name you set in sources.yml.",
-    "The source name (`" + (datasources[0]?.[0] || "your_source") + "`) is already filled in for you.",
+    "The `dim_` model contains row-level expressions — no GROUP BY needed.",
+    "Add your primary/join key to make it joinable to fct_ models.",
     "",
     "---",
     "",
     "## Step 4 — Run dbt",
     "",
     "```bash",
-    "dbt deps",
     "dbt source freshness   # verify source connections",
-    "dbt run                # build all models",
-    "dbt test               # run schema tests",
+    "dbt run --select staging  # build staging layer first",
+    "dbt run --select marts    # then build mart models",
+    "dbt test                  # run schema tests",
+    "```",
+    "",
+    "---",
+    "",
+    "## Step 5 — Wire up MetricFlow (optional, dbt >= 1.6)",
+    "",
+    "`metrics.yml` contains a semantic model and metric definitions for all measure fields.",
+    "Update `TODO_ENTITY` and `TODO_ID_COLUMN` with your primary key, then run:",
+    "```bash",
+    "dbt sl validate   # validate semantic layer",
     "```",
     "",
     "---",
@@ -778,19 +1093,19 @@ export function generateSetupMd(calcs, workbookName) {
   ];
 
   if (untranslatable.length > 0) {
-    lines.push("## Untranslatable fields (manual rewrite required)");
+    lines.push("## Fields requiring manual rewrite");
     lines.push("");
-    lines.push("These use Tableau table calculations (INDEX, WINDOW, RANK) with no direct SQL equivalent.");
-    lines.push("Rewrite as window functions in a separate dbt model.");
+    lines.push("These use Tableau table calculations with no direct SQL equivalent.");
+    lines.push("See `translation_report.md` for suggested window function rewrites.");
     lines.push("");
     untranslatable.forEach((c) => {
       lines.push(`- **${c.caption}**: \`${c.formula.slice(0, 100)}\``);
     });
     lines.push("");
+    lines.push("---");
+    lines.push("");
   }
 
-  lines.push("---");
-  lines.push("");
   lines.push("_Generated by [Tableau → dbt Exporter](https://tableau-twb-to-dbt.vercel.app)_");
 
   return lines.join("\n");
@@ -802,13 +1117,7 @@ export function generateSetupMd(calcs, workbookName) {
 
 export function generateDbtProjectYml(calcs, workbookName) {
   const projectName = slugify(workbookName || "tableau_export");
-
-  // Collect unique datasources
-  const datasources = [...new Set(
-    calcs
-      .filter((c) => c.datasourceSlug)
-      .map((c) => c.datasourceSlug)
-  )];
+  const datasources = groupByDatasource(calcs);
 
   const lines = [
     `name: '${projectName}'`,
@@ -832,12 +1141,15 @@ export function generateDbtProjectYml(calcs, workbookName) {
     "",
     "models:",
     `  ${projectName}:`,
-    "    +materialized: view",
-    "    +schema: dbt_tableau_export",
+    "    staging:",
+    "      +materialized: view",
+    "      +schema: staging",
+    "    marts:",
+    "      +materialized: table",
+    "      +schema: marts",
     "",
-    "# Sources are defined in sources.yml",
-    "# Detected datasources from this workbook:",
-    ...datasources.map((ds) => `#   - ${ds}`),
+    "# Datasources detected from this workbook:",
+    ...datasources.map((ds) => `#   - ${ds.slug}: ${ds.aggregates?.length || 0} aggregate metrics (fct_), ${ds.rowLevel?.length || 0} row-level expressions (dim_)`),
   ];
 
   return lines.join("\n");
