@@ -470,8 +470,9 @@ export default function App() {
               <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: 1.8, maxWidth: "680px" }}>
                 Analytics engineers spend days manually rewriting Tableau business logic into SQL.
                 Upload a <span style={{ color: "#9ca3af" }}>.twb</span> or <span style={{ color: "#9ca3af" }}>.twbx</span> file
-                and get a complete, layered dbt package — staging models, consolidated mart models, a MetricFlow semantic layer,
-                schema tests, and source definitions — structured for reuse across any report, not just the one you're migrating.
+                and get a complete, layered dbt package — staging models, fct_ and dim_ marts, LOD-to-CTE translation,
+                a MetricFlow semantic layer, schema tests, and source definitions — in Snowflake or BigQuery SQL,
+                structured for reuse across any report.
               </div>
             </div>
 
@@ -537,37 +538,37 @@ export default function App() {
                     file: "staging/stg_*.sql",
                     icon: "🗂️",
                     label: "Staging layer — one per datasource",
-                    desc: "A clean, typed view over your raw Snowflake source. Referenced by all downstream models. Source column names from your Tableau workbook are pre-populated as comments.",
+                    desc: "A clean, typed view over your raw source table. Column names referenced in your Tableau formulas are pre-populated. All downstream models reference this — change it once, everything updates.",
                   },
                   {
-                    file: "marts/fct_*.sql",
+                    file: "marts/fct_*.sql + dim_*.sql",
                     icon: "📐",
-                    label: "Consolidated mart model — all metrics in one place",
-                    desc: "Every translated calculated field lands in a single fct_ model per datasource — not 40 separate files. Add your grain columns and GROUP BY, and it's ready to serve any report or dashboard.",
+                    label: "fct_ and dim_ models — properly split",
+                    desc: "Aggregate expressions (SUM/COUNT/AVG) land in a fct_ model with a GROUP BY you configure. Row-level expressions land in a dim_ model with no aggregation. No more invalid SQL mixing both in one SELECT.",
                   },
                   {
                     file: "metrics.yml",
                     icon: "📡",
                     label: "MetricFlow semantic layer (dbt ≥ 1.6)",
-                    desc: "A semantic_model and metric definition for every measure field. Wire up your primary key, run dbt sl validate, and your metrics are queryable across any tool connected to dbt Cloud.",
+                    desc: "Simple aggregations become proper semantic_model measures with correct agg: types. Derived expressions (SUM(a)/COUNT(b)) are generated as type: derived metrics. Fill in your primary key, run dbt sl validate.",
                   },
                   {
-                    file: "schema.yml",
+                    file: "FIXED/INCLUDE/EXCLUDE → CTEs",
+                    icon: "🔗",
+                    label: "LOD expressions translated to CTE patterns",
+                    desc: "Tableau LOD expressions are the hardest part of any migration. FIXED LODs are converted to SQL CTE templates and injected directly into your fct_ model's WITH clause — no manual rewrite required.",
+                  },
+                  {
+                    file: "sources.yml + schema.yml",
                     icon: "🧪",
-                    label: "Schema tests for staging and marts",
-                    desc: "not_null tests on every measure column, unique + not_null on staging primary keys. Run dbt test immediately after import to validate translations before they hit production.",
-                  },
-                  {
-                    file: "sources.yml",
-                    icon: "🔌",
-                    label: "Source definitions pre-filled",
-                    desc: "Datasource names are extracted directly from your workbook XML and pre-populated. You only need to fill in database, schema, and table names.",
+                    label: "Source definitions and schema tests",
+                    desc: "Datasource names extracted from your workbook XML, pre-populated in sources.yml. not_null tests on every measure, unique + not_null on staging primary keys. dbt test ready on day one.",
                   },
                   {
                     file: "SETUP.md + translation_report.md",
                     icon: "📋",
-                    label: "Workbook-specific docs",
-                    desc: "A step-by-step setup guide listing every datasource, grain instructions, and dbt commands — plus a full translation report with the original formula, SQL output, AI notes, and window function rewrites for untranslatable fields.",
+                    label: "Step-by-step docs and full translation report",
+                    desc: "SETUP.md lists every datasource, grain instructions, and dbt commands to run. The translation report shows original formula → SQL output side by side, LOD CTE templates, and window function rewrites for untranslatable fields.",
                   },
                 ].map((item) => (
                   <div key={item.file} style={{ background: "#0a1f15", border: "1px solid #0d2b1e", borderRadius: "8px", padding: "18px 20px", display: "flex", gap: "14px" }}>
@@ -585,10 +586,10 @@ export default function App() {
               <div style={{ ...styles.h2, marginBottom: "20px" }}>How it works</div>
               <div style={{ display: "flex", gap: "0", marginBottom: "16px" }}>
                 {[
-                  { step: "01", label: "Parse", desc: "Reads every calculated field from the workbook XML. Resolves Calculation_XXXX internal references to human-readable names. Maps each field to its datasource." },
-                  { step: "02", label: "Classify", desc: "Categorises fields by complexity: simple expressions, date/conditional logic, LOD expressions (FIXED/INCLUDE/EXCLUDE), and table calcs that need window function rewrites." },
-                  { step: "03", label: "Translate", desc: "Rule-based pass converts Tableau syntax to Snowflake SQL. Complex calcs go through an AI refinement pass to resolve intent, not just syntax. Dependency chains are mapped and resolved." },
-                  { step: "04", label: "Structure", desc: "Groups fields into a staging + marts layer by datasource. Generates MetricFlow metrics.yml for a queryable semantic layer. Exports everything as a .zip ready to drop into your dbt project." },
+                  { step: "01", label: "Parse", desc: "Reads every calculated field from .twb or .twbx. Resolves Calculation_XXXX internal IDs to human-readable names. Maps each field to its datasource. .twbx files are unzipped automatically." },
+                  { step: "02", label: "Classify", desc: "Categorises fields by complexity: simple expressions, date/conditional logic, LOD expressions (FIXED/INCLUDE/EXCLUDE), and table calcs flagged for window function rewrites." },
+                  { step: "03", label: "Translate", desc: "Rule-based pass converts Tableau syntax to your target dialect (Snowflake or BigQuery). LOD expressions generate CTE templates. Complex calcs go through an AI pass to resolve intent. Dependency chains are resolved." },
+                  { step: "04", label: "Structure", desc: "Aggregates go into fct_ models with GROUP BY. Row-level expressions go into dim_ models. LOD CTEs are injected into the WITH clause. MetricFlow metrics.yml is generated for a queryable semantic layer." },
                 ].map((s, i, arr) => (
                   <div key={s.step} style={{ flex: 1, padding: "18px 20px", background: "#0a1f15", border: "1px solid #0d2b1e", borderRight: i < arr.length - 1 ? "none" : "1px solid #0d2b1e", borderRadius: i === 0 ? "8px 0 0 8px" : i === arr.length - 1 ? "0 8px 8px 0" : "0" }}>
                     <div style={{ fontSize: "10px", fontWeight: 700, color: "#34d399", letterSpacing: "0.1em", marginBottom: "6px" }}>{s.step}</div>

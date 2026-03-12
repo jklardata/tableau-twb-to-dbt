@@ -1,435 +1,282 @@
 # Tableau → dbt Calculated Field Exporter
-## Project Requirements, Architecture & Context
+## Project Architecture, Engine Design & Development Context
 
-> **Purpose of this document:** Full handoff context for continuing development in Claude Code. Everything discussed, decided, built, and deferred — in one place.
+> **Purpose of this document:** Full handoff context for continuing development in Claude Code. Everything built, decided, and deferred — in one place. Kept up to date as features ship.
 
 ---
 
 ## 1. What We're Building
 
-A web-based tool that parses Tableau workbook files (`.twb` / `.twbx`) and exports the calculated fields as production-ready dbt SQL models, with full documentation and Snowflake dialect support.
+A web-based tool that parses Tableau workbook files (`.twb` / `.twbx`) and exports the calculated fields as a production-ready dbt semantic layer — staging models, consolidated mart models, MetricFlow metrics, schema tests, and source definitions — targeting Snowflake and BigQuery SQL dialects.
 
-**The one-line pitch:** *"Turn your Tableau workbook's business logic into documented dbt metrics."*
+**The one-line pitch:** *"Turn your Tableau workbook's business logic into a documented, reusable dbt semantic layer."*
 
-**Target persona:** Analytics engineers (AEs) and BI engineers who are migrating business logic out of Tableau and into a dbt project. This is the person who inherits a Tableau workbook with 100+ calculated fields and needs to reconstruct that logic in SQL — documented, version-controlled, and maintainable.
-
----
-
-## 2. Why We Built It
-
-### The Pain
-
-Analytics engineers face a specific, well-documented problem: Tableau workbooks accumulate years of business logic in calculated fields that exist nowhere else. When orgs migrate to dbt or a semantic layer, someone has to manually translate every formula. A single workbook can have 200–300 calculated fields. This is days of tedious, error-prone work.
-
-The pain is real and validated by Tableau community posts — people actively asking how to export calculated fields in bulk, how to decode internal Calculation_XXXX references, and how to handle dependencies between fields.
-
-### The Gap
-
-The existing landscape does not solve this:
-
-- **Native Tableau + dbt partnership (Coalesce 2024)** — handles future-state governance (dbt Semantic Layer ↔ Tableau), but does nothing to migrate existing Tableau calc logic into dbt. This is a forward-looking integration, not a migration tool.
-- **Euno.ai** — raised $6.25M seed, positioned as an enterprise data governance platform. Not a point tool. Expensive, complex, wrong persona. Their existence validates the market but they're not competing on this specific use case.
-- **TWB Auditor / Metadata API** — can export a list of calculated fields to Excel, but provides no SQL translation, no dbt output, no dependency resolution. Just audit/documentation.
-- **Manual GPT prompting** — what AEs currently do. Paste formula, get SQL, fix it. One at a time. No structure, no dependency chains, no dbt-ready output.
-
-**No standalone tool exists for the TWB → documented dbt SQL export use case.**
-
-### Business Model Decision
-
-We decided to build this as a **narrow web app** (not a CLI tool), specifically to:
-- Have a shareable URL for organic distribution
-- Build an email capture gate before download (lead gen)
-- Surface a paywall for the paid tier
-- Position as a consulting lead-gen tool for KlarData in the short term, monetizable SaaS in the medium term
-
-**Monetization tiers decided:**
-- Free: ≤10 fields translated per workbook
-- Paid: $49/month or $99/one-time per workbook (unlimited fields)
-
-**Realistic revenue ceiling as a point tool:** $50–150K ARR. Acquisition potential $200–500K. Strong consulting lead-gen value regardless.
+**Target persona:** Analytics engineers (AEs) and BI engineers migrating business logic out of Tableau and into a dbt project. This is the person who inherits a workbook with 100+ calculated fields and needs to reconstruct that logic in SQL — documented, version-controlled, and maintainable — not just for the one dashboard they're migrating, but as a reusable foundation for other reports.
 
 ---
 
-## 3. Test Data
+## 2. Monetization
 
-We built and validated the entire engine against a real client workbook:
-
-- **File:** `Client_Reporting_V2_10_-_for_LF_Logo.twb` (RetireeFirst / LaborFirst client)
-- **Raw calculated fields:** 297
-- **Unique (deduplicated):** 68
-- **Classified as skip:** 21
-- **Translated:** 45
-- **Untranslatable:** 3
-
-This is the ground truth for all complexity thresholds and translation rule design.
+- **Free:** ≤10 fields translated per workbook (email gate before download)
+- **Paid:** $19/workbook (Stripe Checkout, unlimited fields)
 
 ---
 
-## 4. Architecture
+## 3. Architecture
 
-### Current State: React Single-Page App (Claude.ai artifact)
-
-Everything is currently in one file: `tableau_dbt_exporter.jsx`
-
-The app is a complete, working React SPA. All parsing happens in the browser. The AI translation layer calls the Anthropic API directly from the client.
-
-### Production Target Stack
+### Stack (current, deployed)
 
 ```
-Frontend:     React (Vite) — same component structure as current JSX
-Backend:      FastAPI (Python) OR serverless (Vercel/Netlify Functions)
-AI layer:     Anthropic API — claude-sonnet-4-20250514
-Storage:      None needed for MVP (stateless — upload → process → download)
-Deployment:   Railway or Render (backend) + Vercel (frontend)
-Email gate:   Simple form before download — pipe to Resend or Loops
+Frontend:     React (Vite) — src/App.jsx, src/lib/engine.js, src/lib/zip.js
+Backend:      Vercel serverless functions — api/ directory
+AI layer:     Anthropic API via /api/translate proxy (claude-sonnet-4-6)
+Payments:     Stripe Checkout — api/create-checkout.js, api/verify-session.js
+Email:        Resend — api/capture-email.js (email gate + welcome email)
+Deployment:   Vercel (auto-deploy from GitHub main)
+Storage:      None — stateless, upload → process → download
 ```
 
 ### Data Flow
 
 ```
-User uploads .twb/.twbx
+User selects .twb or .twbx
         ↓
-[BROWSER] XML parsing (DOMParser)
+[BROWSER] .twbx? → JSZip extracts inner .twb XML
         ↓
-[BROWSER] Privacy scan (scanTWB)
+[BROWSER] XML parsing (DOMParser) — parseTWB()
         ↓
-[BROWSER] Rule-based translation pass
+[BROWSER] Privacy scan — scanTWB() (server URLs, flagged strings)
         ↓
-[API] AI refinement pass (Anthropic) — formula logic only, batched
+[BROWSER] Classify + rule-based translate — classify(), ruleBasedTranslate()
+          LOD expressions → translateLOD() generates CTE templates rule-based
         ↓
-[BROWSER] Output file assembly (JSZip)
+[API /api/translate] AI refinement pass (Claude) — complex + flagged calcs, batched 8
+        ↓
+[BROWSER] Grain config applied — user-specified GROUP BY columns for fct_ models
+        ↓
+[BROWSER] Output file assembly — buildZip() via JSZip
         ↓
 User downloads .zip
 ```
 
 ---
 
-## 5. App Stages / UX Flow
-
-The app has five stages, rendered conditionally:
+## 4. App Stages / UX Flow
 
 | Stage | Trigger | What Happens |
 |---|---|---|
-| `upload` | Default | Drop zone + feature cards |
-| `parsing` | File selected | XML parse + classify + rule-based translate |
+| `upload` | Default | Dialect selector + drop zone + feature cards |
+| `parsing` | File selected | .twbx unzip if needed, XML parse, classify, rule-based translate, LOD CTE generation |
 | `scan` | Parse complete | Privacy disclosure screen |
-| `preview` | User approves scan | Field breakdown table with complexity badges |
-| `translating` | User clicks Run | AI pass on flagged calcs, live log |
-| `results` | Translation done | 4-tab output (Report / SQL Models / schema.yml / sources.yml) |
+| `preview` | User approves scan | Field breakdown + grain config inputs per datasource |
+| `translating` | User clicks Run | AI pass on flagged calcs, live progress log |
+| `results` | Translation done | 5-tab output (Report / SQL Models / schema.yml / metrics.yml / sources.yml) |
 
 ---
 
-## 6. Core Engine Logic
+## 5. Core Engine Logic (`src/lib/engine.js`)
 
 ### 6a. Parsing (`parseTWB`)
 
-Reads the TWB XML and extracts all `<column caption="...">` elements that contain a `<calculation formula="...">` child. Deduplicates by `caption + formula[:100]` key.
+Reads the TWB XML and extracts all `<column caption="...">` elements containing a `<calculation formula="...">` child. Deduplicates by `caption + formula[:100]`.
 
-Also builds the **internal ID map**: Tableau generates internal IDs for calculated fields like `Calculation_1634806716618883078`. The parser maps these to their human-readable captions so the translation engine can resolve them.
+Builds the **internal ID map**: Tableau auto-generates IDs like `Calculation_1634806716618883078` for calculated fields referenced by other calcs. The parser maps these to human-readable captions so they can be resolved downstream.
 
 ### 6b. Complexity Classification (`classify`)
 
-Every calc is classified into one of five buckets:
-
 | Class | Criteria | Action |
 |---|---|---|
-| `skip` | Literal strings, numbers, booleans, parameter refs, bin definitions | Excluded from output |
+| `skip` | Literals, booleans, parameter refs, bin definitions | Excluded from output |
 | `simple` | Basic math, comparisons, aggregations | Rule-based only |
 | `moderate` | Date functions, CASE/WHEN, IF/ELSEIF, IIF, COUNTD | Rule-based + optional AI |
-| `complex` | LOD expressions (FIXED, INCLUDE, EXCLUDE) | Always AI-refined |
-| `untranslatable` | Table calcs: INDEX, WINDOW_*, RUNNING_*, RANK, SIZE, FIRST, LAST | Flagged in report, no SQL generated |
+| `complex` | LOD expressions (FIXED, INCLUDE, EXCLUDE) | Rule-based CTE + optional AI for inner expression |
+| `untranslatable` | Table calcs: INDEX, WINDOW_*, RUNNING_*, RANK, SIZE, FIRST, LAST | Window function hints in report, no SQL generated |
 
 ### 6c. Rule-Based Translation (`ruleBasedTranslate`)
 
-Applies regex-based substitutions for known Tableau → Snowflake function mappings:
+Dialect-aware regex substitutions. Accepts `dialect = "Snowflake" | "BigQuery"`.
 
-| Tableau | Snowflake |
-|---|---|
-| `IIF(...)` | `IFF(...)` |
-| `DATETRUNC('...')` | `DATE_TRUNC('...')` |
-| `TODAY()` | `CURRENT_DATE` |
-| `NOW()` | `CURRENT_TIMESTAMP` |
-| `COUNTD(` | `COUNT(DISTINCT ` |
-| `LEN(` | `LENGTH(` |
-| `#2025-01-01#` | `'2025-01-01'::DATE` |
-| `[Field Name]` | `field_name` (slugified) |
-| Double-quoted strings | Single-quoted (Snowflake standard) |
-| `// comments` | Stripped |
-| `\r\n` | Normalized to `\n` |
+| Tableau | Snowflake | BigQuery |
+|---|---|---|
+| `IIF(...)` | `IFF(...)` | `IF(...)` |
+| `DATETRUNC('month', x)` | `DATE_TRUNC('month', x)` | `DATE_TRUNC(x, MONTH)` |
+| `TODAY()` | `CURRENT_DATE` | `CURRENT_DATE()` |
+| `NOW()` | `CURRENT_TIMESTAMP` | `CURRENT_TIMESTAMP()` |
+| `#2025-01-01#` | `'2025-01-01'::DATE` | `DATE('2025-01-01')` |
+| `COUNTD(` | `COUNT(DISTINCT ` | `COUNT(DISTINCT ` |
+| `LEN(` | `LENGTH(` | `LENGTH(` |
+| `[Field Name]` | `field_name` (slugified) | `field_name` (slugified) |
 
-### 6d. Internal Reference Resolution
+### 6d. LOD Expression Translation (`parseLOD`, `translateLOD`)
 
-Tableau auto-generates internal IDs for calculated fields when they're referenced by other calcs. Example: `[Calculation_1843661155940384776]` is actually the `Case Age` field.
+LOD expressions are handled rule-based before the AI pass. `parseLOD()` extracts type, dimension list, and inner expression from the Tableau LOD syntax.
 
-The engine builds a registry from the XML and substitutes all `Calculation_XXXX` references with the human slug (`case_age`) before translation. **38 internal references were resolved in the test workbook.**
-
-### 6e. Parameter Annotation
-
-Tableau parameter references (`[Parameters].[Parameter 7]`) cannot be automatically resolved — they require an AE decision. Instead of silently dropping them or failing, the engine replaces them with inline comments:
-
+**FIXED LODs** → CTE template injected into the model's `WITH` clause:
 ```sql
-/* 🔧 PARAM:parameter_7 — replace with your parameter logic */
-```
-
-This makes them impossible to miss during review.
-
-### 6f. Dependency Chain Detection (`findDependencies`)
-
-Some calculated fields reference other calculated fields. The engine builds a dependency graph and inlines dependencies as CTEs in the generated SQL model.
-
-**12 dependency chains found in test workbook.** Example:
-```
-NPS Calculation → Total NPS → NPS Count Expression
-Avg Age → Total Age → Age
-```
-
-Generated model output:
-```sql
-with total_nps as (
-    -- dependency: Total NPS
-    select count(distinct survey_respondent_id) as total_nps from source
-),
-final as (
+-- FIXED LOD: aggregated at [customer_id] grain
+lod_customer_id as (
     select
-        case when total_nps.total_nps > 0 then ... end as nps_calculation
-    from source
-    left join total_nps on true
+        customer_id,
+        SUM(revenue) as lod_value
+    from {{ ref('stg_your_source') }}
+    group by 1
 )
-select * from final
+-- Column reference: lod_customer_id.lod_value
+-- FIXED LOD: LEFT JOIN lod_customer_id ON t.customer_id = lod_customer_id.customer_id
 ```
 
-### 6g. AI Refinement Layer (`claudeTranslate` / `needsClaude`)
+**INCLUDE LODs** → inline note added to the column SQL with a GROUP BY instruction.
 
-The AI pass triggers on calcs that have any of these signals:
+**EXCLUDE LODs** → CTE template with coarser grain; requires manual grain column specification.
 
-- Commented-out logic with an active fallback (suggests intent not captured by rules)
+LOD calcs with a rule-based CTE are not sent to Claude for the LOD itself — only if other signals (unresolved refs, long formula, etc.) also apply.
+
+### 6e. AI Refinement Layer (`claudeTranslate` / `needsClaude`)
+
+AI pass triggers on calcs with any of these signals:
+
+- Commented-out logic with an active fallback
 - Unresolved internal refs remaining after rule-based pass
-- Complex multi-step date math (business days calculations)
-- Self-division patterns (`x / x` count tricks → should be `NULLIFZERO` + literal `1`)
-- LOD expressions (`FIXED`, `INCLUDE`, `EXCLUDE`)
-- Heavy parameter dependency (more than 2 params in one formula)
+- Complex multi-step formula (>300 chars)
+- Self-division patterns (`x / x` count tricks)
+- LOD expression where rule-based translation wasn't possible
+- Heavy parameter dependency (>2 params in one formula)
 
-AI calcs are **batched in groups of 8** to minimize API calls. Each batch sends:
-- Original Tableau formula
-- Rule-based attempt (if any)
-- Complexity class and reasons for AI flagging
+Batched in groups of 8. Prompt includes: original formula, rule-based attempt, complexity class, and reasons. Claude returns: refined SQL, calc_type (aggregate | row_level), suggested_grain, dbt description, AE recommendations.
 
-The AI returns:
-- Refined Snowflake SQL
-- A natural language description for `schema.yml`
-- AE-facing recommendations (shown inline in the Results tab)
+**API model:** `claude-sonnet-4-6`
 
-**API model:** `claude-sonnet-4-20250514`
+### 6f. Aggregate Detection + Datasource Grouping (`isAggregate`, `groupByDatasource`)
+
+After all translation passes, calcs are grouped by datasource and split into two buckets:
+- **aggregates** — SQL contains `SUM(`, `COUNT(`, `AVG(`, `MIN(`, `MAX(`, etc.
+- **rowLevel** — row-level expressions, safe without GROUP BY
+
+Uses SQL-based detection (`isAggregate()`) rather than Tableau's `role` attribute, which is unreliable.
 
 ---
 
-## 7. Output Files
+## 6. Output Files
 
 All outputs are bundled into a `.zip` download:
 
 ```
 dbt_export/
 ├── models/
-│   ├── nps_calculation.sql
-│   ├── avg_age.sql
-│   ├── gender_format.sql
-│   └── ... (one file per translatable calc)
-├── schema.yml
-├── sources.yml
-└── translation_report.md
+│   ├── staging/
+│   │   └── stg_{datasource}.sql       ← clean typed view over raw source
+│   └── marts/
+│       ├── fct_{datasource}.sql       ← aggregate metrics, user-specified GROUP BY
+│       └── dim_{datasource}.sql       ← row-level expressions, no aggregation
+├── metrics.yml                        ← MetricFlow semantic layer (dbt >= 1.6)
+├── schema.yml                         ← model docs + not_null tests
+├── sources.yml                        ← source definitions (TODOs to fill in)
+├── dbt_project.yml                    ← project scaffold
+├── SETUP.md                           ← step-by-step wiring guide
+└── translation_report.md              ← original formula → SQL, LOD CTEs, window hints
 ```
 
-### SQL Model Structure (`models/{slug}.sql`)
+### Staging model (`stg_{slug}.sql`)
 
-```sql
--- ============================================================
--- dbt model: nps_calculation
--- Migrated from Tableau calculated field: NPS Calculation
--- Complexity: moderate | ✨ AI-refined
--- Generated: 2026-03-12
--- ============================================================
--- REVIEW CHECKLIST:
---   [ ] Verify source table ref
---   [ ] Confirm field name mappings
---   [ ] Test against known values
---   [ ] Remove this header when approved
--- ============================================================
--- Original Tableau formula:
--- IIF([Total NPS] > 0, ([NPS Count Expression] / [Total NPS]) * 100, NULL)
--- ============================================================
+A clean `materialized='view'` over the raw source. Raw column names referenced in Tableau formulas are pre-populated as the column list. Source table reference uses `{{ source() }}` macro with `TODO_TABLE` placeholder.
 
-{{ config(materialized='view') }}
+### Fact model (`fct_{slug}.sql`)
 
-with total_nps as (
-    select count(distinct respondent_id) as total_nps from {{ ref('your_source_model') }}
-),
+`materialized='table'`. Contains only aggregate expressions (SUM/COUNT/AVG). GROUP BY uses grain columns specified by the user in the preview step. LOD CTEs are injected into the `WITH` clause. Grain placeholder is dialect-specific.
 
-final as (
-    select
-        IFF(total_nps.total_nps > 0,
-            (nps_count_expression / total_nps.total_nps) * 100,
-            NULL
-        ) as nps_calculation
-    from {{ ref('your_source_model') }}
-    left join total_nps on true
-)
+### Dimension model (`dim_{slug}.sql`)
 
-select * from final
-```
+`materialized='view'`. Contains only row-level expressions. No GROUP BY. Safe to join to any grain.
 
-### schema.yml
+### metrics.yml
 
-Standard dbt schema file. Includes:
-- Model name and description
-- Column definitions derived from calc name + formula
-- `not_null` tests auto-applied to measure fields
+MetricFlow semantic layer starter template. Simple aggregations (SUM/COUNT/AVG of a single column) are generated as proper `semantic_model` measures with correct `agg:` type. Derived expressions (e.g. `SUM(a) / COUNT(b)`) are generated as `type: derived` metrics with a TODO decomposition note.
 
-### sources.yml
-
-Infers source tables from TWB datasource metadata and formula field references. Emits placeholder values:
-- `TODO_DATABASE` — Snowflake database name
-- `TODO_SCHEMA` — schema name
-- `TODO_TABLE` — table name
-
-Includes inline instructions for how to fill these in and integrate with dbt.
-
-### translation_report.md
-
-Human-readable summary including:
-- Counts table (total, by complexity, untranslatable, skipped)
-- Dependency chains found
-- Parameter decisions required (list of all `/* 🔧 PARAM */` flags)
-- Side-by-side original formula → SQL for every translated field
-- Full list of untranslatable fields with explanation of why
+Requires: fill in `TODO_primary_entity` and `TODO_ID_COLUMN`, then run `dbt sl validate`.
 
 ---
 
-## 8. Privacy Scan Feature
+## 7. Privacy Scan Feature
 
-**Why we built it:** The TWB format embeds sensitive connection metadata (server URLs, database names, Tableau site paths) alongside the formula logic. Users uploading client workbooks need explicit assurance about what leaves their browser.
+Between the `parsing` stage and `preview`, the app shows a disclosure screen:
 
-**How it works:** Between the `parsing` stage and the `preview` stage, the app shows a disclosure screen with three sections:
+1. **Stays in browser** — server URLs, database names, Tableau site paths. Tagged `BROWSER ONLY`. Never transmitted.
+2. **Flagged** — hardcoded strings in parameter defaults that look like org/client names. Tagged `NOT SENT`.
+3. **Sent to AI** — count of formula expressions being sent. Makes clear it's logic-only, no connection data.
 
-1. **Stays in browser** — lists every server URL, database name, Tableau site, and path found in the XML connection metadata. Tagged `BROWSER ONLY`. These are never transmitted.
-
-2. **Flagged** — detects hardcoded strings in parameter defaults that look like org/client names (proper nouns with spaces and capitals). Tagged `NOT SENT`. Prompts user to review before sharing the workbook file externally.
-
-3. **Sent to AI** — shows the count of formula expressions being sent, with a concrete example of what a formula looks like (`IIF([Survey Q8] > 8, 1, 0)`). Makes clear it's logic-only, no connection data.
-
-**Implementation note:** The scan only parses what's already in the XML — no additional network requests. All sensitive metadata extraction happens in the browser via `DOMParser`.
+All sensitive metadata extraction happens in the browser via `DOMParser`. No additional network requests.
 
 ---
 
-## 9. UI / Design
+## 8. UI / Design
 
-### Theme
-
-**Emerald / Teal dark** — applied globally across all stages.
+**Emerald / Teal dark theme** — monospace throughout.
 
 | Token | Value |
 |---|---|
 | App background | `linear-gradient(160deg, #030f0a, #071a12, #071e2a)` |
-| Primary accent | `#34d399` (emerald green) |
+| Primary accent | `#34d399` (emerald) |
 | Secondary accent | `#67e8f9` (cyan) |
-| Tertiary accent | `#2dd4bf` (teal) |
 | CTA gradient | `linear-gradient(135deg, #059669, #0891b2)` |
-| Card background | `#0a1f15` |
-| Card border | `#0d2b1e` |
-| Muted text | `#4b5563` / `#6b7280` |
-| Warning (flag) | `#fbbf24` |
-| Error | `#f87171` |
-| Code blocks | `#040d08` bg, `#67e8f9` text |
+| Card background | `#0a1f15` / border `#0d2b1e` |
 
-### Font
-
-`'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace` — the tool is built for technical users. Monospace throughout feels appropriate and intentional.
-
-### Complexity Badges
-
-Dark translucent variants — no light backgrounds that would fight the dark theme:
-
-| Type | Color |
-|---|---|
-| simple | `#34d399` on `#05966918` |
-| moderate | `#67e8f9` on `#0891b218` |
-| complex | `#fbbf24` on `#f59e0b18` |
-| untranslatable | `#f87171` on `#f8717118` |
-| skip | `#6b7280` on `#ffffff0a` |
+Font: `'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace`
 
 ---
 
-## 10. Known Limitations & Deferred Items
+## 9. Known Limitations
 
 ### Technical Limitations
 
-- **`.twbx` files** — currently treated as plain XML. In production, `.twbx` is a ZIP archive containing the `.twb` plus data extracts. Need JSZip to unpack it first. The app currently notes this but doesn't handle it correctly.
-- **Multi-datasource workbooks** — the parser collects all calculated fields across all datasources. Fields that reference columns from a different datasource than their primary one may have incorrect source table inference in `sources.yml`.
-- **LOD expressions** — AI pass handles these, but the Snowflake translation of `FIXED` LODs often requires subqueries or window functions. AI output should be reviewed carefully.
-- **Table calculations** — `INDEX()`, `WINDOW_SUM()`, `RUNNING_SUM()`, `RANK()`, etc. are classified as `untranslatable` and excluded from output. These depend on Tableau's query context and have no direct SQL equivalent.
-- **Parameters** — annotated with `/* 🔧 PARAM */` inline but not auto-resolved. Requires AE judgment call per parameter.
+- **Multi-datasource workbooks** — calcs across all datasources are collected and grouped by their declared datasource. Fields that reference columns from a different datasource than their own may produce incorrect `{{ source() }}` references in the staging model. Requires manual review.
+- **LOD inner expressions** — CTE templates are generated rule-based, but the `stg_TODO` source reference and join key in the CTE must be manually updated to the actual staging model and primary key. The inner expression SQL is correct for simple cases; review complex nested LODs.
+- **LOD INCLUDE** — adds a note to add the specified dimension to the GROUP BY, but cannot automatically determine whether this is correct for the user's grain. Requires AE judgment.
+- **Table calculations** — `INDEX()`, `WINDOW_SUM()`, `RUNNING_SUM()`, `RANK()`, etc. are classified as `untranslatable`. Window function rewrite hints (with SQL templates) are provided in the translation report, but the PARTITION BY / ORDER BY columns must be determined by the AE.
+- **Parameters** — annotated with `/* 🔧 PARAM */` inline but not auto-resolved. Requires AE judgment per parameter: hardcode, dbt var, or seed.
+- **BigQuery dialect coverage** — DATE_TRUNC arg order, IF(), DATE() casts, and CURRENT_DATE() are handled rule-based. Complex BigQuery-specific functions (SAFE_DIVIDE, FORMAT_DATE, TIMESTAMP_DIFF, COUNTIF) are covered by the AI pass but not by the rule-based layer.
+- **MetricFlow entity setup** — metrics.yml outputs `TODO_primary_entity` and `TODO_ID_COLUMN` as placeholders. Primary key auto-detection from workbook XML is not implemented. Must be filled in manually before `dbt sl validate` passes.
+- **Grain config is manual** — grain columns for `fct_` models are entered by the user in the preview step. The AI suggests a grain per aggregate field, but the final GROUP BY is user-controlled.
 
 ### Deferred Features
 
-- [ ] Email capture gate before download (lead gen)
-- [ ] Paid tier paywall ($49/mo or $99/workbook)
-- [ ] Backend deployment (currently runs entirely in browser)
-- [ ] JSZip for `.twbx` unpacking
-- [ ] Additional SQL dialects: BigQuery, Redshift, DuckDB (v2)
-- [ ] Power BI DAX → dbt exporter (v2 expansion — same concept, different parser)
-- [ ] dbt `source()` macro substitution — currently emits `ref('your_source_model')` placeholders; after `sources.yml` is filled in, SQL models should use `source('datasource_name', 'table_name')` instead
-- [ ] Tableau Server / Cloud API mode — instead of uploading a file, authenticate to Tableau Server and pull workbooks directly
-- [ ] LinkedIn / dbt Slack launch post (#tools-and-extensions channel)
+- [ ] Redshift and DuckDB dialects
+- [ ] Primary key / entity auto-detection from workbook XML join relationships
+- [ ] LOD INCLUDE automatic grain expansion
+- [ ] `dbt source()` macro substitution — currently staging models use `source('slug', 'TODO_TABLE')`, which is correct; sources.yml must be filled in first
+- [ ] Tableau Server / Cloud API mode — pull workbooks directly instead of uploading a file
+- [ ] Power BI DAX → dbt exporter (same concept, different parser)
+- [ ] dbt Slack launch post (`#tools-and-extensions` channel)
 
 ---
 
-## 11. Current File Inventory
+## 10. Current File Inventory
 
 | File | Description |
 |---|---|
-| `tableau_dbt_exporter.jsx` | Complete React SPA — all logic, UI, and AI calls in one file |
-| `tableau_to_dbt_export_v2.zip` | Python-generated test output from the real RetireeFirst workbook |
-| `Client_Reporting_V2_10_-_for_LF_Logo.twb` | Test workbook (client data — handle carefully) |
+| `src/App.jsx` | Main React SPA — all UI stages, state management, file handling |
+| `src/lib/engine.js` | Core engine — parsing, classification, translation, LOD handling, output generation |
+| `src/lib/zip.js` | Output assembly — calls engine generators, bundles into JSZip |
+| `src/components/Badge.jsx` | Complexity badge component |
+| `src/components/ProgressBar.jsx` | Translation progress bar |
+| `src/components/EmailGateModal.jsx` | Email capture modal (free tier gate) |
+| `src/components/PaywallBanner.jsx` | Paid tier paywall banner |
+| `api/translate.js` | Vercel function — Anthropic API proxy |
+| `api/create-checkout.js` | Vercel function — Stripe Checkout session ($19) |
+| `api/verify-session.js` | Vercel function — Stripe payment verification on redirect |
+| `api/capture-email.js` | Vercel function — Resend audience add + welcome email |
+| `vercel.json` | SPA rewrites + API routing |
+| `.env.example` | Required env vars: ANTHROPIC_API_KEY, STRIPE_SECRET_KEY, RESEND_API_KEY |
 
 ---
 
-## 12. Next Steps for Claude Code
+## 11. Next Development Priorities
 
-Priority order for the production build:
-
-1. **Scaffold the project** — Vite + React, move JSX component into `src/App.jsx`, extract engine functions into `src/lib/` modules
-2. **Fix `.twbx` support** — add JSZip dependency, detect file type, unzip before parsing
-3. **Wire real Anthropic API key** — currently the API call structure is correct but needs the key passed via environment variable, not hardcoded
-4. **Add email gate** — simple modal before download, POST to a serverless function that stores email + workbook stats
-5. **Deploy** — Vercel for frontend, or full-stack on Railway
-6. **Add BigQuery dialect** — second most requested after Snowflake based on the AE community
-
-### Key Implementation Note for AI API Calls
-
-The current implementation in `tableau_dbt_exporter.jsx` calls the Anthropic API directly from the browser. In production this needs to be proxied through a backend to protect the API key. The fetch call structure is already correct — just swap the direct `api.anthropic.com` call for a call to your own `/api/translate` endpoint.
-
-```javascript
-// Current (browser direct — insecure for production)
-const response = await fetch("https://api.anthropic.com/v1/messages", {
-  headers: { "x-api-key": API_KEY, ... }
-});
-
-// Production (proxy through backend)
-const response = await fetch("/api/translate", {
-  method: "POST",
-  body: JSON.stringify({ formulas: batch })
-});
-```
+1. **Redshift dialect** — similar to Snowflake with DATEDIFF/DATEADD differences; lower effort than BigQuery was
+2. **Primary key detection** — parse join relationships from the workbook XML to pre-populate MetricFlow entity fields
+3. **LOD INCLUDE auto-grain** — detect current grain from the fct_ model and suggest whether the INCLUDE dimension needs to be added
+4. **Tableau Server API mode** — authenticate to Tableau Server/Cloud and pull workbooks without file upload; major UX improvement for enterprise users
+5. **Power BI DAX → dbt** — same architecture, different parser; significant market expansion
 
 ---
 
-## 13. Market Context
-
-- **dbt Cloud** has ~50,000+ users as of 2024. Analytics engineering as a job title grew 150% in 3 years.
-- Most mid-market companies running Tableau also run dbt. The migration use case is a direct consequence of the dbt adoption curve hitting the "now what do we do with all our Tableau logic" phase.
-- **Euno.ai's $6.25M seed** (2024) validates enterprise appetite for Tableau governance tooling. They're not competing on this point-tool use case — they're selling a platform.
-- **The dbt Slack** `#tools-and-extensions` channel is the right launch channel. High AE density, tool-friendly culture, known to amplify niche-but-useful tools.
-- **Upwork / Freelance angle** — this tool directly serves the "migrate Tableau to dbt" contract work that AEs pick up. Justin has existing Upwork credibility here.
-
----
-
-*Document generated March 2026. Built in collaboration with Claude (Anthropic) during a single ideation + build session.*
+*Last updated March 2026. Built with Claude Code (Anthropic).*
