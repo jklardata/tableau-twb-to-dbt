@@ -287,8 +287,8 @@ export default function DiffPage() {
           <span style={{ fontSize: "14px", fontWeight: 800, color: "#fff" }}>Tableau<span style={{ color: T.primary }}>to</span>Dbt</span>
         </a>
         <nav style={{ marginLeft: "auto", display: "flex", gap: "4px" }}>
-          {[["Convert", "/app"], ["Diff", "/app/diff"], ["Docs", "/app/docs"], ["Audit", "/app/audit"]].map(([label, href]) => (
-            <a key={label} href={href} style={{ fontSize: "12px", color: currentPath === href ? "#fff" : "rgba(255,255,255,0.55)", padding: "5px 12px", borderRadius: "6px", textDecoration: "none", fontWeight: currentPath === href ? 600 : 400, background: currentPath === href ? "rgba(255,255,255,0.1)" : "none" }}>
+          {[["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"]].map(([label, href]) => (
+            <a key={label} href={href} style={{ fontSize: "12px", color: label === "Diff" ? "#fff" : "rgba(255,255,255,0.55)", padding: "5px 12px", borderRadius: "6px", textDecoration: "none", fontWeight: label === "Diff" ? 600 : 400, background: label === "Diff" ? "rgba(255,255,255,0.1)" : "none" }}>
               {label}
             </a>
           ))}
@@ -556,16 +556,6 @@ export default function DiffPage() {
                 })}
               </div>
             </div>
-          </div>
-
-          {/* Stats band */}
-          <div style={{ background: T.primary, display: "flex", overflow: "hidden" }}>
-            {[["5","diff categories"],["∞","workbook size"],["<1s","parse time"],["0","data uploaded"]].map(([n,l],i) => (
-              <div key={l} style={{ flex: 1, textAlign: "center", padding: "18px 24px", borderRight: i < 3 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
-                <div style={{ fontSize: "28px", fontWeight: 900, color: "#fff", lineHeight: 1 }}>{n}</div>
-                <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.75)", marginTop: "4px" }}>{l}</div>
-              </div>
-            ))}
           </div>
 
           {/* Feature grid */}

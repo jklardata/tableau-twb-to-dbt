@@ -836,10 +836,10 @@ export default function App() {
         )}
         <nav style={{ marginLeft: "auto", display: "flex", gap: "4px" }}>
           {[
-            { label: "Convert", href: "/app" },
-            { label: "Diff", href: "/app/diff" },
-            { label: "Docs", href: "/app/docs" },
-            { label: "Audit", href: "/app/audit" },
+            { label: "Convert", href: "/" },
+            { label: "Diff", href: "/diff" },
+            { label: "Docs", href: "/docs" },
+            { label: "Audit", href: "/audit" },
           ].map(({ label, href }) => (
             <a
               key={label}

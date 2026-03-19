@@ -550,8 +550,8 @@ export default function DocsPage() {
           <span style={{ fontSize: "14px", fontWeight: 800, color: "#fff" }}>Tableau<span style={{ color: T.primary }}>to</span>Dbt</span>
         </a>
         <nav style={{ marginLeft: "auto", display: "flex", gap: "4px" }}>
-          {[["Convert", "/app"], ["Diff", "/app/diff"], ["Docs", "/app/docs"], ["Audit", "/app/audit"]].map(([label, href]) => (
-            <a key={label} href={href} style={{ fontSize: "12px", color: currentPath === href ? "#fff" : "rgba(255,255,255,0.55)", padding: "5px 12px", borderRadius: "6px", textDecoration: "none", fontWeight: currentPath === href ? 600 : 400, background: currentPath === href ? "rgba(255,255,255,0.1)" : "none" }}>
+          {[["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"]].map(([label, href]) => (
+            <a key={label} href={href} style={{ fontSize: "12px", color: label === "Docs" ? "#fff" : "rgba(255,255,255,0.55)", padding: "5px 12px", borderRadius: "6px", textDecoration: "none", fontWeight: label === "Docs" ? 600 : 400, background: label === "Docs" ? "rgba(255,255,255,0.1)" : "none" }}>
               {label}
             </a>
           ))}

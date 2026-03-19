@@ -279,6 +279,21 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
     btn.addEventListener('click', function() { inp.click(); });
   });
 })();
+(function() {
+  var row = document.querySelector('.email-row');
+  if (!row) return;
+  var inp = row.querySelector('input[type="email"]');
+  var btn = row.querySelector('button');
+  if (!inp || !btn) return;
+  btn.addEventListener('click', function() {
+    var email = inp.value.trim();
+    if (!email || !email.includes('@')) { inp.focus(); return; }
+    btn.disabled = true; btn.textContent = '...';
+    fetch('/api/capture-email', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email: email, source: 'landing-audit'}) })
+      .then(function() { btn.textContent = 'You\'re on the list ✓'; inp.value = ''; })
+      .catch(function() { btn.disabled = false; btn.textContent = 'Notify Me'; });
+  });
+})();
 </script>
 </body>
 </html>
