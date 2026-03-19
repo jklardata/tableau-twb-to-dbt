@@ -310,10 +310,21 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
     const reader = new FileReader();
     reader.onload = function() {
       sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result }));
+      sessionStorage.setItem('twb_pending_dialect', selectedDialect);
       window.location.href = DEST;
     };
     reader.readAsDataURL(file);
   }
+
+  // Dialect toggle
+  var selectedDialect = 'Snowflake';
+  document.querySelectorAll('.dialect-btn').forEach(function(b) {
+    b.addEventListener('click', function() {
+      document.querySelectorAll('.dialect-btn').forEach(function(x) { x.classList.remove('active'); });
+      b.classList.add('active');
+      selectedDialect = b.textContent.trim();
+    });
+  });
 
   inp.onchange = function(e) { if (e.target.files[0]) storeAndGo(e.target.files[0]); };
   zone.style.cursor = 'pointer';

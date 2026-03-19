@@ -450,7 +450,7 @@ export default function App() {
   const [emailCaptured, setEmailCaptured] = useState(false);
   const [paidSession, setPaidSession] = useState(() => localStorage.getItem("paid") === "1");
   const [grainConfig, setGrainConfig] = useState({});
-  const [dialect, setDialect] = useState("Snowflake");
+  const [dialect, setDialect] = useState(() => sessionStorage.getItem("twb_pending_dialect") || "Snowflake");
   const [previewModel, setPreviewModel] = useState(null);
   const [multiMode, setMultiMode] = useState(false);
   const [workbooks, setWorkbooks] = useState([]); // [{ name, calcs, xmlString }]
@@ -573,6 +573,7 @@ export default function App() {
     const raw = sessionStorage.getItem("twb_pending_convert");
     if (!raw) return;
     sessionStorage.removeItem("twb_pending_convert");
+    sessionStorage.removeItem("twb_pending_dialect");
     const { name, data } = JSON.parse(raw);
     fetch(data).then(r => r.blob()).then(blob => handleFile(new File([blob], name)));
   }, [handleFile]);
