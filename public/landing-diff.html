@@ -272,11 +272,9 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
     reader.onload = function() {
       sessionStorage.setItem(key, JSON.stringify({ name: file.name, data: reader.result }));
       stored[label] = true;
-      if (stored.before && stored.after) {
-        cmpBtn.style.opacity = '1'; cmpBtn.style.cursor = 'pointer';
-        cmpBtn.style.background = '#0ea5e9'; cmpBtn.style.color = '#fff';
-        window.location.href = DEST;
-      }
+      cmpBtn.style.opacity = '1'; cmpBtn.style.cursor = 'pointer';
+      cmpBtn.style.background = '#0ea5e9'; cmpBtn.style.color = '#fff';
+      window.location.href = DEST;
     };
     reader.readAsDataURL(file);
   }

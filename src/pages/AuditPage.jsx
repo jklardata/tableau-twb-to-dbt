@@ -395,7 +395,33 @@ export default function AuditPage() {
     if (!raw) return;
     sessionStorage.removeItem("twb_pending_audit");
     const { name, data } = JSON.parse(raw);
-    fetch(data).then(r => r.blob()).then(blob => setFile(new File([blob], name)));
+    fetch(data).then(r => r.blob()).then(async blob => {
+      const f = new File([blob], name);
+      setFile(f);
+      setLoading(true);
+      setError(null);
+      setResult(null);
+      setSelectedField(null);
+      try {
+        const r = await auditWorkbook(f);
+        setResult(r);
+        posthog.capture("audit_completed", {
+          workbook: f.name,
+          health_score: r.meta.health_score,
+          total_fields: r.meta.total_calculated_fields,
+          errors: r.meta.issue_breakdown.error,
+          warnings: r.meta.issue_breakdown.warning,
+          unused_fields: r.summary.unused_fields,
+          circular_deps: r.summary.circular_dependencies,
+        });
+        setTimeout(() => document.getElementById("audit-results")?.scrollIntoView({ behavior: "smooth" }), 100);
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+        posthog.capture("audit_error", { error: err.message });
+      } finally {
+        setLoading(false);
+      }
+    });
   }, []);
   const [drag, setDrag] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -183,15 +183,40 @@ export default function DiffPage() {
   const [file2, setFile2] = useState(null);
 
   useEffect(() => {
-    function restoreFile(key, setter) {
-      const raw = sessionStorage.getItem(key);
-      if (!raw) return;
-      sessionStorage.removeItem(key);
-      const { name, data } = JSON.parse(raw);
-      fetch(data).then(r => r.blob()).then(blob => setter(new File([blob], name)));
-    }
-    restoreFile("twb_pending_diff1", setFile1);
-    restoreFile("twb_pending_diff2", setFile2);
+    const raw1 = sessionStorage.getItem("twb_pending_diff1");
+    const raw2 = sessionStorage.getItem("twb_pending_diff2");
+    if (!raw1) return;
+    sessionStorage.removeItem("twb_pending_diff1");
+    sessionStorage.removeItem("twb_pending_diff2");
+    const { name: n1, data: d1 } = JSON.parse(raw1);
+    const restore = async () => {
+      const f1 = new File([await fetch(d1).then(r => r.blob())], n1);
+      setFile1(f1);
+      if (!raw2) return;
+      const { name: n2, data: d2 } = JSON.parse(raw2);
+      const f2 = new File([await fetch(d2).then(r => r.blob())], n2);
+      setFile2(f2);
+      setLoading(true);
+      setError(null);
+      setResult(null);
+      setSelectedRow(null);
+      try {
+        const r = await diffWorkbooks(f1, f2);
+        setResult(r);
+        posthog.capture("diff_compared", {
+          total_changes: r.summary.total_changes,
+          has_changes: r.summary.has_changes,
+          file1: f1.name,
+          file2: f2.name,
+        });
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+        posthog.capture("diff_error", { error: err.message });
+      } finally {
+        setLoading(false);
+      }
+    };
+    restore();
   }, []);
   const [drag1, setDrag1] = useState(false);
   const [drag2, setDrag2] = useState(false);

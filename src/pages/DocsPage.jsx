@@ -449,7 +449,29 @@ export default function DocsPage() {
     if (!raw) return;
     sessionStorage.removeItem("twb_pending_docs");
     const { name, data } = JSON.parse(raw);
-    fetch(data).then(r => r.blob()).then(blob => setFile(new File([blob], name)));
+    fetch(data).then(r => r.blob()).then(async blob => {
+      const f = new File([blob], name);
+      setFile(f);
+      setLoading(true);
+      setError(null);
+      setResult(null);
+      setSelectedField(null);
+      try {
+        const r = await extractWorkbook(f);
+        setResult(r);
+        posthog.capture("docs_extracted", {
+          workbook: f.name,
+          calculated_fields: r.calculated_fields?.length ?? 0,
+          datasources: r.datasources?.length ?? 0,
+          sheets: r.sheets?.length ?? 0,
+        });
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+        posthog.capture("docs_error", { error: err.message });
+      } finally {
+        setLoading(false);
+      }
+    });
   }, []);
   const [drag, setDrag] = useState(false);
   const [loading, setLoading] = useState(false);
