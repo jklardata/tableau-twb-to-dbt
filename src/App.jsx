@@ -32,53 +32,50 @@ const FREE_TIER_LIMIT = 10;
 const styles = {
   app: {
     minHeight: "100vh",
-    background: "linear-gradient(160deg, #030f0a 0%, #071a12 55%, #071e2a 100%)",
-    color: "#e2ede8",
-    fontFamily: "'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace",
+    background: "#f8fafc",
+    color: "#1e293b",
+    fontFamily: "'Inter', system-ui, sans-serif",
   },
   header: {
-    borderBottom: "1px solid #0d2b1e",
-    padding: "20px 32px",
+    background: "#1e293b",
+    padding: "10px 24px",
     display: "flex",
     alignItems: "center",
-    gap: "16px",
-    background: "rgba(7,26,18,0.9)",
-    backdropFilter: "blur(12px)",
+    gap: "12px",
     position: "sticky",
     top: 0,
     zIndex: 100,
   },
   logo: {
-    fontSize: "13px",
-    fontWeight: 700,
-    color: "#f0f0f0",
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
+    fontSize: "14px",
+    fontWeight: 800,
+    color: "#fff",
+    textDecoration: "none",
   },
-  logoAccent: { color: "#34d399" },
-  tagline: { fontSize: "11px", color: "#4b5563", marginLeft: "auto" },
-  main: { padding: "40px 32px", maxWidth: "1100px", margin: "0 auto" },
+  logoAccent: { color: "#0ea5e9" },
+  tagline: { fontSize: "11px", color: "rgba(255,255,255,0.35)", marginLeft: "auto" },
+  main: { padding: "40px 32px", maxWidth: "1200px", margin: "0 auto" },
   h2: {
-    fontSize: "13px",
+    fontSize: "10px",
     fontWeight: 700,
-    color: "#9ca3af",
+    color: "#94a3b8",
     letterSpacing: "0.12em",
     textTransform: "uppercase",
     marginBottom: "16px",
   },
   dropzone: {
-    border: "1.5px dashed #0d4a2e",
-    borderRadius: "8px",
-    padding: "60px 40px",
+    border: "1.5px dashed #e2e8f0",
+    borderRadius: "10px",
+    padding: "32px 16px",
     textAlign: "center",
     cursor: "pointer",
-    transition: "all 0.2s",
-    background: "#0a1f15",
+    background: "#f8fafc",
+    transition: "all 0.15s",
   },
-  dropTitle: { fontSize: "18px", fontWeight: 600, color: "#e0e0e0", marginBottom: "8px" },
-  dropSub: { fontSize: "12px", color: "#4b5563" },
+  dropTitle: { fontSize: "13px", fontWeight: 600, color: "#64748b", marginBottom: "4px" },
+  dropSub: { fontSize: "11px", color: "#94a3b8" },
   btn: {
-    background: "linear-gradient(135deg, #059669, #0891b2)",
+    background: "#1e293b",
     color: "#fff",
     border: "none",
     borderRadius: "6px",
@@ -86,65 +83,64 @@ const styles = {
     fontSize: "12px",
     fontWeight: 700,
     cursor: "pointer",
-    letterSpacing: "0.06em",
-    textTransform: "uppercase",
+    letterSpacing: "0.04em",
     transition: "opacity 0.15s",
-    boxShadow: "0 2px 12px #05966933",
+    fontFamily: "inherit",
   },
   btnSecondary: {
     background: "transparent",
-    color: "#34d399",
-    border: "1px solid #0d4a2e",
+    color: "#475569",
+    border: "1px solid #e2e8f0",
     borderRadius: "6px",
     padding: "8px 16px",
     fontSize: "11px",
     fontWeight: 600,
     cursor: "pointer",
-    letterSpacing: "0.04em",
+    fontFamily: "inherit",
   },
   card: {
-    background: "#0a1f15",
-    border: "1px solid #0d2b1e",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
     borderRadius: "8px",
     padding: "20px 24px",
     marginBottom: "12px",
   },
-  statsRow: { display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap" },
+  statsRow: { display: "flex", gap: "12px", marginBottom: "24px", flexWrap: "wrap" },
   statCard: {
-    background: "#0a1f15",
-    border: "1px solid #0d2b1e",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
     borderRadius: "8px",
     padding: "16px 20px",
     flex: "1",
     minWidth: "120px",
   },
-  statNum: { fontSize: "28px", fontWeight: 700, color: "#34d399", lineHeight: 1 },
-  statLabel: { fontSize: "10px", color: "#4b5563", marginTop: "4px", letterSpacing: "0.06em", textTransform: "uppercase" },
+  statNum: { fontSize: "28px", fontWeight: 700, color: "#0ea5e9", lineHeight: 1 },
+  statLabel: { fontSize: "10px", color: "#94a3b8", marginTop: "4px", letterSpacing: "0.06em", textTransform: "uppercase" },
   calcRow: {
     display: "flex",
     alignItems: "flex-start",
     gap: "12px",
     padding: "12px 16px",
-    background: "#071a12",
-    border: "1px solid #0d2b1e",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
     borderRadius: "6px",
     marginBottom: "6px",
     cursor: "pointer",
     transition: "border-color 0.15s",
   },
-  calcName: { fontSize: "13px", fontWeight: 600, color: "#d1d5db", flex: 1 },
+  calcName: { fontSize: "13px", fontWeight: 600, color: "#1e293b", flex: 1 },
   log: {
-    background: "#040d08",
-    border: "1px solid #0d2b1e",
+    background: "#1e293b",
+    border: "1px solid #334155",
     borderRadius: "6px",
     padding: "16px",
     maxHeight: "200px",
     overflowY: "auto",
     fontSize: "11px",
-    fontFamily: "monospace",
+    fontFamily: "'JetBrains Mono', monospace",
   },
   logLine: { marginBottom: "4px", lineHeight: 1.5 },
-  tabs: { display: "flex", gap: "0", borderBottom: "1px solid #0d2b1e", marginBottom: "20px" },
+  tabs: { display: "flex", gap: "0", borderBottom: "1px solid #e2e8f0", marginBottom: "20px" },
   tab: {
     padding: "10px 20px",
     fontSize: "11px",
@@ -152,20 +148,21 @@ const styles = {
     letterSpacing: "0.06em",
     textTransform: "uppercase",
     cursor: "pointer",
-    color: "#4b5563",
+    color: "#94a3b8",
     background: "none",
     border: "none",
     borderBottom: "2px solid transparent",
     marginBottom: "-1px",
+    fontFamily: "inherit",
   },
-  tabActive: { color: "#34d399", borderBottom: "2px solid #34d399" },
+  tabActive: { color: "#0ea5e9", borderBottom: "2px solid #0ea5e9" },
   code: {
-    background: "#040d08",
-    border: "1px solid #0d2b1e",
+    background: "#1e293b",
+    border: "1px solid #334155",
     borderRadius: "6px",
     padding: "16px",
     fontSize: "11px",
-    fontFamily: "monospace",
+    fontFamily: "'JetBrains Mono', monospace",
     whiteSpace: "pre-wrap",
     wordBreak: "break-all",
     maxHeight: "500px",
@@ -178,14 +175,14 @@ const styles = {
     alignItems: "center",
     gap: "12px",
     padding: "10px 14px",
-    background: "#071a12",
-    border: "1px solid #0d2b1e",
+    background: "#fff",
+    border: "1px solid #e2e8f0",
     borderRadius: "6px",
   },
-  fileName: { flex: 1, fontSize: "12px", color: "#9ca3af", fontFamily: "monospace" },
+  fileName: { flex: 1, fontSize: "12px", color: "#64748b", fontFamily: "'JetBrains Mono', monospace" },
 };
 
-const logColors = { info: "#6b7280", success: "#34d399", error: "#f87171", warning: "#fbbf24" };
+const logColors = { info: "#94a3b8", success: "#0ea5e9", error: "#ef4444", warning: "#f59e0b" };
 
 // ================================================================
 // SCREENSHOT CAROUSEL
@@ -348,12 +345,11 @@ function EmailCapture() {
   };
 
   return (
-    <div style={{ marginTop: "72px", background: "#0a1f15", border: "1px solid #0d2b1e", borderRadius: "12px", padding: "40px 32px", textAlign: "center" }}>
-      <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#34d399", marginBottom: "10px" }}>Stay in the loop</div>
-      <div style={{ fontSize: "20px", fontWeight: 700, color: "#f0f0f0", marginBottom: "8px" }}>New dialects, features, and migration guides.</div>
-      <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "24px" }}>No spam. Unsubscribe anytime.</div>
+    <div style={{ marginTop: "72px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "40px 32px", textAlign: "center" }}>
+      <div style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>Stay in the loop</div>
+      <div style={{ fontSize: "14px", color: "#64748b", marginBottom: "24px" }}>New dialects, features, and migration guides. No spam.</div>
       {status === "done" ? (
-        <div style={{ fontSize: "14px", color: "#34d399" }}>You're on the list.</div>
+        <div style={{ fontSize: "14px", color: "#0ea5e9" }}>You're on the list.</div>
       ) : (
         <form onSubmit={handleSubmit} style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
           <input
@@ -362,18 +358,18 @@ function EmailCapture() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ padding: "12px 16px", background: "#071a12", border: "1px solid #0d4a2e", borderRadius: "6px", color: "#e2ede8", fontSize: "13px", fontFamily: "inherit", width: "280px", outline: "none" }}
+            style={{ padding: "10px 14px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "6px", color: "#1e293b", fontSize: "13px", fontFamily: "inherit", width: "240px", outline: "none" }}
           />
           <button
             type="submit"
             disabled={status === "loading"}
-            style={{ padding: "12px 20px", background: "linear-gradient(135deg, #059669, #0891b2)", color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.04em" }}
+            style={{ padding: "10px 20px", background: "#1e293b", color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
           >
             {status === "loading" ? "..." : "Notify Me"}
           </button>
         </form>
       )}
-      {status === "error" && <div style={{ fontSize: "12px", color: "#f87171", marginTop: "8px" }}>Something went wrong — try again.</div>}
+      {status === "error" && <div style={{ fontSize: "12px", color: "#ef4444", marginTop: "8px" }}>Something went wrong — try again.</div>}
     </div>
   );
 }
@@ -410,11 +406,11 @@ function MultiWorkbookPaywall() {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", background: "linear-gradient(135deg, rgba(5,150,105,0.08), rgba(8,145,178,0.08))", border: "1px solid rgba(8,145,178,0.3)", borderRadius: "8px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 16px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px" }}>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: "12px", fontWeight: 700, color: "#f0f0f0", marginBottom: "2px" }}>Unlock multi-workbook merge — $19</div>
-        <div style={{ fontSize: "11px", color: "#6b7280" }}>Same price as a single workbook export. Includes deduplication, conflict report, and all SQL models.</div>
-        {error && <div style={{ fontSize: "11px", color: "#f87171", marginTop: "4px" }}>{error}</div>}
+        <div style={{ fontSize: "12px", fontWeight: 700, color: "#1e293b", marginBottom: "2px" }}>Unlock multi-workbook merge — $19</div>
+        <div style={{ fontSize: "11px", color: "#64748b" }}>Same price as a single workbook export. Includes deduplication, conflict report, and all SQL models.</div>
+        {error && <div style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px" }}>{error}</div>}
       </div>
       <button
         onClick={handleCheckout}
@@ -830,286 +826,258 @@ export default function App() {
 
       {/* Header */}
       <div style={styles.header}>
-        <div>
-          <div style={styles.logo}>
-            tableau<span style={styles.logoAccent}> → </span>dbt
-          </div>
-          <div style={{ fontSize: "10px", color: "#34d39966", marginTop: "2px" }}>Calculated Field Exporter</div>
-        </div>
+        <a href="/" style={styles.logo}>
+          Tableau<span style={styles.logoAccent}>to</span>Dbt
+        </a>
         {selectedFile && (
-          <div style={{ fontSize: "11px", color: "#34d399", background: "#05966912", border: "1px solid #05966930", borderRadius: "4px", padding: "4px 10px" }}>
+          <div style={{ fontSize: "11px", color: "#0ea5e9", background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: "4px", padding: "4px 10px" }}>
             {selectedFile}
           </div>
         )}
-        <div style={styles.tagline}>Turn Tableau business logic into documented dbt metrics</div>
+        <nav style={{ marginLeft: "auto", display: "flex", gap: "4px" }}>
+          {[
+            { label: "Convert", href: "/app" },
+            { label: "Diff", href: "/app/diff" },
+            { label: "Docs", href: "/app/docs" },
+            { label: "Audit", href: "/app/audit" },
+          ].map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              style={{
+                fontSize: "12px",
+                color: label === "Convert" ? "#fff" : "rgba(255,255,255,0.55)",
+                padding: "5px 12px",
+                borderRadius: "6px",
+                textDecoration: "none",
+                background: label === "Convert" ? "rgba(255,255,255,0.1)" : "transparent",
+                fontWeight: label === "Convert" ? 600 : 400,
+              }}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
       </div>
 
       <div style={styles.main}>
         {/* ── UPLOAD ── */}
         {stage === "upload" && (
           <div>
-            {/* Hero */}
-            <div style={{ marginBottom: "32px" }}>
-              <div style={{ fontSize: "28px", fontWeight: 700, color: "#f0f0f0", marginBottom: "12px", lineHeight: 1.2 }}>
-                You're not starting from scratch —<br />
-                <span style={{ color: "#34d399" }}>you're starting from 80% done</span>
-              </div>
-              <div style={{ fontSize: "13px", color: "#6b7280", lineHeight: 1.8, maxWidth: "680px" }}>
-                Upload a <span style={{ color: "#9ca3af" }}>.twb</span> or <span style={{ color: "#9ca3af" }}>.twbx</span> file
-                and get a complete, layered dbt package — staging models, fct_ and dim_ marts, LOD-to-CTE translation,
-                a MetricFlow semantic layer, schema tests, and source definitions — in Snowflake or BigQuery SQL.
-                With a clear list of what still needs your judgment.
-              </div>
-              <div style={{ fontSize: "12px", color: "#34d399", marginTop: "12px", letterSpacing: "0.04em" }}>
-                Used by analytics engineers at mid-size and enterprise companies migrating complex Tableau deployments to a modern data stack.
-              </div>
-            </div>
-
-            {/* Benefits row */}
-            <div style={{ display: "flex", gap: "0", marginBottom: "32px" }}>
-              {[
-                {
-                  headline: "Migrate logic, not memory",
-                  body: "Every field shows the original Tableau formula alongside the translated SQL and an AI description. You're not reconstructing intent from scratch — it's all there.",
-                },
-                {
-                  headline: "The dirty work is done",
-                  body: "Dependency chains resolved. LOD expressions converted to CTE templates. Complexity badges on every field. You're reviewing and validating, not drafting.",
-                },
-                {
-                  headline: "A foundation, not a one-off",
-                  body: "Staging + fct_ + dim_ structure means the models you build for this workbook are reusable for the next one. You're building the semantic layer, not a report clone.",
-                },
-              ].map((b, i, arr) => (
-                <div key={b.headline} style={{
-                  flex: 1,
-                  padding: "16px 20px",
-                  background: "#0a1f15",
-                  border: "1px solid #0d2b1e",
-                  borderRight: i < arr.length - 1 ? "none" : "1px solid #0d2b1e",
-                  borderRadius: i === 0 ? "8px 0 0 8px" : i === arr.length - 1 ? "0 8px 8px 0" : "0",
-                }}>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#e2ede8", marginBottom: "6px" }}>{b.headline}</div>
-                  <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.7 }}>{b.body}</div>
+            {/* Split hero */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "0", margin: "-40px -32px 0", borderBottom: "1px solid #e2e8f0" }}>
+              {/* Left: Copy */}
+              <div style={{ padding: "64px 48px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 12px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "20px", fontSize: "11px", fontWeight: 600, color: "#0ea5e9", marginBottom: "20px", width: "fit-content" }}>
+                  ⚡ Free tier · Browser-only · Snowflake & BigQuery
                 </div>
-              ))}
-            </div>
-
-            {/* Dialect selector */}
-            <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "11px", color: "#6b7280", letterSpacing: "0.06em", textTransform: "uppercase" }}>Target warehouse</span>
-              {["Snowflake", "BigQuery"].map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setDialect(d)}
-                  style={{
-                    padding: "6px 14px",
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    fontFamily: "inherit",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    letterSpacing: "0.04em",
-                    border: dialect === d ? "1px solid #34d399" : "1px solid #0d2b1e",
-                    background: dialect === d ? "#05966918" : "transparent",
-                    color: dialect === d ? "#34d399" : "#4b5563",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-
-            {/* Dropzone */}
-            <div
-              style={styles.dropzone}
-              onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) multiMode ? addWorkbookFile(f) : handleFile(f); }}
-              onDragOver={(e) => e.preventDefault()}
-              onClick={() => multiMode ? multiFileRef.current?.click() : fileRef.current?.click()}
-            >
-              <div style={{ fontSize: "32px", marginBottom: "12px" }}>⬆</div>
-              <div style={styles.dropTitle}>
-                {multiMode ? "Drop workbooks here to add" : "Drop .twb or .twbx here"}
-              </div>
-              <div style={styles.dropSub}>or click to browse — workbook data never leaves your browser</div>
-            </div>
-            <input
-              ref={fileRef}
-              type="file"
-              accept=".twb,.twbx"
-              style={{ display: "none" }}
-              onChange={(e) => handleFile(e.target.files[0])}
-            />
-
-            {/* Multi-workbook mode toggle */}
-            <div style={{ marginTop: "12px", display: "flex", alignItems: "center", gap: "12px" }}>
-              <button
-                onClick={() => { setMultiMode((m) => !m); setWorkbooks([]); setLog([]); }}
-                style={{
-                  padding: "6px 14px",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  fontFamily: "inherit",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  letterSpacing: "0.04em",
-                  border: multiMode ? "1px solid #fbbf24" : "1px solid #0d2b1e",
-                  background: multiMode ? "#d9770612" : "transparent",
-                  color: multiMode ? "#fbbf24" : "#4b5563",
-                  transition: "all 0.15s",
-                }}
-              >
-                {multiMode ? "✓ Multi-workbook mode" : "Compare multiple workbooks"}
-              </button>
-              {multiMode && (
-                <span style={{ fontSize: "11px", color: "#6b7280" }}>
-                  Upload 2+ workbooks to deduplicate fields and generate a conflict report
-                </span>
-              )}
-            </div>
-
-            {/* Multi-workbook file list */}
-            {multiMode && (
-              <div style={{ marginTop: "16px", padding: "18px 20px", background: "#0a1f15", border: "1px solid #0d4a2e", borderRadius: "8px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "12px" }}>
-                  Workbooks ({workbooks.length})
+                <h1 style={{ fontSize: "clamp(28px, 3vw, 42px)", fontWeight: 800, color: "#1e293b", lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: "8px", fontFamily: "inherit" }}>
+                  You're not starting from scratch.<br />
+                  <span style={{ color: "#0ea5e9" }}>You're starting from 80% done.</span>
+                </h1>
+                <p style={{ fontSize: "15px", color: "#64748b", maxWidth: "480px", lineHeight: 1.75, marginBottom: "28px" }}>
+                  Upload a .twb or .twbx and get a complete, layered dbt package: staging models, fct_ and dim_ marts, LOD-to-CTE translation, a MetricFlow semantic layer, schema tests, and source definitions.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "36px" }}>
+                  {[
+                    "Staging layer per datasource, fct_ and dim_ models properly split",
+                    "LOD expressions (FIXED / INCLUDE / EXCLUDE) translated to CTE patterns",
+                    "MetricFlow metrics.yml generated for a queryable semantic layer",
+                    "sources.yml and schema tests ready for dbt test on day one",
+                    "Multi-workbook merge mode with conflict report",
+                    "SETUP.md and full translation report included in every export",
+                    "Formula data never leaves your browser",
+                  ].map((f) => (
+                    <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "13px", color: "#475569", lineHeight: 1.5 }}>
+                      <div style={{ width: "6px", height: "6px", background: "#0ea5e9", borderRadius: "50%", flexShrink: 0, marginTop: "6px" }} />
+                      {f}
+                    </div>
+                  ))}
                 </div>
-                {workbooks.length === 0 && (
-                  <div style={{ fontSize: "12px", color: "#4b5563", marginBottom: "12px" }}>
-                    No workbooks added yet — drop files above or use the button below
+                <div style={{ fontSize: "12px", color: "#94a3b8", borderTop: "1px solid #f1f5f9", paddingTop: "20px" }}>
+                  Used by analytics engineers at mid-size and enterprise companies migrating complex Tableau deployments to a modern data stack.
+                </div>
+              </div>
+
+              {/* Right: Widget */}
+              <div style={{ background: "#f8fafc", borderLeft: "1px solid #e2e8f0", padding: "40px 28px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+                  {/* Chrome bar */}
+                  <div style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", padding: "8px 14px", display: "flex", alignItems: "center", gap: "7px" }}>
+                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#ef4444" }} />
+                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f59e0b" }} />
+                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#22c55e" }} />
+                    <span style={{ fontSize: "11px", fontWeight: 600, color: "#64748b", marginLeft: "6px" }}>Convert Workbook to dbt</span>
                   </div>
-                )}
-                {workbooks.map((wb) => (
-                  <div key={wb.name} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", background: "#071a12", border: "1px solid #0d2b1e", borderRadius: "6px", marginBottom: "6px" }}>
-                    <span style={{ fontSize: "12px", color: "#34d399" }}>✓</span>
-                    <span style={{ flex: 1, fontSize: "12px", color: "#9ca3af", fontFamily: "monospace" }}>{wb.name}</span>
-                    <span style={{ fontSize: "10px", color: "#4b5563" }}>
-                      {wb.calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length} fields
-                    </span>
-                    <button
-                      style={{ fontSize: "10px", color: "#f87171", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
-                      onClick={() => setWorkbooks((prev) => prev.filter((w) => w.name !== wb.name))}
+
+                  <div style={{ padding: "24px" }}>
+                    {/* Dialect toggle */}
+                    <div style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "8px" }}>Target warehouse</div>
+                    <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
+                      {["Snowflake", "BigQuery"].map((d) => (
+                        <button
+                          key={d}
+                          onClick={() => setDialect(d)}
+                          style={{
+                            flex: 1, padding: "8px 0", borderRadius: "6px", fontSize: "12px", fontWeight: 700,
+                            fontFamily: "inherit", cursor: "pointer", border: "1px solid",
+                            borderColor: dialect === d ? "#0ea5e9" : "#e2e8f0",
+                            background: dialect === d ? "#f0f9ff" : "#f8fafc",
+                            color: dialect === d ? "#0369a1" : "#94a3b8",
+                            textAlign: "center", transition: "all 0.15s",
+                          }}
+                        >
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Upload zone */}
+                    <div
+                      style={{ border: "1.5px dashed #e2e8f0", borderRadius: "10px", padding: "28px 16px", textAlign: "center", cursor: "pointer", background: "#f8fafc", transition: "all 0.15s", marginBottom: "16px" }}
+                      onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) multiMode ? addWorkbookFile(f) : handleFile(f); }}
+                      onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.background = "#f0f9ff"; }}
+                      onDragLeave={(e) => { e.currentTarget.style.borderColor = ""; e.currentTarget.style.background = ""; }}
+                      onClick={() => multiMode ? multiFileRef.current?.click() : fileRef.current?.click()}
                     >
-                      ✕
+                      <div style={{ fontSize: "26px", color: "#cbd5e1", marginBottom: "8px" }}>↑</div>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "#64748b", marginBottom: "3px" }}>
+                        {multiMode ? "Drop workbooks here to add" : "Drop .twb or .twbx"}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#94a3b8" }}>or click to browse</div>
+                    </div>
+
+                    {/* Output preview */}
+                    <div style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#94a3b8", marginBottom: "8px" }}>Output preview</div>
+                    <div style={{ background: "#1e293b", borderRadius: "8px", padding: "12px 14px", marginBottom: "16px", fontFamily: "'JetBrains Mono', monospace" }}>
+                      {[
+                        { icon: "📁", name: "staging/", badge: null, indent: 0 },
+                        { icon: "📄", name: "stg_sales.sql", badge: "STG", bc: { bg: "rgba(14,165,233,0.15)", color: "#0ea5e9" }, indent: 14 },
+                        { icon: "📁", name: "marts/", badge: null, indent: 0 },
+                        { icon: "📄", name: "fct_orders.sql", badge: "FCT", bc: { bg: "rgba(139,92,246,0.15)", color: "#a78bfa" }, indent: 14 },
+                        { icon: "📄", name: "dim_customers.sql", badge: "DIM", bc: { bg: "rgba(34,197,94,0.15)", color: "#4ade80" }, indent: 14 },
+                        { icon: "📄", name: "metrics.yml", badge: "YML", bc: { bg: "rgba(251,146,60,0.15)", color: "#fb923c" }, indent: 0 },
+                        { icon: "📄", name: "sources.yml", badge: "YML", bc: { bg: "rgba(251,146,60,0.15)", color: "#fb923c" }, indent: 0 },
+                        { icon: "📄", name: "SETUP.md", badge: null, indent: 0 },
+                      ].map((f) => (
+                        <div key={f.name} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "3px 0", paddingLeft: f.indent, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <span style={{ fontSize: "11px", width: "14px", textAlign: "center", flexShrink: 0 }}>{f.icon}</span>
+                          <span style={{ fontSize: "10px", color: "#94a3b8", flex: 1 }}>{f.name}</span>
+                          {f.badge && <span style={{ fontSize: "8px", padding: "1px 5px", borderRadius: "3px", fontWeight: 700, background: f.bc.bg, color: f.bc.color }}>{f.badge}</span>}
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => multiMode ? multiFileRef.current?.click() : fileRef.current?.click()}
+                      style={{ width: "100%", padding: "13px", background: "#1e293b", color: "#fff", border: "none", borderRadius: "8px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}
+                    >
+                      Convert to dbt →
                     </button>
                   </div>
-                ))}
-                {log.filter((l) => l.type === "error").map((l, i) => (
-                  <div key={i} style={{ fontSize: "11px", color: "#f87171", marginBottom: "4px" }}>{l.msg}</div>
-                ))}
-                <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
-                  <button
-                    style={{ ...styles.btnSecondary, fontSize: "12px" }}
-                    onClick={() => multiFileRef.current?.click()}
-                  >
-                    + Add workbook
-                  </button>
-                  {workbooks.length >= 2 && (
-                    <button style={styles.btn} onClick={analyzeWorkbooks}>
-                      Analyze & Merge →
-                    </button>
-                  )}
                 </div>
-                <input
-                  ref={multiFileRef}
-                  type="file"
-                  accept=".twb,.twbx"
-                  style={{ display: "none" }}
-                  onChange={(e) => { if (e.target.files[0]) addWorkbookFile(e.target.files[0]); e.target.value = ""; }}
-                />
-              </div>
-            )}
 
+                <div style={{ textAlign: "center", fontSize: "11px", color: "#94a3b8", marginTop: "12px" }}>
+                  🔒 All processing is local. Nothing is uploaded.
+                </div>
 
-            {/* See it in action */}
-            <div style={{ marginTop: "56px" }}>
-              <div style={{ ...styles.h2, marginBottom: "8px", textAlign: "center" }}>See it in action</div>
-              <div style={{ fontSize: "14px", color: "#9ca3af", textAlign: "center", marginBottom: "28px" }}>
-                Upload a .twb — walk away with a full dbt package
-              </div>
-              <ScreenshotCarousel />
-            </div>
+                {/* Multi-workbook toggle */}
+                <div style={{ marginTop: "12px" }}>
+                  <button
+                    onClick={() => { setMultiMode((m) => !m); setWorkbooks([]); setLog([]); }}
+                    style={{
+                      padding: "6px 14px", fontSize: "11px", fontWeight: 700, fontFamily: "inherit",
+                      borderRadius: "6px", cursor: "pointer",
+                      border: multiMode ? "1px solid #f59e0b" : "1px solid #e2e8f0",
+                      background: multiMode ? "rgba(245,158,11,0.08)" : "transparent",
+                      color: multiMode ? "#f59e0b" : "#94a3b8",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {multiMode ? "✓ Multi-workbook mode" : "Compare multiple workbooks"}
+                  </button>
+                </div>
 
-            {/* What you get */}
-            <div style={{ marginTop: "48px" }}>
-              <div style={{ ...styles.h2, marginBottom: "20px" }}>What you get</div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "32px" }}>
-                {[
-                  {
-                    file: "staging/stg_*.sql",
-                    icon: "🗂️",
-                    label: "Staging layer — one per datasource",
-                    desc: "A clean, typed view over your raw source table. Column names referenced in your Tableau formulas are pre-populated. All downstream models reference this — change it once, everything updates.",
-                  },
-                  {
-                    file: "marts/fct_*.sql + dim_*.sql",
-                    icon: "📐",
-                    label: "fct_ and dim_ models — properly split",
-                    desc: "Aggregate expressions (SUM/COUNT/AVG) land in a fct_ model with a GROUP BY you configure. Row-level expressions land in a dim_ model with no aggregation. No more invalid SQL mixing both in one SELECT.",
-                  },
-                  {
-                    file: "metrics.yml",
-                    icon: "📡",
-                    label: "MetricFlow semantic layer (dbt ≥ 1.6)",
-                    desc: "Simple aggregations become proper semantic_model measures with correct agg: types. Derived expressions (SUM(a)/COUNT(b)) are generated as type: derived metrics. Fill in your primary key, run dbt sl validate.",
-                  },
-                  {
-                    file: "FIXED/INCLUDE/EXCLUDE → CTEs",
-                    icon: "🔗",
-                    label: "LOD expressions translated to CTE patterns",
-                    desc: "Tableau LOD expressions are the hardest part of any migration. FIXED LODs are converted to SQL CTE templates and injected directly into your fct_ model's WITH clause — no manual rewrite required.",
-                  },
-                  {
-                    file: "STG / FCT / DIM preview before you run",
-                    icon: "🗺️",
-                    label: "Models breakdown before you commit",
-                    desc: "Before running the AI pass, see the full output structure: every staging model, which datasources get a fct_ vs dim_ model, field counts, grain status, and LOD CTE count. No surprises after translation.",
-                  },
-                  {
-                    file: "conflict_report.md",
-                    icon: "🔀",
-                    label: "Multi-workbook merge mode",
-                    desc: "Upload 2+ workbooks. Identical fields across workbooks are auto-merged into one canonical definition. Formula conflicts are flagged with both versions side by side so you decide which to use.",
-                  },
-                  {
-                    file: "sources.yml + schema.yml",
-                    icon: "🧪",
-                    label: "Source definitions and schema tests",
-                    desc: "Datasource names extracted from your workbook XML, pre-populated in sources.yml. not_null tests on every measure, unique + not_null on staging primary keys. dbt test ready on day one.",
-                  },
-                  {
-                    file: "SETUP.md + translation_report.md",
-                    icon: "📋",
-                    label: "Step-by-step docs and full translation report",
-                    desc: "SETUP.md lists every datasource, grain instructions, and dbt commands to run. The translation report shows original formula → SQL output side by side, LOD CTE templates, and window function rewrites for untranslatable fields.",
-                  },
-                ].map((item) => (
-                  <div key={item.file} style={{ background: "#0a1f15", border: "1px solid #0d2b1e", borderRadius: "8px", padding: "18px 20px", display: "flex", gap: "14px" }}>
-                    <div style={{ fontSize: "22px", flexShrink: 0, marginTop: "2px" }}>{item.icon}</div>
-                    <div>
-                      <div style={{ fontSize: "12px", fontWeight: 700, color: "#e2ede8", marginBottom: "4px" }}>{item.label}</div>
-                      <div style={{ fontSize: "11px", fontFamily: "monospace", color: "#34d399", marginBottom: "6px" }}>{item.file}</div>
-                      <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.7 }}>{item.desc}</div>
+                {/* Multi-workbook file list */}
+                {multiMode && (
+                  <div style={{ marginTop: "12px", padding: "16px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "11px", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
+                      Workbooks ({workbooks.length})
+                    </div>
+                    {workbooks.length === 0 && (
+                      <div style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "10px" }}>No workbooks added yet — drop files above</div>
+                    )}
+                    {workbooks.map((wb) => (
+                      <div key={wb.name} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "7px 10px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", marginBottom: "5px" }}>
+                        <span style={{ fontSize: "12px", color: "#0ea5e9" }}>✓</span>
+                        <span style={{ flex: 1, fontSize: "12px", color: "#64748b", fontFamily: "'JetBrains Mono', monospace" }}>{wb.name}</span>
+                        <span style={{ fontSize: "10px", color: "#94a3b8" }}>{wb.calcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length} fields</span>
+                        <button style={{ fontSize: "10px", color: "#ef4444", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }} onClick={() => setWorkbooks((prev) => prev.filter((w) => w.name !== wb.name))}>✕</button>
+                      </div>
+                    ))}
+                    {log.filter((l) => l.type === "error").map((l, i) => (
+                      <div key={i} style={{ fontSize: "11px", color: "#ef4444", marginBottom: "4px" }}>{l.msg}</div>
+                    ))}
+                    <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                      <button style={{ ...styles.btnSecondary, fontSize: "12px" }} onClick={() => multiFileRef.current?.click()}>+ Add workbook</button>
+                      {workbooks.length >= 2 && <button style={styles.btn} onClick={analyzeWorkbooks}>Analyze & Merge →</button>}
                     </div>
                   </div>
-                ))}
+                )}
+              </div>
+            </div>
+
+            <input ref={fileRef} type="file" accept=".twb,.twbx" style={{ display: "none" }} onChange={(e) => handleFile(e.target.files[0])} />
+            <input ref={multiFileRef} type="file" accept=".twb,.twbx" style={{ display: "none" }} onChange={(e) => { if (e.target.files[0]) addWorkbookFile(e.target.files[0]); e.target.value = ""; }} />
+
+            {/* Below fold */}
+            <div style={{ padding: "64px 0", maxWidth: "960px", margin: "0 auto" }}>
+              {/* See it in action */}
+              <div style={{ marginBottom: "64px" }}>
+                <div style={{ ...styles.h2, marginBottom: "8px", textAlign: "center" }}>See it in action</div>
+                <div style={{ fontSize: "14px", color: "#94a3b8", textAlign: "center", marginBottom: "28px" }}>
+                  Upload a .twb — walk away with a full dbt package
+                </div>
+                <ScreenshotCarousel />
               </div>
 
               {/* How it works */}
               <div style={{ ...styles.h2, marginBottom: "20px" }}>How it works</div>
-              <div style={{ display: "flex", gap: "0", marginBottom: "16px" }}>
+              <div style={{ display: "flex", gap: "0", marginBottom: "56px" }}>
                 {[
                   { step: "01", label: "Parse", desc: "Reads every calculated field from .twb or .twbx. Resolves Calculation_XXXX internal IDs to human-readable names. Maps each field to its datasource. .twbx files are unzipped automatically." },
                   { step: "02", label: "Classify", desc: "Categorises fields by complexity: simple expressions, date/conditional logic, LOD expressions (FIXED/INCLUDE/EXCLUDE), and table calcs flagged for window function rewrites." },
                   { step: "03", label: "Translate", desc: "Rule-based pass converts Tableau syntax to your target dialect (Snowflake or BigQuery). LOD expressions generate CTE templates. Complex calcs go through an AI pass to resolve intent. Dependency chains are resolved." },
                   { step: "04", label: "Structure", desc: "Aggregates go into fct_ models with GROUP BY. Row-level expressions go into dim_ models. LOD CTEs are injected into the WITH clause. MetricFlow metrics.yml is generated for a queryable semantic layer." },
                 ].map((s, i, arr) => (
-                  <div key={s.step} style={{ flex: 1, padding: "18px 20px", background: "#0a1f15", border: "1px solid #0d2b1e", borderRight: i < arr.length - 1 ? "none" : "1px solid #0d2b1e", borderRadius: i === 0 ? "8px 0 0 8px" : i === arr.length - 1 ? "0 8px 8px 0" : "0" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 700, color: "#34d399", letterSpacing: "0.1em", marginBottom: "6px" }}>{s.step}</div>
-                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "8px" }}>{s.label}</div>
-                    <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.7 }}>{s.desc}</div>
+                  <div key={s.step} style={{ flex: 1, padding: "20px", background: "#fff", border: "1px solid #e2e8f0", borderRight: i < arr.length - 1 ? "none" : "1px solid #e2e8f0", borderRadius: i === 0 ? "10px 0 0 10px" : i === arr.length - 1 ? "0 10px 10px 0" : "0" }}>
+                    <div style={{ fontSize: "22px", fontWeight: 800, color: "#e2e8f0", marginBottom: "8px" }}>{s.step}</div>
+                    <div style={{ fontSize: "13px", fontWeight: 700, color: "#0ea5e9", marginBottom: "4px" }}>{s.label}</div>
+                    <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>{s.desc}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* What you get */}
+              <div style={{ ...styles.h2, marginBottom: "20px" }}>What you get</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                {[
+                  { file: "staging/stg_*.sql", icon: "🗂️", label: "Staging layer, one per datasource", desc: "A clean, typed view over your raw source table. Column names referenced in your Tableau formulas are pre-populated. All downstream models reference this." },
+                  { file: "marts/fct_*.sql + dim_*.sql", icon: "📐", label: "fct_ and dim_ models, properly split", desc: "Aggregate expressions land in a fct_ model with a GROUP BY you configure. Row-level expressions land in a dim_ model. No more invalid SQL mixing both in one SELECT." },
+                  { file: "metrics.yml", icon: "📡", label: "MetricFlow semantic layer (dbt 1.6+)", desc: "Simple aggregations become proper semantic_model measures. Derived expressions are generated as type: derived metrics. Fill in your primary key, run dbt sl validate." },
+                  { file: "FIXED / INCLUDE / EXCLUDE to CTEs", icon: "🔗", label: "LOD expressions translated to CTE patterns", desc: "FIXED LODs are converted to SQL CTE templates and injected directly into your fct_ model's WITH clause. No manual rewrite required." },
+                  { file: "sources.yml + schema.yml", icon: "🧪", label: "Source definitions and schema tests", desc: "Datasource names extracted from your workbook XML and pre-populated in sources.yml. not_null tests on every measure, unique + not_null on staging primary keys." },
+                  { file: "conflict_report.md", icon: "🔀", label: "Multi-workbook merge mode", desc: "Upload 2+ workbooks. Identical fields are auto-merged into one canonical definition. Formula conflicts are flagged with both versions side by side." },
+                  { file: "STG / FCT / DIM preview before you run", icon: "🗺️", label: "Models breakdown before you commit", desc: "Before the AI pass, see the full output structure: every staging model, field counts, grain status, and LOD CTE count." },
+                  { file: "SETUP.md + translation_report.md", icon: "📋", label: "Step-by-step docs and full translation report", desc: "SETUP.md lists every datasource, grain instructions, and dbt commands to run. The translation report shows original formula to SQL output side by side." },
+                ].map((item) => (
+                  <div key={item.file} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", display: "flex", gap: "14px" }}>
+                    <div style={{ fontSize: "20px", flexShrink: 0, marginTop: "2px" }}>{item.icon}</div>
+                    <div>
+                      <div style={{ fontSize: "10px", fontFamily: "'JetBrains Mono', monospace", color: "#0ea5e9", marginBottom: "4px" }}>{item.file}</div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#1e293b", marginBottom: "4px" }}>{item.label}</div>
+                      <div style={{ fontSize: "12px", color: "#64748b", lineHeight: 1.6 }}>{item.desc}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -1121,7 +1089,7 @@ export default function App() {
         {stage === "parsing" && (
           <div style={{ textAlign: "center", padding: "80px 0" }}>
             <div style={{ fontSize: "32px", marginBottom: "16px", animation: "spin 1s linear infinite" }}>⚙</div>
-            <div style={{ fontSize: "16px", color: "#d1d5db", marginBottom: "24px" }}>Parsing workbook...</div>
+            <div style={{ fontSize: "16px", color: "#1e293b", marginBottom: "24px" }}>Parsing workbook...</div>
             <div style={styles.log}>
               {log.map((l, i) => (
                 <div key={i} style={{ ...styles.logLine, color: logColors[l.type] || "#6b7280" }}>
@@ -1136,31 +1104,31 @@ export default function App() {
         {stage === "scan" && scanResults && (
           <div style={{ position: "relative", maxWidth: "600px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "32px" }}>
-              <div style={{ width: "60px", height: "60px", margin: "0 auto 16px", background: "linear-gradient(135deg, #059669, #0891b2)", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", boxShadow: "0 8px 28px #05966944" }}>🔍</div>
-              <div style={{ fontSize: "22px", fontWeight: 700, color: "#f0fdf4", marginBottom: "6px" }}>Privacy Scan Complete</div>
-              <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                <span style={{ color: "#34d399" }}>{selectedFile}</span> · {scanResults.staysInBrowser.length} local items · {scanResults.translatableCount} formulas to translate
+              <div style={{ width: "60px", height: "60px", margin: "0 auto 16px", background: "#1e293b", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", boxShadow: "0 8px 28px rgba(0,0,0,0.1)" }}>🔍</div>
+              <div style={{ fontSize: "22px", fontWeight: 700, color: "#1e293b", marginBottom: "6px" }}>Privacy Scan Complete</div>
+              <div style={{ fontSize: "12px", color: "#64748b" }}>
+                <span style={{ color: "#0ea5e9" }}>{selectedFile}</span> · {scanResults.staysInBrowser.length} local items · {scanResults.translatableCount} formulas to translate
               </div>
             </div>
 
             {/* Stays in browser */}
-            <div style={{ background: "rgba(5,150,105,0.07)", border: "1px solid rgba(5,150,105,0.2)", borderRadius: "12px", padding: "18px 20px", marginBottom: "12px" }}>
+            <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", padding: "18px 20px", marginBottom: "12px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                <div style={{ width: "28px", height: "28px", background: "#05966922", border: "1px solid #05966955", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>🔒</div>
+                <div style={{ width: "28px", height: "28px", background: "#dcfce7", border: "1px solid #86efac", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>🔒</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#ecfdf5" }}>Stays in your browser</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280" }}>Connection metadata — never transmitted</div>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#166534" }}>Stays in your browser</div>
+                  <div style={{ fontSize: "11px", color: "#64748b" }}>Connection metadata — never transmitted</div>
                 </div>
-                <div style={{ fontSize: "9px", fontWeight: 700, color: "#34d399", background: "#05966918", border: "1px solid #05966940", borderRadius: "4px", padding: "2px 8px", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>BROWSER ONLY</div>
+                <div style={{ fontSize: "9px", fontWeight: 700, color: "#166534", background: "#dcfce7", border: "1px solid #86efac", borderRadius: "4px", padding: "2px 8px", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>BROWSER ONLY</div>
               </div>
               {scanResults.staysInBrowser.length === 0 ? (
-                <div style={{ fontSize: "12px", color: "#4b5563", fontStyle: "italic" }}>No connection strings or server paths detected</div>
+                <div style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic" }}>No connection strings or server paths detected</div>
               ) : (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                   {scanResults.staysInBrowser.map((f, i) => (
-                    <div key={i} style={{ background: "rgba(5,150,105,0.05)", border: "1px solid rgba(5,150,105,0.15)", borderRadius: "6px", padding: "6px 10px" }}>
-                      <div style={{ fontSize: "9px", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "2px" }}>{f.type}</div>
-                      <div style={{ fontSize: "11px", color: "#9ca3af", fontFamily: "monospace" }}>{f.value}</div>
+                    <div key={i} style={{ background: "#fff", border: "1px solid #bbf7d0", borderRadius: "6px", padding: "6px 10px" }}>
+                      <div style={{ fontSize: "9px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: "2px" }}>{f.type}</div>
+                      <div style={{ fontSize: "11px", color: "#1e293b", fontFamily: "'JetBrains Mono', monospace" }}>{f.value}</div>
                     </div>
                   ))}
                 </div>
@@ -1169,17 +1137,17 @@ export default function App() {
 
             {/* Flagged */}
             {scanResults.flagged.length > 0 && (
-              <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.18)", borderRadius: "12px", padding: "18px 20px", marginBottom: "12px" }}>
+              <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "12px", padding: "18px 20px", marginBottom: "12px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                  <div style={{ width: "28px", height: "28px", background: "#d9770622", border: "1px solid #d9770655", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>⚠️</div>
+                  <div style={{ width: "28px", height: "28px", background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>⚠️</div>
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#fcd34d" }}>Possible client names detected</div>
-                    <div style={{ fontSize: "11px", color: "#6b7280" }}>In parameter defaults — classified as skip, not sent to AI</div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#92400e" }}>Possible client names detected</div>
+                    <div style={{ fontSize: "11px", color: "#64748b" }}>In parameter defaults — classified as skip, not sent to AI</div>
                   </div>
-                  <div style={{ marginLeft: "auto", fontSize: "9px", fontWeight: 700, color: "#fbbf24", background: "rgba(245,158,11,0.09)", border: "1px solid rgba(245,158,11,0.28)", borderRadius: "4px", padding: "2px 8px", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>NOT SENT</div>
+                  <div style={{ marginLeft: "auto", fontSize: "9px", fontWeight: 700, color: "#92400e", background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "4px", padding: "2px 8px", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>NOT SENT</div>
                 </div>
                 {scanResults.flagged.map((f, i) => (
-                  <div key={i} style={{ fontSize: "11px", color: "#fcd34d", fontFamily: "monospace", padding: "6px 10px", background: "rgba(245,158,11,0.06)", borderRadius: "5px", marginBottom: "4px", opacity: 0.9 }}>
+                  <div key={i} style={{ fontSize: "11px", color: "#92400e", fontFamily: "'JetBrains Mono', monospace", padding: "6px 10px", background: "#fff", borderRadius: "5px", marginBottom: "4px" }}>
                     <span style={{ opacity: 0.5 }}>{f.caption}: </span>{f.value}
                   </div>
                 ))}
@@ -1187,28 +1155,28 @@ export default function App() {
             )}
 
             {/* Sent to AI */}
-            <div style={{ background: "rgba(8,145,178,0.08)", border: "1px solid rgba(8,145,178,0.22)", borderRadius: "12px", padding: "18px 20px", marginBottom: "28px" }}>
+            <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "12px", padding: "18px 20px", marginBottom: "28px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={{ width: "28px", height: "28px", background: "#0891b222", border: "1px solid #0891b255", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>✨</div>
+                  <div style={{ width: "28px", height: "28px", background: "#e0f2fe", border: "1px solid #7dd3fc", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>✨</div>
                   <div>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#67e8f9" }}>Sent to AI for translation</div>
-                    <div style={{ fontSize: "11px", color: "#6b7280" }}>Formula logic only — no connection data</div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#0369a1" }}>Sent to AI for translation</div>
+                    <div style={{ fontSize: "11px", color: "#64748b" }}>Formula logic only — no connection data</div>
                   </div>
                 </div>
-                <div style={{ fontSize: "32px", fontWeight: 700, color: "#2dd4bf", lineHeight: 1 }}>{scanResults.translatableCount}</div>
+                <div style={{ fontSize: "32px", fontWeight: 700, color: "#0ea5e9", lineHeight: 1 }}>{scanResults.translatableCount}</div>
               </div>
             </div>
 
             <div style={{ display: "flex", gap: "10px" }}>
               <button
-                style={{ flex: 1, padding: "14px", background: "linear-gradient(135deg, #059669, #0891b2)", border: "none", borderRadius: "10px", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em", boxShadow: "0 4px 20px #05966944" }}
+                style={{ flex: 1, padding: "14px", background: "#1e293b", border: "none", borderRadius: "10px", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
                 onClick={() => setStage("preview")}
               >
                 Looks good — continue to preview →
               </button>
               <button
-                style={{ padding: "14px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", color: "#6b7280", fontSize: "13px", cursor: "pointer" }}
+                style={{ padding: "14px 20px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", color: "#64748b", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}
                 onClick={resetApp}
               >
                 Cancel
@@ -1227,8 +1195,8 @@ export default function App() {
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
               <div>
-                <div style={{ fontSize: "20px", fontWeight: 700, color: "#f0f0f0" }}>Ready to translate</div>
-                <div style={{ fontSize: "12px", color: "#4b5563", marginTop: "4px" }}>Review the field breakdown, then run the full export</div>
+                <div style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>Ready to translate</div>
+                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>Review the field breakdown, then run the full export</div>
               </div>
               {!needsPayment && (
                 <button style={styles.btn} onClick={runTranslation}>
@@ -1239,12 +1207,12 @@ export default function App() {
 
             <div style={styles.statsRow}>
               {[
-                { num: translatable.filter((c) => c.complexity === "simple").length, label: "Simple", color: "#34d399" },
-                { num: translatable.filter((c) => c.complexity === "moderate").length, label: "Moderate", color: "#67e8f9" },
-                { num: translatable.filter((c) => c.complexity === "complex").length, label: "Complex", color: "#fbbf24" },
-                { num: claudeCount, label: "AI layer", color: "#2dd4bf" },
-                { num: untranslatable.length, label: "Untranslatable", color: "#f87171" },
-                { num: skipped.length, label: "Skipped", color: "#4b5563" },
+                { num: translatable.filter((c) => c.complexity === "simple").length, label: "Simple", color: "#0ea5e9" },
+                { num: translatable.filter((c) => c.complexity === "moderate").length, label: "Moderate", color: "#8b5cf6" },
+                { num: translatable.filter((c) => c.complexity === "complex").length, label: "Complex", color: "#f59e0b" },
+                { num: claudeCount, label: "AI layer", color: "#06b6d4" },
+                { num: untranslatable.length, label: "Untranslatable", color: "#ef4444" },
+                { num: skipped.length, label: "Skipped", color: "#94a3b8" },
               ].map((s) => (
                 <div key={s.label} style={styles.statCard}>
                   <div style={{ ...styles.statNum, color: s.color }}>{s.num}</div>
@@ -1263,7 +1231,7 @@ export default function App() {
               const totalUntranslatable = calcs.filter((c) => c.complexity === "untranslatable").length;
               return (
                 <div style={{ marginBottom: "24px" }}>
-                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#9ca3af", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
                     Models to be generated
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -1271,28 +1239,28 @@ export default function App() {
                       const lodCount = [...(ds.aggregates || []), ...(ds.rowLevel || [])].filter((c) => c.lodCte).length;
                       const grain = grainConfig[ds.slug]?.cols;
                       return (
-                        <div key={ds.slug} style={{ background: "#0a1f15", border: "1px solid #0d2b1e", borderRadius: "8px", padding: "14px 18px" }}>
+                        <div key={ds.slug} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "14px 18px" }}>
                           {/* Staging */}
                           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: ds.aggregates?.length > 0 || ds.rowLevel?.length > 0 ? "10px" : "0" }}>
-                            <span style={{ fontSize: "10px", fontWeight: 700, color: "#34d399", background: "#05966918", border: "1px solid #05966930", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>STG</span>
-                            <code style={{ fontSize: "12px", color: "#d1d5db" }}>stg_{ds.slug}.sql</code>
-                            <span style={{ fontSize: "11px", color: "#4b5563", marginLeft: "auto" }}>
+                            <span style={{ fontSize: "10px", fontWeight: 700, color: "#0ea5e9", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>STG</span>
+                            <code style={{ fontSize: "12px", color: "#1e293b", fontFamily: "'JetBrains Mono', monospace" }}>stg_{ds.slug}.sql</code>
+                            <span style={{ fontSize: "11px", color: "#94a3b8", marginLeft: "auto" }}>
                               {(ds.aggregates?.length || 0) + (ds.rowLevel?.length || 0)} fields
                             </span>
                           </div>
                           {/* Fct */}
                           {ds.aggregates?.length > 0 && (
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "20px", marginBottom: ds.rowLevel?.length > 0 ? "6px" : "0" }}>
-                              <span style={{ fontSize: "10px", color: "#0d2b1e" }}>└</span>
-                              <span style={{ fontSize: "10px", fontWeight: 700, color: "#67e8f9", background: "#0891b218", border: "1px solid #0891b230", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>FCT</span>
-                              <code style={{ fontSize: "12px", color: "#d1d5db" }}>fct_{ds.slug}.sql</code>
-                              <span style={{ fontSize: "11px", color: "#4b5563" }}>{ds.aggregates.length} aggregates</span>
+                              <span style={{ fontSize: "10px", color: "#e2e8f0" }}>└</span>
+                              <span style={{ fontSize: "10px", fontWeight: 700, color: "#8b5cf6", background: "#f5f3ff", border: "1px solid #ddd6fe", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>FCT</span>
+                              <code style={{ fontSize: "12px", color: "#1e293b", fontFamily: "'JetBrains Mono', monospace" }}>fct_{ds.slug}.sql</code>
+                              <span style={{ fontSize: "11px", color: "#94a3b8" }}>{ds.aggregates.length} aggregates</span>
                               {grain ? (
-                                <span style={{ fontSize: "10px", color: "#34d399", background: "#05966912", border: "1px solid #05966930", borderRadius: "4px", padding: "2px 7px", marginLeft: "auto" }}>
+                                <span style={{ fontSize: "10px", color: "#0ea5e9", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "4px", padding: "2px 7px", marginLeft: "auto" }}>
                                   GROUP BY {grain}
                                 </span>
                               ) : (
-                                <span style={{ fontSize: "10px", color: "#fbbf24", background: "#d9770612", border: "1px solid #d9770630", borderRadius: "4px", padding: "2px 7px", marginLeft: "auto" }}>
+                                <span style={{ fontSize: "10px", color: "#f59e0b", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "4px", padding: "2px 7px", marginLeft: "auto" }}>
                                   ⚠ grain not set
                                 </span>
                               )}
@@ -1301,12 +1269,12 @@ export default function App() {
                           {/* Dim */}
                           {ds.rowLevel?.length > 0 && (
                             <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingLeft: "20px" }}>
-                              <span style={{ fontSize: "10px", color: "#0d2b1e" }}>└</span>
-                              <span style={{ fontSize: "10px", fontWeight: 700, color: "#fbbf24", background: "#d9770612", border: "1px solid #d9770630", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>DIM</span>
-                              <code style={{ fontSize: "12px", color: "#d1d5db" }}>dim_{ds.slug}.sql</code>
-                              <span style={{ fontSize: "11px", color: "#4b5563" }}>{ds.rowLevel.length} row-level</span>
+                              <span style={{ fontSize: "10px", color: "#e2e8f0" }}>└</span>
+                              <span style={{ fontSize: "10px", fontWeight: 700, color: "#f59e0b", background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "4px", padding: "2px 7px", letterSpacing: "0.05em" }}>DIM</span>
+                              <code style={{ fontSize: "12px", color: "#1e293b", fontFamily: "'JetBrains Mono', monospace" }}>dim_{ds.slug}.sql</code>
+                              <span style={{ fontSize: "11px", color: "#94a3b8" }}>{ds.rowLevel.length} row-level</span>
                               {lodCount > 0 && (
-                                <span style={{ fontSize: "10px", color: "#2dd4bf", marginLeft: "auto" }}>{lodCount} LOD CTE{lodCount !== 1 ? "s" : ""}</span>
+                                <span style={{ fontSize: "10px", color: "#06b6d4", marginLeft: "auto" }}>{lodCount} LOD CTE{lodCount !== 1 ? "s" : ""}</span>
                               )}
                             </div>
                           )}
@@ -1315,11 +1283,11 @@ export default function App() {
                     })}
                   </div>
                   {/* Summary footer */}
-                  <div style={{ display: "flex", gap: "20px", marginTop: "10px", padding: "10px 14px", background: "#071a12", borderRadius: "6px", fontSize: "11px", color: "#4b5563" }}>
-                    <span><span style={{ color: "#34d399" }}>{datasources.length}</span> datasource{datasources.length !== 1 ? "s" : ""}</span>
-                    <span><span style={{ color: "#34d399" }}>{datasources.filter(ds => ds.aggregates?.length > 0).length * 2 + datasources.filter(ds => !ds.aggregates?.length && ds.rowLevel?.length > 0).length + datasources.length}</span> models total</span>
-                    {totalLods > 0 && <span><span style={{ color: "#2dd4bf" }}>{totalLods}</span> LOD CTEs to wire up</span>}
-                    {totalUntranslatable > 0 && <span><span style={{ color: "#f87171" }}>{totalUntranslatable}</span> table calcs need manual rewrite</span>}
+                  <div style={{ display: "flex", gap: "20px", marginTop: "10px", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", fontSize: "11px", color: "#94a3b8" }}>
+                    <span><span style={{ color: "#0ea5e9" }}>{datasources.length}</span> datasource{datasources.length !== 1 ? "s" : ""}</span>
+                    <span><span style={{ color: "#0ea5e9" }}>{datasources.filter(ds => ds.aggregates?.length > 0).length * 2 + datasources.filter(ds => !ds.aggregates?.length && ds.rowLevel?.length > 0).length + datasources.length}</span> models total</span>
+                    {totalLods > 0 && <span><span style={{ color: "#06b6d4" }}>{totalLods}</span> LOD CTEs to wire up</span>}
+                    {totalUntranslatable > 0 && <span><span style={{ color: "#ef4444" }}>{totalUntranslatable}</span> table calcs need manual rewrite</span>}
                   </div>
                 </div>
               );
@@ -1331,11 +1299,11 @@ export default function App() {
               const aggregateDatasources = datasources.filter((ds) => ds.aggregates?.length > 0);
               if (aggregateDatasources.length === 0) return null;
               return (
-                <div style={{ marginBottom: "24px", padding: "18px 20px", background: "#071e2a", border: "1px solid #0891b230", borderRadius: "8px", borderLeft: "3px solid #0891b2" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#67e8f9", marginBottom: "4px" }}>Grain configuration</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", lineHeight: 1.6, marginBottom: "14px" }}>
+                <div style={{ marginBottom: "24px", padding: "18px 20px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", borderLeft: "3px solid #0ea5e9" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#0369a1", marginBottom: "4px" }}>Grain configuration</div>
+                  <div style={{ fontSize: "11px", color: "#64748b", lineHeight: 1.6, marginBottom: "14px" }}>
                     For each datasource with aggregate metrics, specify the grain columns (comma-separated).
-                    These become the GROUP BY in your <code style={{ color: "#2dd4bf" }}>fct_</code> models.
+                    These become the GROUP BY in your <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>fct_</code> models.
                     Leave blank to use a TODO placeholder.
                   </div>
                   {aggregateDatasources.map((ds) => {
@@ -1347,8 +1315,8 @@ export default function App() {
                     return (
                       <div key={ds.slug} style={{ marginBottom: "12px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                          <code style={{ fontSize: "12px", color: "#34d399" }}>fct_{ds.slug}</code>
-                          <span style={{ fontSize: "10px", color: "#4b5563" }}>· {ds.aggregates.length} aggregate fields</span>
+                          <code style={{ fontSize: "12px", color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>fct_{ds.slug}</code>
+                          <span style={{ fontSize: "10px", color: "#94a3b8" }}>· {ds.aggregates.length} aggregate fields</span>
                         </div>
                         <input
                           type="text"
@@ -1362,18 +1330,18 @@ export default function App() {
                           }
                           style={{
                             width: "100%",
-                            background: "#040d08",
-                            border: "1px solid #0d4a2e",
+                            background: "#fff",
+                            border: "1px solid #e2e8f0",
                             borderRadius: "6px",
                             padding: "8px 12px",
                             fontSize: "12px",
-                            color: "#e2ede8",
-                            fontFamily: "monospace",
+                            color: "#1e293b",
+                            fontFamily: "'JetBrains Mono', monospace",
                             outline: "none",
                           }}
                         />
                         {hint && !grainConfig[ds.slug]?.cols && (
-                          <div style={{ fontSize: "10px", color: "#34d39966", marginTop: "4px" }}>
+                          <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "4px" }}>
                             AI suggested: {hint}
                           </div>
                         )}
@@ -1390,7 +1358,7 @@ export default function App() {
               .map((c, i) => (
                 <div
                   key={i}
-                  style={{ ...styles.calcRow, borderColor: expandedCalc === i ? "#2d3a5c" : "#0d2b1e" }}
+                  style={{ ...styles.calcRow, borderColor: expandedCalc === i ? "#bae6fd" : "#e2e8f0" }}
                   onClick={() => setExpandedCalc(expandedCalc === i ? null : i)}
                 >
                   <div style={{ flex: 1 }}>
@@ -1402,17 +1370,17 @@ export default function App() {
                     </div>
                     {expandedCalc === i && (
                       <div style={{ marginTop: "12px" }}>
-                        <div style={{ fontSize: "10px", color: "#4b5563", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Formula</div>
-                        <div style={{ ...styles.code, maxHeight: "120px", fontSize: "11px", color: "#9ca3af" }}>
+                        <div style={{ fontSize: "10px", color: "#94a3b8", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Formula</div>
+                        <div style={{ ...styles.code, maxHeight: "120px", fontSize: "11px" }}>
                           {c.formula}
                         </div>
                         {c.claudeReasons?.length > 0 && (
-                          <div style={{ marginTop: "8px", fontSize: "11px", color: "#34d399" }}>
+                          <div style={{ marginTop: "8px", fontSize: "11px", color: "#0ea5e9" }}>
                             AI flags: {c.claudeReasons.join(" · ")}
                           </div>
                         )}
                         {c.dependsOn?.length > 0 && (
-                          <div style={{ marginTop: "4px", fontSize: "11px", color: "#fbbf24" }}>
+                          <div style={{ marginTop: "4px", fontSize: "11px", color: "#f59e0b" }}>
                             Depends on: {c.dependsOn.join(", ")}
                           </div>
                         )}
@@ -1427,12 +1395,12 @@ export default function App() {
         {/* ── TRANSLATING ── */}
         {stage === "translating" && (
           <div style={{ padding: "60px 0" }}>
-            <div style={{ fontSize: "20px", fontWeight: 700, color: "#f0f0f0", marginBottom: "8px" }}>
+            <div style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>
               Translating...
             </div>
             {progress.total > 0 && (
               <div style={{ marginBottom: "20px" }}>
-                <div style={{ fontSize: "11px", color: "#4b5563", marginBottom: "6px" }}>
+                <div style={{ fontSize: "11px", color: "#64748b", marginBottom: "6px" }}>
                   {progress.step} — {progress.current}/{progress.total}
                 </div>
                 <ProgressBar value={progress.current} max={progress.total} />
@@ -1452,26 +1420,26 @@ export default function App() {
         {stage === "conflicts" && conflictResult && (
           <div style={{ maxWidth: "720px", margin: "0 auto" }}>
             <div style={{ marginBottom: "28px" }}>
-              <div style={{ fontSize: "22px", fontWeight: 700, color: "#f0fdf4", marginBottom: "8px" }}>Merge Analysis</div>
-              <div style={{ fontSize: "12px", color: "#6b7280" }}>
+              <div style={{ fontSize: "22px", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>Merge Analysis</div>
+              <div style={{ fontSize: "12px", color: "#64748b" }}>
                 {workbooks.map((w) => w.name).join(" · ")} — {conflictResult.mergedCalcs.filter((c) => !["skip", "untranslatable"].includes(c.complexity)).length} unique translatable fields
               </div>
             </div>
 
             {/* Auto-merged */}
-            <div style={{ background: "rgba(5,150,105,0.07)", border: "1px solid rgba(5,150,105,0.2)", borderRadius: "12px", padding: "18px 20px", marginBottom: "12px" }}>
+            <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "12px", padding: "18px 20px", marginBottom: "12px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: conflictResult.matches.length > 0 ? "14px" : "0" }}>
-                <div style={{ width: "28px", height: "28px", background: "#05966922", border: "1px solid #05966955", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>✓</div>
+                <div style={{ width: "28px", height: "28px", background: "#dcfce7", border: "1px solid #86efac", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>✓</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#ecfdf5" }}>Auto-merged: {conflictResult.matches.length} identical field{conflictResult.matches.length !== 1 ? "s" : ""}</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280" }}>Same formula across workbooks — one canonical definition used</div>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "#166534" }}>Auto-merged: {conflictResult.matches.length} identical field{conflictResult.matches.length !== 1 ? "s" : ""}</div>
+                  <div style={{ fontSize: "11px", color: "#64748b" }}>Same formula across workbooks — one canonical definition used</div>
                 </div>
-                <div style={{ fontSize: "9px", fontWeight: 700, color: "#34d399", background: "#05966918", border: "1px solid #05966940", borderRadius: "4px", padding: "2px 8px", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>AUTO-MERGED</div>
+                <div style={{ fontSize: "9px", fontWeight: 700, color: "#166534", background: "#dcfce7", border: "1px solid #86efac", borderRadius: "4px", padding: "2px 8px", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>AUTO-MERGED</div>
               </div>
               {conflictResult.matches.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
                   {conflictResult.matches.map((m) => (
-                    <div key={m.key} style={{ fontSize: "11px", color: "#34d399", background: "#05966912", border: "1px solid #05966930", borderRadius: "4px", padding: "3px 8px", fontFamily: "monospace" }}>
+                    <div key={m.key} style={{ fontSize: "11px", color: "#166534", background: "#fff", border: "1px solid #bbf7d0", borderRadius: "4px", padding: "3px 8px", fontFamily: "'JetBrains Mono', monospace" }}>
                       {m.caption}
                     </div>
                   ))}
@@ -1481,25 +1449,25 @@ export default function App() {
 
             {/* Conflicts */}
             {conflictResult.conflicts.length > 0 ? (
-              <div style={{ background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "12px", padding: "18px 20px", marginBottom: "20px" }}>
+              <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "12px", padding: "18px 20px", marginBottom: "20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                  <div style={{ width: "28px", height: "28px", background: "#d9770622", border: "1px solid #d9770655", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>⚠️</div>
+                  <div style={{ width: "28px", height: "28px", background: "#fef3c7", border: "1px solid #fcd34d", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>⚠️</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#fcd34d" }}>{conflictResult.conflicts.length} field conflict{conflictResult.conflicts.length !== 1 ? "s" : ""} — different formulas</div>
-                    <div style={{ fontSize: "11px", color: "#6b7280" }}>First version used. Full details in <code style={{ color: "#fbbf24" }}>conflict_report.md</code> in your zip.</div>
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "#92400e" }}>{conflictResult.conflicts.length} field conflict{conflictResult.conflicts.length !== 1 ? "s" : ""} — different formulas</div>
+                    <div style={{ fontSize: "11px", color: "#64748b" }}>First version used. Full details in <code style={{ color: "#f59e0b", fontFamily: "'JetBrains Mono', monospace" }}>conflict_report.md</code> in your zip.</div>
                   </div>
                 </div>
                 {conflictResult.conflicts.map((cf) => (
-                  <div key={cf.key} style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid rgba(245,158,11,0.1)" }}>
-                    <div style={{ fontSize: "12px", fontWeight: 600, color: "#fcd34d", marginBottom: "8px", fontFamily: "monospace" }}>
-                      {cf.caption} <span style={{ color: "#6b7280", fontWeight: 400 }}>({cf.datasource})</span>
+                  <div key={cf.key} style={{ marginBottom: "12px", paddingBottom: "12px", borderBottom: "1px solid #fde68a" }}>
+                    <div style={{ fontSize: "12px", fontWeight: 600, color: "#92400e", marginBottom: "8px", fontFamily: "'JetBrains Mono', monospace" }}>
+                      {cf.caption} <span style={{ color: "#94a3b8", fontWeight: 400 }}>({cf.datasource})</span>
                     </div>
                     {cf.versions.map((v, vi) => (
                       <div key={vi} style={{ marginBottom: "4px" }}>
-                        <div style={{ fontSize: "10px", color: "#6b7280", marginBottom: "2px" }}>
+                        <div style={{ fontSize: "10px", color: "#64748b", marginBottom: "2px" }}>
                           {v.workbookName}{vi === 0 ? " · used" : ""}
                         </div>
-                        <div style={{ fontSize: "11px", color: vi === 0 ? "#fcd34d" : "#4b5563", fontFamily: "monospace", background: "#040d08", padding: "6px 10px", borderRadius: "4px", opacity: vi === 0 ? 1 : 0.6 }}>
+                        <div style={{ fontSize: "11px", color: vi === 0 ? "#92400e" : "#94a3b8", fontFamily: "'JetBrains Mono', monospace", background: vi === 0 ? "#fff" : "#f8fafc", padding: "6px 10px", borderRadius: "4px", border: "1px solid #e2e8f0", opacity: vi === 0 ? 1 : 0.7 }}>
                           {v.formula.length > 160 ? v.formula.slice(0, 160) + "…" : v.formula}
                         </div>
                       </div>
@@ -1508,20 +1476,20 @@ export default function App() {
                 ))}
               </div>
             ) : (
-              <div style={{ padding: "14px 18px", background: "rgba(5,150,105,0.05)", border: "1px solid rgba(5,150,105,0.15)", borderRadius: "8px", marginBottom: "20px", fontSize: "12px", color: "#34d399" }}>
+              <div style={{ padding: "14px 18px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", marginBottom: "20px", fontSize: "12px", color: "#166534" }}>
                 No conflicts — all shared fields are identical across workbooks ✓
               </div>
             )}
 
             <div style={{ display: "flex", gap: "10px" }}>
               <button
-                style={{ flex: 1, padding: "14px", background: "linear-gradient(135deg, #059669, #0891b2)", border: "none", borderRadius: "10px", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: "pointer", letterSpacing: "0.02em", boxShadow: "0 4px 20px #05966944" }}
+                style={{ flex: 1, padding: "14px", background: "#1e293b", border: "none", borderRadius: "10px", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
                 onClick={proceedFromConflicts}
               >
                 Continue to preview →
               </button>
               <button
-                style={{ padding: "14px 20px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", color: "#6b7280", fontSize: "13px", cursor: "pointer" }}
+                style={{ padding: "14px 20px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", color: "#64748b", fontSize: "13px", cursor: "pointer", fontFamily: "inherit" }}
                 onClick={resetApp}
               >
                 Cancel
@@ -1535,16 +1503,16 @@ export default function App() {
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
               <div>
-                <div style={{ fontSize: "20px", fontWeight: 700, color: "#f0f0f0" }}>
+                <div style={{ fontSize: "20px", fontWeight: 700, color: "#1e293b" }}>
                   Export ready ✓
                 </div>
-                <div style={{ fontSize: "12px", color: "#4b5563", marginTop: "4px" }}>
+                <div style={{ fontSize: "12px", color: "#64748b", marginTop: "4px" }}>
                   {Object.keys(outputFiles).length} files generated
                 </div>
               </div>
               <div style={{ display: "flex", gap: "10px" }}>
                 <button
-                  style={{ ...styles.btn, background: zipping ? "#0d2b1e" : "linear-gradient(135deg, #059669, #0891b2)", opacity: zipping ? 0.6 : 1 }}
+                  style={{ ...styles.btn, opacity: zipping ? 0.6 : 1 }}
                   disabled={zipping}
                   onClick={handleDownloadAll}
                 >
@@ -1557,17 +1525,17 @@ export default function App() {
             </div>
 
             {isFreeTier && !emailCaptured && (
-              <div style={{ marginBottom: "20px", padding: "12px 16px", background: "rgba(5,150,105,0.06)", border: "1px solid rgba(5,150,105,0.2)", borderRadius: "8px", fontSize: "12px", color: "#6b7280" }}>
+              <div style={{ marginBottom: "20px", padding: "12px 16px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", fontSize: "12px", color: "#64748b" }}>
                 Free export · {translatable.length} fields · Enter your email to download
               </div>
             )}
 
             <div style={styles.statsRow}>
               {[
-                { num: [...new Set(calcs.filter((c) => c.datasourceSlug).map((c) => c.datasourceSlug))].length * 2, label: "Models generated", color: "#34d399" },
-                { num: calcs.filter((c) => c.finalSql).length, label: "Fields translated", color: "#34d399" },
-                { num: calcs.filter((c) => c.translatedByClaude).length, label: "AI-refined", color: "#2dd4bf" },
-                { num: calcs.filter((c) => c.complexity === "untranslatable").length, label: "Untranslatable", color: "#f87171" },
+                { num: [...new Set(calcs.filter((c) => c.datasourceSlug).map((c) => c.datasourceSlug))].length * 2, label: "Models generated", color: "#0ea5e9" },
+                { num: calcs.filter((c) => c.finalSql).length, label: "Fields translated", color: "#0ea5e9" },
+                { num: calcs.filter((c) => c.translatedByClaude).length, label: "AI-refined", color: "#06b6d4" },
+                { num: calcs.filter((c) => c.complexity === "untranslatable").length, label: "Untranslatable", color: "#ef4444" },
               ].map((s) => (
                 <div key={s.label} style={styles.statCard}>
                   <div style={{ ...styles.statNum, color: s.color }}>{s.num}</div>
@@ -1608,18 +1576,18 @@ export default function App() {
               <div>
                 <div style={styles.fileList}>
                   {/* Staging models */}
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "4px" }}>Staging</div>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "4px" }}>Staging</div>
                   {Object.entries(outputFiles)
                     .filter(([k]) => k.startsWith("staging/"))
                     .map(([filename, content]) => (
                       <div key={filename}>
                         <div
-                          style={{ ...styles.fileItem, cursor: "pointer", borderColor: previewModel === filename ? "#34d399" : "#0d2b1e" }}
+                          style={{ ...styles.fileItem, cursor: "pointer", borderColor: previewModel === filename ? "#0ea5e9" : "#e2e8f0" }}
                           onClick={() => setPreviewModel(previewModel === filename ? null : filename)}
                         >
                           <span style={styles.fileName}>{filename}</span>
                           <Badge type="simple" label="STAGING" />
-                          <span style={{ fontSize: "10px", color: "#4b5563" }}>{previewModel === filename ? "▲ hide" : "▼ preview"}</span>
+                          <span style={{ fontSize: "10px", color: "#94a3b8" }}>{previewModel === filename ? "▲ hide" : "▼ preview"}</span>
                           <button style={styles.btnSecondary} onClick={(e) => { e.stopPropagation(); downloadFile(filename.split("/").pop(), content); }}>Download</button>
                         </div>
                         {previewModel === filename && (
@@ -1628,18 +1596,18 @@ export default function App() {
                       </div>
                     ))}
                   {/* Mart models */}
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#6b7280", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "16px" }}>Marts</div>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#94a3b8", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px", marginTop: "16px" }}>Marts</div>
                   {Object.entries(outputFiles)
                     .filter(([k]) => k.startsWith("marts/"))
                     .map(([filename, content]) => (
                       <div key={filename}>
                         <div
-                          style={{ ...styles.fileItem, cursor: "pointer", borderColor: previewModel === filename ? "#34d399" : "#0d2b1e" }}
+                          style={{ ...styles.fileItem, cursor: "pointer", borderColor: previewModel === filename ? "#0ea5e9" : "#e2e8f0" }}
                           onClick={() => setPreviewModel(previewModel === filename ? null : filename)}
                         >
                           <span style={styles.fileName}>{filename}</span>
                           <Badge type="moderate" label={filename.includes("/fct_") ? "FCT" : "DIM"} />
-                          <span style={{ fontSize: "10px", color: "#4b5563" }}>{previewModel === filename ? "▲ hide" : "▼ preview"}</span>
+                          <span style={{ fontSize: "10px", color: "#94a3b8" }}>{previewModel === filename ? "▲ hide" : "▼ preview"}</span>
                           <button style={styles.btnSecondary} onClick={(e) => { e.stopPropagation(); downloadFile(filename.split("/").pop(), content); }}>Download</button>
                         </div>
                         {previewModel === filename && (
@@ -1664,10 +1632,10 @@ export default function App() {
 
             {activeTab === "metrics" && (
               <div>
-                <div style={{ marginBottom: "16px", padding: "12px 16px", background: "#071e2a", border: "1px solid #0891b230", borderRadius: "6px", borderLeft: "3px solid #0891b2" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#67e8f9", marginBottom: "4px" }}>MetricFlow semantic layer</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", lineHeight: 1.6 }}>
-                    Compatible with dbt &gt;= 1.6. Update <code style={{ color: "#2dd4bf" }}>TODO_ENTITY</code> and <code style={{ color: "#2dd4bf" }}>TODO_ID_COLUMN</code> with your primary key, then run <code style={{ color: "#2dd4bf" }}>dbt sl validate</code>.
+                <div style={{ marginBottom: "16px", padding: "12px 16px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "6px", borderLeft: "3px solid #0ea5e9" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#0369a1", marginBottom: "4px" }}>MetricFlow semantic layer</div>
+                  <div style={{ fontSize: "11px", color: "#64748b", lineHeight: 1.6 }}>
+                    Compatible with dbt &gt;= 1.6. Update <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>TODO_ENTITY</code> and <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>TODO_ID_COLUMN</code> with your primary key, then run <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>dbt sl validate</code>.
                   </div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
@@ -1692,12 +1660,12 @@ export default function App() {
 
             {activeTab === "sources" && (
               <div>
-                <div style={{ marginBottom: "16px", padding: "12px 16px", background: "#071e2a", border: "1px solid #0891b230", borderRadius: "6px", borderLeft: "3px solid #0891b2" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#67e8f9", marginBottom: "6px" }}>How to use sources.yml</div>
-                  <div style={{ fontSize: "11px", color: "#6b7280", lineHeight: 1.7 }}>
-                    1. Fill in <code style={{ color: "#2dd4bf" }}>TODO_DATABASE</code>, <code style={{ color: "#2dd4bf" }}>TODO_SCHEMA</code>, and <code style={{ color: "#2dd4bf" }}>TODO_TABLE</code> with your Snowflake values<br />
-                    2. Place this file in your dbt project root alongside <code style={{ color: "#2dd4bf" }}>schema.yml</code><br />
-                    3. Run <code style={{ color: "#2dd4bf" }}>dbt source freshness</code> to validate the connection
+                <div style={{ marginBottom: "16px", padding: "12px 16px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "6px", borderLeft: "3px solid #0ea5e9" }}>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "#0369a1", marginBottom: "6px" }}>How to use sources.yml</div>
+                  <div style={{ fontSize: "11px", color: "#64748b", lineHeight: 1.7 }}>
+                    1. Fill in <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>TODO_DATABASE</code>, <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>TODO_SCHEMA</code>, and <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>TODO_TABLE</code> with your Snowflake values<br />
+                    2. Place this file in your dbt project root alongside <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>schema.yml</code><br />
+                    3. Run <code style={{ color: "#0ea5e9", fontFamily: "'JetBrains Mono', monospace" }}>dbt source freshness</code> to validate the connection
                   </div>
                 </div>
                 {outputFiles["sources.yml"] ? (
@@ -1710,7 +1678,7 @@ export default function App() {
                     <div style={styles.code}>{outputFiles["sources.yml"]}</div>
                   </>
                 ) : (
-                  <div style={{ ...styles.code, color: "#4b5563" }}>
+                  <div style={{ ...styles.code, color: "#94a3b8" }}>
                     sources.yml could not be generated — datasource metadata not found in workbook.
                   </div>
                 )}
@@ -1724,43 +1692,25 @@ export default function App() {
       <EmailCapture />
 
       {/* Footer */}
-      <footer style={{ borderTop: "1px solid #0d2b1e", marginTop: "80px" }}>
-        {/* Consulting CTA */}
-        <div style={{ background: "#0a1f15", padding: "40px 32px", textAlign: "center" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#34d399", marginBottom: "10px" }}>Need hands-on help?</div>
-          <div style={{ fontSize: "20px", fontWeight: 700, color: "#f0f0f0", marginBottom: "8px" }}>
-            We do this for clients too.
-          </div>
-          <div style={{ fontSize: "14px", color: "#6b7280", maxWidth: "480px", margin: "0 auto 20px", lineHeight: 1.7 }}>
-            Klardata helps data teams migrate Tableau workbooks to dbt, build semantic layers, and modernize their analytics stack.
-          </div>
-          <a
-            href="https://www.klardata.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ display: "inline-block", padding: "12px 28px", background: "linear-gradient(135deg, #059669, #0891b2)", color: "#fff", borderRadius: "6px", fontSize: "13px", fontWeight: 700, textDecoration: "none", letterSpacing: "0.06em", boxShadow: "0 2px 16px rgba(5,150,105,0.3)" }}
-          >
-            Learn More at klardata.com →
-          </a>
-        </div>
-        {/* Links bar */}
-        <div style={{ padding: "16px 32px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap" }}>
-          <a href="/" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Convert</a>
-          <a href="/diff" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Diff</a>
-          <a href="/docs" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Docs</a>
-          <a href="/audit" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Audit</a>
-          <a href="/privacy" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Privacy</a>
-          <a href="/terms" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Terms</a>
-          <span style={{ marginLeft: "auto", fontSize: "10px", color: "#1f2937" }}>Not affiliated with Salesforce or Tableau.</span>
+      <footer style={{ background: "#1e293b", marginTop: "80px" }}>
+        <div style={{ padding: "14px 32px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap" }}>
+          <a href="/" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Convert</a>
+          <a href="/diff" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Diff</a>
+          <a href="/docs" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Docs</a>
+          <a href="/audit" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Audit</a>
+          <a href="/privacy" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Privacy</a>
+          <a href="/terms" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Terms</a>
+          <span style={{ marginLeft: "auto", fontSize: "10px", color: "rgba(255,255,255,0.2)" }}>Not affiliated with Salesforce or Tableau.</span>
         </div>
       </footer>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: #030f0a; }
-        ::-webkit-scrollbar-thumb { background: #0d4a2e; border-radius: 2px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
         button:focus { outline: none; }
       `}</style>
     </div>
