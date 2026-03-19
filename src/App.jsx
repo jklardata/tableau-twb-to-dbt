@@ -1694,7 +1694,17 @@ export default function App() {
 
       {/* Footer */}
       <footer style={{ background: "#1e293b", marginTop: "80px" }}>
-        <div style={{ padding: "14px 32px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ padding: "40px 32px", textAlign: "center" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#0ea5e9", marginBottom: "10px" }}>Need hands-on help?</div>
+          <div style={{ fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "8px" }}>We do this for clients too.</div>
+          <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.6)", maxWidth: "480px", margin: "0 auto 20px", lineHeight: 1.7 }}>
+            Klardata helps data teams migrate Tableau workbooks to dbt, build semantic layers, and modernize their analytics stack.
+          </div>
+          <a href="https://www.klardata.com" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "12px 28px", background: "#0ea5e9", color: "#fff", borderRadius: "6px", fontSize: "13px", fontWeight: 700, textDecoration: "none", letterSpacing: "0.06em" }}>
+            Learn More at klardata.com →
+          </a>
+        </div>
+        <div style={{ padding: "14px 32px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           <a href="/" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Convert</a>
           <a href="/diff" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Diff</a>
           <a href="/docs" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Docs</a>

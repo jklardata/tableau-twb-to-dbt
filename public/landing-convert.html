@@ -102,8 +102,14 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;m
 .email-row input{padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;width:240px;font-family:inherit;color:#1e293b;outline:none}
 .email-row button{padding:10px 20px;background:#1e293b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 
-footer{background:#1e293b;padding:14px 32px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
-footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
+footer{background:#1e293b}
+.footer-cta{padding:40px 32px;text-align:center}
+.footer-cta-label{font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#0ea5e9;margin-bottom:10px}
+.footer-cta-title{font-size:20px;font-weight:700;color:#fff;margin-bottom:8px}
+.footer-cta-sub{font-size:14px;color:rgba(255,255,255,0.6);max-width:480px;margin:0 auto 20px;line-height:1.7}
+.footer-cta-link{display:inline-block;padding:12px 28px;background:#0ea5e9;color:#fff;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;letter-spacing:0.06em}
+.footer-links{padding:14px 32px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.08)}
+.footer-links a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
 
 .back-bar{background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:6px 16px;text-align:center;font-size:12px;color:#0369a1}
 .back-bar a{color:#0369a1;font-weight:600;text-decoration:none}
@@ -291,8 +297,16 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
 </div>
 
 <footer>
-  <a href="/">Convert</a><a href="/diff">Diff</a><a href="/docs">Docs</a><a href="/audit">Audit</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a>
-  <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
+  <div class="footer-cta">
+    <div class="footer-cta-label">Need hands-on help?</div>
+    <div class="footer-cta-title">We do this for clients too.</div>
+    <div class="footer-cta-sub">Klardata helps data teams migrate Tableau workbooks to dbt, build semantic layers, and modernize their analytics stack.</div>
+    <a href="https://www.klardata.com" class="footer-cta-link" target="_blank" rel="noopener noreferrer">Learn More at klardata.com →</a>
+  </div>
+  <div class="footer-links">
+    <a href="/">Convert</a><a href="/diff">Diff</a><a href="/docs">Docs</a><a href="/audit">Audit</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a>
+    <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
+  </div>
 </footer>
 <script>
 (function() {
