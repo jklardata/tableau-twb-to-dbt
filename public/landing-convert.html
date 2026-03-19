@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<title>Convert Landing 2: Split, Copy Left / Upload Right</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tableau to dbt Converter — Free, Browser-Based | tableautodbt.com</title>
+<meta name="description" content="Upload a .twb or .twbx and get a complete dbt package: staging models, marts, LOD-to-CTE translation, MetricFlow semantic layer, schema tests. Free and browser-based."/>
+<link rel="canonical" href="https://tableautodbt.com/"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -113,6 +116,24 @@ footer{background:#1e293b}
 
 .back-bar{background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:6px 16px;text-align:center;font-size:12px;color:#0369a1}
 .back-bar a{color:#0369a1;font-weight:600;text-decoration:none}
+
+@media(max-width:768px){
+  .split-hero{grid-template-columns:1fr;min-height:auto}
+  .upload-side{order:-1;border-left:none;border-bottom:2px solid #e2e8f0;padding:24px 20px;position:static;height:auto}
+  .copy-side{padding:32px 20px}
+  .below-fold{padding:32px 20px}
+  .how-grid{grid-template-columns:1fr 1fr}
+  .how-card:first-child{border-radius:10px 0 0 0}
+  .how-card:nth-child(2){border-radius:0 10px 0 0;border-right:1px solid #e2e8f0}
+  .how-card:nth-child(3){border-radius:0 0 0 10px;border-right:none;border-top:none}
+  .how-card:last-child{border-radius:0 0 10px 0;border-top:none}
+  .wyg-grid{grid-template-columns:1fr}
+  .email-wrap{padding:24px 20px}
+  .email-row input{width:100%}
+  .footer-cta{padding:32px 20px}
+  .footer-links{padding:12px 20px;gap:12px}
+  .nav a{padding:5px 8px}
+}
 </style>
 </head>
 <body>
