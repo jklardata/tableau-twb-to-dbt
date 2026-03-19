@@ -257,7 +257,8 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
 
   function makeInput(key, zone, label) {
     const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = '.twb,.twbx';
+    inp.type = 'file'; inp.accept = '.twb,.twbx'; inp.style.display = 'none';
+    document.body.appendChild(inp);
     inp.onchange = function(e) { if (e.target.files[0]) storeFile(key, zone, label, e.target.files[0]); };
     return inp;
   }
@@ -270,7 +271,8 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
     zone.style.borderColor = '#22c55e';
     const reader = new FileReader();
     reader.onload = function() {
-      sessionStorage.setItem(key, JSON.stringify({ name: file.name, data: reader.result }));
+      sessionStorage.removeItem(key);
+      try { sessionStorage.setItem(key, JSON.stringify({ name: file.name, data: reader.result })); } catch(e) {}
       stored[label] = true;
       cmpBtn.style.opacity = '1'; cmpBtn.style.cursor = 'pointer';
       cmpBtn.style.background = '#0ea5e9'; cmpBtn.style.color = '#fff';

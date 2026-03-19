@@ -155,7 +155,8 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
   const zone = document.querySelector('.upload-zone');
   const btn = document.querySelector('.extract-btn');
   const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = '.twb,.twbx';
+  inp.type = 'file'; inp.accept = '.twb,.twbx'; inp.style.display = 'none';
+  document.body.appendChild(inp);
 
   function storeAndGo(file) {
     zone.innerHTML = '<div class="uz-icon" style="color:#22c55e;margin-bottom:8px">✓</div><div class="uz-title">' + file.name + '</div><div class="uz-sub">Loading...</div>';
@@ -163,7 +164,8 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
     btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.textContent = 'Loading...';
     const reader = new FileReader();
     reader.onload = function() {
-      sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result }));
+      sessionStorage.removeItem(KEY);
+      try { sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result })); } catch(e) {}
       window.location.href = DEST;
     };
     reader.readAsDataURL(file);

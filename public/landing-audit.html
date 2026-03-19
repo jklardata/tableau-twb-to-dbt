@@ -252,12 +252,14 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
   const DEST = '/app/audit';
   const KEY = 'twb_pending_audit';
   const inp = document.createElement('input');
-  inp.type = 'file'; inp.accept = '.twb,.twbx';
+  inp.type = 'file'; inp.accept = '.twb,.twbx'; inp.style.display = 'none';
+  document.body.appendChild(inp);
 
   function storeAndGo(file) {
     const reader = new FileReader();
     reader.onload = function() {
-      sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result }));
+      sessionStorage.removeItem(KEY);
+      try { sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result })); } catch(e) {}
       window.location.href = DEST;
     };
     reader.readAsDataURL(file);
