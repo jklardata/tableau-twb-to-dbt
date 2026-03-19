@@ -386,6 +386,7 @@ export default function AuditPage() {
   useEffect(() => {
     document.title = "Tableau Calculated Field Auditor: Find Unused, Complex & Broken Fields";
     posthog.capture("page_viewed", { page: "audit" });
+    if (window.location.pathname !== "/audit") window.history.replaceState(null, "", "/audit");
   }, []);
 
   const [file, setFile] = useState(null);

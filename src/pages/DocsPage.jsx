@@ -440,6 +440,7 @@ export default function DocsPage() {
   useEffect(() => {
     document.title = "Tableau Docs Generator: Auto-Generate Workbook Documentation";
     posthog.capture("page_viewed", { page: "docs" });
+    if (window.location.pathname !== "/docs") window.history.replaceState(null, "", "/docs");
   }, []);
 
   const [file, setFile] = useState(null);

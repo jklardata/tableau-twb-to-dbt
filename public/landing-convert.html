@@ -310,10 +310,12 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
     btn.style.opacity = '1'; btn.style.cursor = 'default'; btn.textContent = 'Loading...';
     const reader = new FileReader();
     reader.onload = function() {
+      var activeBtn = document.querySelector('.dialect-btn.active');
+      var dialect = activeBtn ? activeBtn.textContent.trim() : 'Snowflake';
       sessionStorage.removeItem(KEY);
       try {
         sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result }));
-        sessionStorage.setItem('twb_pending_dialect', selectedDialect);
+        sessionStorage.setItem('twb_pending_dialect', dialect);
       } catch(e) { /* quota exceeded — navigate anyway, app will show upload UI */ }
       window.location.href = DEST;
     };
