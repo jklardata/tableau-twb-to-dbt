@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { auditWorkbook } from "../lib/auditEngine.js";
 import posthog from "posthog-js";
+import { readPendingFile } from "../lib/pendingFile.js";
 
 // ================================================================
 // DESIGN TOKENS
@@ -392,12 +393,9 @@ export default function AuditPage() {
   const [file, setFile] = useState(null);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("twb_pending_audit");
-    if (!raw) return;
-    sessionStorage.removeItem("twb_pending_audit");
-    const { name, data } = JSON.parse(raw);
-    fetch(data).then(r => r.blob()).then(async blob => {
-      const f = new File([blob], name);
+    readPendingFile("twb_pending_audit").then(async (pending) => {
+      if (!pending) return;
+      const f = pending.file;
       setFile(f);
       setLoading(true);
       setError(null);

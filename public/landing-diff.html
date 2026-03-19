@@ -269,16 +269,19 @@ footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
     if (txt) txt.textContent = file.name;
     if (icon && icon.tagName !== 'DIV') icon.textContent = '✓';
     zone.style.borderColor = '#22c55e';
-    const reader = new FileReader();
-    reader.onload = function() {
-      sessionStorage.removeItem(key);
-      try { sessionStorage.setItem(key, JSON.stringify({ name: file.name, data: reader.result })); } catch(e) {}
-      stored[label] = true;
-      cmpBtn.style.opacity = '1'; cmpBtn.style.cursor = 'pointer';
-      cmpBtn.style.background = '#0ea5e9'; cmpBtn.style.color = '#fff';
-      window.location.href = DEST;
+    stored[label] = true;
+    cmpBtn.style.opacity = '1'; cmpBtn.style.cursor = 'pointer';
+    cmpBtn.style.background = '#0ea5e9'; cmpBtn.style.color = '#fff';
+    var req = indexedDB.open('tableau2dbt_pending', 1);
+    req.onupgradeneeded = function(e) { e.target.result.createObjectStore('files'); };
+    req.onsuccess = function(e) {
+      var db = e.target.result;
+      var tx = db.transaction('files', 'readwrite');
+      tx.objectStore('files').put({ name: file.name, blob: file }, key);
+      tx.oncomplete = function() { window.location.href = DEST; };
+      tx.onerror = function() { window.location.href = DEST; };
     };
-    reader.readAsDataURL(file);
+    req.onerror = function() { window.location.href = DEST; };
   }
 
   function wireZone(zone, key, label, inp) {

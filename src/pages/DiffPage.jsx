@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { diffWorkbooks, diffFormula } from "../lib/diffEngine.js";
 import posthog from "posthog-js";
+import { readPendingFile } from "../lib/pendingFile.js";
 
 // ================================================================
 // DESIGN TOKENS
@@ -183,18 +184,14 @@ export default function DiffPage() {
   const [file2, setFile2] = useState(null);
 
   useEffect(() => {
-    const raw1 = sessionStorage.getItem("twb_pending_diff1");
-    const raw2 = sessionStorage.getItem("twb_pending_diff2");
-    if (!raw1) return;
-    sessionStorage.removeItem("twb_pending_diff1");
-    sessionStorage.removeItem("twb_pending_diff2");
-    const { name: n1, data: d1 } = JSON.parse(raw1);
     const restore = async () => {
-      const f1 = new File([await fetch(d1).then(r => r.blob())], n1);
+      const p1 = await readPendingFile("twb_pending_diff1");
+      if (!p1) return;
+      const f1 = p1.file;
       setFile1(f1);
-      if (!raw2) return;
-      const { name: n2, data: d2 } = JSON.parse(raw2);
-      const f2 = new File([await fetch(d2).then(r => r.blob())], n2);
+      const p2 = await readPendingFile("twb_pending_diff2");
+      if (!p2) return;
+      const f2 = p2.file;
       setFile2(f2);
       setLoading(true);
       setError(null);

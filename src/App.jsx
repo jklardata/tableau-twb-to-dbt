@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { readPendingFile } from "./lib/pendingFile.js";
 import DiffPage from "./pages/DiffPage.jsx";
 import DocsPage from "./pages/DocsPage.jsx";
 import AuditPage from "./pages/AuditPage.jsx";
@@ -450,7 +451,7 @@ export default function App() {
   const [emailCaptured, setEmailCaptured] = useState(false);
   const [paidSession, setPaidSession] = useState(() => localStorage.getItem("paid") === "1");
   const [grainConfig, setGrainConfig] = useState({});
-  const [dialect, setDialect] = useState(() => sessionStorage.getItem("twb_pending_dialect") || "Snowflake");
+  const [dialect, setDialect] = useState("Snowflake");
   const [previewModel, setPreviewModel] = useState(null);
   const [multiMode, setMultiMode] = useState(false);
   const [workbooks, setWorkbooks] = useState([]); // [{ name, calcs, xmlString }]
@@ -570,12 +571,11 @@ export default function App() {
   );
 
   useEffect(() => {
-    const raw = sessionStorage.getItem("twb_pending_convert");
-    if (!raw) return;
-    sessionStorage.removeItem("twb_pending_convert");
-    sessionStorage.removeItem("twb_pending_dialect");
-    const { name, data } = JSON.parse(raw);
-    fetch(data).then(r => r.blob()).then(blob => handleFile(new File([blob], name)));
+    readPendingFile("twb_pending_convert").then((pending) => {
+      if (!pending) return;
+      if (pending.dialect) setDialect(pending.dialect);
+      handleFile(pending.file);
+    });
   }, [handleFile]);
 
   const runTranslation = useCallback(async () => {
