@@ -76,7 +76,7 @@ function Pill({ color, children }) {
 // CALCULATED FIELDS TAB
 // ================================================================
 
-function CalculatedFieldsTab({ fields, selectedField, onSelectField, panelMode }) {
+function CalculatedFieldsTab({ fields, selectedField, onSelectField, panelMode, usedByMap, sheetUsageMap }) {
   const [search, setSearch] = useState("");
   const [filterDep, setFilterDep] = useState(null);
   const [sort, setSort] = useState("az");
@@ -97,6 +97,8 @@ function CalculatedFieldsTab({ fields, selectedField, onSelectField, panelMode }
   if (fields.length === 0) return <div style={{ textAlign: "center", padding: "48px", color: T.dim, fontSize: "14px" }}>No calculated fields found in this workbook.</div>;
 
   const showSplit = panelMode === "split" && !!selectedField;
+  const usedBy = selectedField ? (usedByMap[selectedField.caption] || []) : [];
+  const usedInSheets = selectedField ? (sheetUsageMap[selectedField.caption] || []) : [];
 
   return (
     <div>
@@ -172,7 +174,20 @@ function CalculatedFieldsTab({ fields, selectedField, onSelectField, panelMode }
             <div style={{ fontSize: "15px", fontWeight: 700, color: T.text, marginBottom: "4px" }}>{selectedField.caption}</div>
             {selectedField.dependencies.length > 0 && (
               <div style={{ marginBottom: "8px" }}>
+                <div style={{ fontSize: "9px", color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Depends on</div>
                 {selectedField.dependencies.map((d, i) => <Pill key={i} color="amber">{d}</Pill>)}
+              </div>
+            )}
+            {usedBy.length > 0 && (
+              <div style={{ marginBottom: "8px" }}>
+                <div style={{ fontSize: "9px", color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Used by {usedBy.length} field{usedBy.length !== 1 ? "s" : ""}</div>
+                {usedBy.map((d, i) => <Pill key={i} color="blue">{d}</Pill>)}
+              </div>
+            )}
+            {usedInSheets.length > 0 && (
+              <div style={{ marginBottom: "8px" }}>
+                <div style={{ fontSize: "9px", color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>Used in {usedInSheets.length} sheet{usedInSheets.length !== 1 ? "s" : ""}</div>
+                {usedInSheets.map((s, i) => <Pill key={i} color="green">{s}</Pill>)}
               </div>
             )}
             <FormulaBlock formula={selectedField.formula} />
@@ -387,6 +402,198 @@ function FiltersTab({ filters }) {
 }
 
 // ================================================================
+// LINEAGE TAB
+// ================================================================
+
+function LineageTab({ fields, usedByMap, sheetUsageMap }) {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null);
+
+  const filtered = useMemo(() => {
+    if (!search) return fields;
+    const q = search.toLowerCase();
+    return fields.filter((f) => f.caption.toLowerCase().includes(q));
+  }, [fields, search]);
+
+  const upstream = selected ? selected.dependencies : [];
+  const downstream = selected ? (usedByMap[selected.caption] || []) : [];
+  const sheets = selected ? (sheetUsageMap[selected.caption] || []) : [];
+
+  const fieldByCaption = useMemo(() => {
+    const m = {};
+    for (const f of fields) m[f.caption] = f;
+    return m;
+  }, [fields]);
+
+  const nodeStyle = (highlight) => ({
+    background: highlight ? "#eff6ff" : T.white,
+    border: `1px solid ${highlight ? "#bae6fd" : T.border}`,
+    borderRadius: "8px",
+    padding: "10px 14px",
+    marginBottom: "6px",
+    fontSize: "12px",
+    fontWeight: 600,
+    color: T.text,
+    cursor: "pointer",
+    transition: "all 0.1s",
+  });
+
+  const arrowCol = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 8px",
+    color: T.dim,
+    fontSize: "20px",
+    flexShrink: 0,
+    minWidth: "24px",
+  };
+
+  return (
+    <div style={{ display: "flex", gap: "16px", height: "calc(100vh - 240px)", minHeight: "400px" }}>
+      {/* Left: field list */}
+      <div style={{ flex: "0 0 240px", display: "flex", flexDirection: "column", gap: "8px", borderRight: `1px solid ${T.border}`, paddingRight: "16px" }}>
+        <input
+          style={{ width: "100%", padding: "6px 10px", border: `1px solid ${T.border}`, borderRadius: "6px", fontSize: "12px", fontFamily: T.font, color: T.text, outline: "none" }}
+          placeholder="Search fields…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <div style={{ fontSize: "9px", color: T.dim, letterSpacing: "0.06em", textTransform: "uppercase" }}>{filtered.length} fields</div>
+        <div style={{ overflow: "auto", flex: 1 }}>
+          {filtered.map((f) => (
+            <div
+              key={f.caption}
+              onClick={() => setSelected(f)}
+              style={{
+                padding: "8px 10px",
+                borderRadius: "6px",
+                marginBottom: "2px",
+                fontSize: "12px",
+                fontWeight: selected?.caption === f.caption ? 700 : 400,
+                color: selected?.caption === f.caption ? T.primary : T.text,
+                background: selected?.caption === f.caption ? "#f0f9ff" : "transparent",
+                cursor: "pointer",
+                lineHeight: 1.4,
+              }}
+            >
+              {f.caption}
+              {((usedByMap[f.caption] || []).length > 0 || (sheetUsageMap[f.caption] || []).length > 0) && (
+                <span style={{ fontSize: "9px", color: T.dim, marginLeft: "6px" }}>
+                  ↑{(usedByMap[f.caption] || []).length + (sheetUsageMap[f.caption] || []).length}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right: lineage graph */}
+      {selected ? (
+        <div style={{ flex: 1, overflow: "auto" }}>
+          {/* 3-column lineage */}
+          <div style={{ display: "flex", gap: "0", alignItems: "flex-start", marginBottom: "24px", minHeight: "200px" }}>
+            {/* Upstream column */}
+            <div style={{ flex: 1, minWidth: "160px" }}>
+              <div style={{ fontSize: "9px", fontWeight: 700, color: T.dim, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
+                Depends on ({upstream.length})
+              </div>
+              {upstream.length === 0 ? (
+                <div style={{ fontSize: "11px", color: T.dim, fontStyle: "italic" }}>No dependencies</div>
+              ) : (
+                upstream.map((dep, i) => (
+                  <div
+                    key={i}
+                    onClick={() => fieldByCaption[dep] && setSelected(fieldByCaption[dep])}
+                    style={{ ...nodeStyle(false), borderLeft: "3px solid #f59e0b", cursor: fieldByCaption[dep] ? "pointer" : "default" }}
+                  >
+                    <div style={{ fontSize: "11px" }}>{dep}</div>
+                    {fieldByCaption[dep] && (
+                      <div style={{ fontSize: "9px", color: T.dim, marginTop: "2px" }}>click to navigate →</div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Arrow left */}
+            <div style={arrowCol}>
+              {upstream.length > 0 && <span style={{ fontSize: "16px", color: T.dim }}>→</span>}
+            </div>
+
+            {/* Center: selected field */}
+            <div style={{ flex: "0 0 220px", background: "#eff6ff", border: "2px solid #bae6fd", borderRadius: "10px", padding: "16px", textAlign: "center" }}>
+              <div style={{ fontSize: "9px", fontWeight: 700, color: T.primary, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "6px" }}>Selected</div>
+              <div style={{ fontSize: "14px", fontWeight: 700, color: T.text, marginBottom: "8px", lineHeight: 1.3 }}>{selected.caption}</div>
+              <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "2px", marginBottom: "8px" }}>
+                <Pill color="blue">{selected.datasource}</Pill>
+                <Pill color="gray">{selected.datatype}</Pill>
+                <Pill color={selected.role === "measure" ? "green" : "gray"}>{selected.role}</Pill>
+              </div>
+              <div style={{ fontSize: "11px", color: T.muted, lineHeight: 1.6 }}>
+                {upstream.length > 0 && <div>{upstream.length} dep{upstream.length !== 1 ? "s" : ""} upstream</div>}
+                {downstream.length > 0 && <div>used by {downstream.length} field{downstream.length !== 1 ? "s" : ""}</div>}
+                {sheets.length > 0 && <div>in {sheets.length} sheet{sheets.length !== 1 ? "s" : ""}</div>}
+                {upstream.length === 0 && downstream.length === 0 && sheets.length === 0 && (
+                  <div style={{ color: T.dim }}>No connections found</div>
+                )}
+              </div>
+            </div>
+
+            {/* Arrow right */}
+            <div style={arrowCol}>
+              {(downstream.length > 0 || sheets.length > 0) && <span style={{ fontSize: "16px", color: T.dim }}>→</span>}
+            </div>
+
+            {/* Downstream column */}
+            <div style={{ flex: 1, minWidth: "160px" }}>
+              <div style={{ fontSize: "9px", fontWeight: 700, color: T.dim, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "10px" }}>
+                Used by ({downstream.length + sheets.length})
+              </div>
+              {downstream.length === 0 && sheets.length === 0 ? (
+                <div style={{ fontSize: "11px", color: T.dim, fontStyle: "italic" }}>Not referenced</div>
+              ) : (
+                <>
+                  {downstream.map((d, i) => (
+                    <div
+                      key={i}
+                      onClick={() => fieldByCaption[d] && setSelected(fieldByCaption[d])}
+                      style={{ ...nodeStyle(false), borderLeft: "3px solid #0ea5e9", cursor: fieldByCaption[d] ? "pointer" : "default" }}
+                    >
+                      <div style={{ fontSize: "9px", color: T.primary, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "2px" }}>Calc Field</div>
+                      <div style={{ fontSize: "11px" }}>{d}</div>
+                    </div>
+                  ))}
+                  {sheets.map((s, i) => (
+                    <div key={i} style={{ ...nodeStyle(false), borderLeft: "3px solid #22c55e", cursor: "default" }}>
+                      <div style={{ fontSize: "9px", color: "#166534", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "2px" }}>Sheet</div>
+                      <div style={{ fontSize: "11px" }}>{s}</div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Formula */}
+          <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: "8px", padding: "16px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: T.dim, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "4px" }}>Formula</div>
+            <FormulaBlock formula={selected.formula} />
+          </div>
+        </div>
+      ) : (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: T.dim, gap: "8px" }}>
+          <div style={{ fontSize: "32px" }}>⬡</div>
+          <div style={{ fontSize: "14px", fontWeight: 600, color: T.muted }}>Select a field to explore its lineage</div>
+          <div style={{ fontSize: "12px", color: T.dim }}>See upstream dependencies and downstream impact across fields and sheets</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ================================================================
 // EMAIL CAPTURE
 // ================================================================
 
@@ -434,8 +641,8 @@ function DocsEmailCapture() {
 // MAIN PAGE
 // ================================================================
 
-const TAB_KEYS = ["calculated_fields", "data_sources", "sheets", "parameters", "filters"];
-const TAB_LABELS = { calculated_fields: "Calc Fields", data_sources: "Data Sources", sheets: "Sheets", parameters: "Parameters", filters: "Filters" };
+const TAB_KEYS = ["calculated_fields", "lineage", "data_sources", "sheets", "parameters", "filters"];
+const TAB_LABELS = { calculated_fields: "Calc Fields", lineage: "Lineage", data_sources: "Data Sources", sheets: "Sheets", parameters: "Parameters", filters: "Filters" };
 
 export default function DocsPage() {
   useEffect(() => {
@@ -480,6 +687,42 @@ export default function DocsPage() {
   const [copyStatus, setCopyStatus] = useState(null);
   const [selectedField, setSelectedField] = useState(null);
   const [panelMode, setPanelMode] = useState("panel");
+
+  // Build reverse dependency map: field caption → calc fields that reference it
+  const usedByMap = useMemo(() => {
+    if (!result) return {};
+    const map = {};
+    for (const cf of result.calculated_fields) {
+      for (const dep of cf.dependencies) {
+        if (!map[dep]) map[dep] = [];
+        map[dep].push(cf.caption);
+      }
+    }
+    return map;
+  }, [result]);
+
+  // Build sheet usage map: field caption → sheet names that include it
+  const sheetUsageMap = useMemo(() => {
+    if (!result) return {};
+    // lookup by lowercased caption and name (without brackets)
+    const captionLookup = {};
+    for (const cf of result.calculated_fields) {
+      captionLookup[cf.caption.toLowerCase()] = cf.caption;
+      const nameClean = cf.name.replace(/^\[|\]$/g, "").toLowerCase();
+      captionLookup[nameClean] = cf.caption;
+    }
+    const map = {};
+    for (const sheet of result.sheets) {
+      for (const rawField of sheet.fields_used) {
+        const clean = rawField.replace(/^\[|\]$/g, "").toLowerCase();
+        const caption = captionLookup[clean];
+        if (!caption) continue;
+        if (!map[caption]) map[caption] = [];
+        if (!map[caption].includes(sheet.name)) map[caption].push(sheet.name);
+      }
+    }
+    return map;
+  }, [result]);
 
   const currentPath = window.location.pathname;
 
@@ -555,6 +798,9 @@ export default function DocsPage() {
   }, []);
 
   const showPanel = panelMode === "panel" && !!selectedField && activeTab === "calculated_fields";
+
+  const usedBy = selectedField ? (usedByMap[selectedField.caption] || []) : [];
+  const usedInSheets = selectedField ? (sheetUsageMap[selectedField.caption] || []) : [];
 
   const btnStyle = (active) => ({
     padding: "8px 14px", background: active ? "#f0f9ff" : T.white, color: active ? T.primary : T.muted,
@@ -673,6 +919,15 @@ export default function DocsPage() {
                 selectedField={selectedField}
                 onSelectField={(field, modeOverride) => { if (modeOverride) setPanelMode(modeOverride); setSelectedField(field); }}
                 panelMode={panelMode}
+                usedByMap={usedByMap}
+                sheetUsageMap={sheetUsageMap}
+              />
+            )}
+            {activeTab === "lineage" && (
+              <LineageTab
+                fields={result.calculated_fields}
+                usedByMap={usedByMap}
+                sheetUsageMap={sheetUsageMap}
               />
             )}
             {activeTab === "data_sources" && <DataSourcesTab datasources={result.datasources} />}
@@ -683,11 +938,28 @@ export default function DocsPage() {
 
           {/* Bottom panel (panel mode, calc fields tab) */}
           {showPanel && (
-            <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "320px", background: T.white, borderTop: `2px solid ${T.border}`, boxShadow: "0 -4px 24px rgba(0,0,0,0.1)", zIndex: 200, display: "flex", flexDirection: "column" }}>
+            <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: "340px", background: T.white, borderTop: `2px solid ${T.border}`, boxShadow: "0 -4px 24px rgba(0,0,0,0.1)", zIndex: 200, display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
                 <span style={{ fontSize: "13px", fontWeight: 600, color: T.text }}>{selectedField.caption}</span>
-                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                  {selectedField.dependencies.length > 0 && selectedField.dependencies.map((d, i) => <Pill key={i} color="amber">{d}</Pill>)}
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                  {selectedField.dependencies.length > 0 && (
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "9px", color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em" }}>deps:</span>
+                      {selectedField.dependencies.map((d, i) => <Pill key={i} color="amber">{d}</Pill>)}
+                    </span>
+                  )}
+                  {usedBy.length > 0 && (
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "9px", color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em" }}>used by:</span>
+                      {usedBy.map((d, i) => <Pill key={i} color="blue">{d}</Pill>)}
+                    </span>
+                  )}
+                  {usedInSheets.length > 0 && (
+                    <span style={{ display: "flex", alignItems: "center", gap: "4px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "9px", color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em" }}>sheets:</span>
+                      {usedInSheets.map((s, i) => <Pill key={i} color="green">{s}</Pill>)}
+                    </span>
+                  )}
                   <button onClick={() => setSelectedField(null)} style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: "18px" }}>×</button>
                 </div>
               </div>
@@ -716,12 +988,12 @@ export default function DocsPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px", marginBottom: "48px" }}>
             {[
               ["🧮", "Calculated Fields", "Every formula extracted with full syntax, datatype, role, and a dependency list."],
+              ["⬡", "Field Lineage", "Visual dependency graph showing upstream and downstream connections for every calc field."],
               ["🗄", "Data Sources", "Connection type, server, database, and a complete field inventory for every datasource."],
               ["📊", "Sheets & Dashboards", "Which data sources, filters, and fields each sheet uses."],
               ["🎛", "Parameters", "Current values, allowed values or ranges, and domain types for every parameter."],
               ["🔍", "Filters", "Every filter across every sheet with include/exclude values."],
               ["✦", "AI-Ready Export", "One-click copy of a structured prompt. Paste into Claude or ChatGPT."],
-              ["📝", "Notion / Confluence", "Markdown export pastes directly into Notion pages or Confluence."],
               ["🔒", "Fully Private", "Your workbook never leaves your browser. All parsing happens locally."],
             ].map(([icon, title, body]) => (
               <div key={title} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: "8px", padding: "18px" }}>
@@ -736,7 +1008,7 @@ export default function DocsPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "48px" }}>
             {[
               ["01", "Upload your workbook", "Drop any .twb or .twbx file. Your workbook never leaves your browser."],
-              ["02", "Browse the extracted docs", "Five tabs: Calc Fields, Data Sources, Sheets, Parameters, and Filters, each with search."],
+              ["02", "Browse the extracted docs", "Six tabs: Calc Fields, Lineage, Data Sources, Sheets, Parameters, and Filters."],
               ["03", "Export in any format", "Download JSON, Markdown, or copy a structured AI prompt for Claude or ChatGPT."],
             ].map(([num, title, body]) => (
               <div key={num} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: "8px", padding: "20px" }}>
