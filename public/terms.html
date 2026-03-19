@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Terms of Service — TableautoDbt</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;flex-direction:column}
+
+.hdr{background:#1e293b;padding:10px 24px;display:flex;align-items:center;gap:12px}
+.logo{font-size:14px;font-weight:800;color:#fff;text-decoration:none}
+.logo span{color:#0ea5e9}
+.nav{margin-left:auto;display:flex;gap:4px}
+.nav a{font-size:12px;color:rgba(255,255,255,0.55);padding:5px 12px;border-radius:6px;text-decoration:none}
+.nav a:hover{color:#fff}
+
+.page-hero{background:#1e293b;padding:48px 48px 40px}
+.hero-inner{max-width:760px;margin:0 auto}
+.hero-eyebrow{font-size:11px;font-weight:600;color:#0ea5e9;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px}
+.hero-inner h1{font-size:clamp(28px,4vw,40px);font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:8px}
+.hero-inner p{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7}
+
+.content{flex:1;padding:56px 48px}
+.content-inner{max-width:760px;margin:0 auto}
+
+.section{margin-bottom:40px}
+.section-title{font-size:16px;font-weight:700;color:#1e293b;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e2e8f0}
+.section p{font-size:14px;color:#475569;line-height:1.8;margin-bottom:12px}
+.section p:last-child{margin-bottom:0}
+.section ul{padding-left:20px;margin-bottom:12px}
+.section ul li{font-size:14px;color:#475569;line-height:1.8;margin-bottom:4px}
+.section a{color:#0ea5e9;text-decoration:none}
+.section a:hover{text-decoration:underline}
+
+.callout{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:18px 20px;margin-bottom:40px;display:flex;gap:12px;align-items:flex-start}
+.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.callout p{font-size:14px;color:#0369a1;line-height:1.7;margin:0}
+
+.meta{font-size:12px;color:#94a3b8;margin-bottom:48px}
+
+footer{background:#1e293b;padding:14px 32px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:auto}
+footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
+footer a:hover{color:rgba(255,255,255,0.7)}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <a href="/" class="logo">Tableau<span>to</span>Dbt</a>
+  <nav class="nav">
+    <a href="/">Convert</a>
+    <a href="/diff">Diff</a>
+    <a href="/docs">Docs</a>
+    <a href="/audit">Audit</a>
+  </nav>
+</header>
+
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Legal</div>
+    <h1>Terms of Service</h1>
+    <p>The rules for using TableautoDbt. Please read before using the tools.</p>
+  </div>
+</div>
+
+<div class="content">
+  <div class="content-inner">
+
+    <div class="meta">Last updated: March 2026</div>
+
+    <div class="callout">
+      <div class="callout-icon">📋</div>
+      <p><strong>The short version:</strong> Use the tools honestly, for legitimate purposes. Don't try to break the service or use it in ways that could harm others. The tools are provided as-is — always verify translated SQL before running it in production. We are not affiliated with Salesforce or Tableau.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Acceptance of terms</div>
+      <p>By accessing or using TableautoDbt ("the Service," "we," "us"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service.</p>
+      <p>We reserve the right to update these terms at any time. Continued use of the Service after changes are posted constitutes acceptance of the revised terms.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Description of the service</div>
+      <p>TableautoDbt provides browser-based tools for working with Tableau workbook files (.twb and .twbx), including:</p>
+      <ul>
+        <li><strong>Convert:</strong> Translates Tableau calculated fields into dbt SQL models for Snowflake and BigQuery</li>
+        <li><strong>Diff:</strong> Compares two Tableau workbook versions and surfaces changes across calculated fields, parameters, data sources, sheets, and filters</li>
+        <li><strong>Docs:</strong> Extracts and browses the contents of a Tableau workbook including formulas, parameters, data sources, and filters</li>
+        <li><strong>Audit:</strong> Analyses a Tableau workbook for quality issues, anti-patterns, and formula problems</li>
+      </ul>
+      <p>Most processing occurs entirely in your browser. The Convert tool includes an optional AI translation feature that sends calculated field formulas (not metadata) to a third-party API.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Free tier and paid features</div>
+      <p>A free tier is available with limits on the number of fields processed per session. Paid access removes these limits and may include additional features. Pricing and feature availability are subject to change with reasonable notice.</p>
+      <p>Free tier limits are enforced per session and are not tied to an account. Creating multiple sessions to circumvent limits is a violation of these terms.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Acceptable use</div>
+      <p>You agree to use the Service only for lawful purposes and in accordance with these terms. You agree not to:</p>
+      <ul>
+        <li>Use the Service to process workbooks or data you do not have the right to access</li>
+        <li>Attempt to reverse engineer, scrape, or systematically extract data from the Service</li>
+        <li>Use automated scripts or bots to interact with the Service</li>
+        <li>Interfere with or disrupt the integrity or performance of the Service</li>
+        <li>Attempt to gain unauthorized access to any part of the Service or its infrastructure</li>
+        <li>Use the Service in any way that violates applicable laws or regulations</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Output accuracy and your responsibility</div>
+      <p>The Convert tool generates SQL code through a combination of rule-based translation and AI-assisted processing. This output is intended as a starting point for migration work, not a production-ready deployment.</p>
+      <p>You are responsible for:</p>
+      <ul>
+        <li>Reviewing all generated SQL before running it against any database</li>
+        <li>Verifying that translated logic produces results consistent with your Tableau workbook</li>
+        <li>Testing dbt models in a development environment before production deployment</li>
+        <li>Correcting any errors or misinterpretations in the generated output</li>
+      </ul>
+      <p>We make no warranty that the output of any tool is correct, complete, or fit for any particular purpose. Use of the Service does not transfer responsibility for the accuracy of your data models.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Intellectual property</div>
+      <p>The Service, including its code, design, and content, is owned by TableautoDbt and protected by applicable intellectual property laws.</p>
+      <p>You retain full ownership of any workbook files you upload and any output generated from them. We claim no ownership over your data or the SQL models generated from your workbooks.</p>
+      <p>TableautoDbt is not affiliated with, endorsed by, or in any way officially connected with Salesforce, Inc. or Tableau Software. Tableau and Tableau Software are registered trademarks of Salesforce, Inc. Use of the Tableau name on this site is purely descriptive — to indicate compatibility — and does not imply any association.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Third-party services</div>
+      <p>The Service uses the following third-party services. Their respective terms and privacy policies apply to data processed through them:</p>
+      <ul>
+        <li><strong>Anthropic (Claude API):</strong> Used for AI-assisted formula translation in the Convert tool. Only formula text is sent; see our <a href="/privacy">Privacy Policy</a> for details.</li>
+        <li><strong>PostHog:</strong> Used for anonymous product analytics.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Disclaimer of warranties</div>
+      <p>The Service is provided "as is" and "as available" without warranties of any kind, either express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.</p>
+      <p>We do not warrant that the Service will be uninterrupted, error-free, or that any defects will be corrected. We do not warrant the accuracy or completeness of any output generated by the Service.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Limitation of liability</div>
+      <p>To the fullest extent permitted by applicable law, TableautoDbt shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service or any output generated by the Service, even if we have been advised of the possibility of such damages.</p>
+      <p>Our total liability for any claims arising from your use of the Service shall not exceed the amount you paid for access to the Service in the three months preceding the claim.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Termination</div>
+      <p>We reserve the right to suspend or terminate access to the Service at any time, with or without notice, for conduct that violates these terms or is otherwise harmful to the Service or its users.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Governing law</div>
+      <p>These terms shall be governed by and construed in accordance with the laws of the State of California, without regard to its conflict of law provisions.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Contact</div>
+      <p>Questions about these terms? Contact us at <a href="mailto:legal@tableautodbt.com">legal@tableautodbt.com</a>.</p>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <a href="/">Convert</a>
+  <a href="/diff">Diff</a>
+  <a href="/docs">Docs</a>
+  <a href="/audit">Audit</a>
+  <a href="/privacy">Privacy</a>
+  <a href="/terms" style="color:rgba(255,255,255,0.7)">Terms</a>
+  <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
+</footer>
+
+</body>
+</html>

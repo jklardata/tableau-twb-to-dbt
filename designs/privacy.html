@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Privacy Policy — TableautoDbt</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;flex-direction:column}
+
+.hdr{background:#1e293b;padding:10px 24px;display:flex;align-items:center;gap:12px}
+.logo{font-size:14px;font-weight:800;color:#fff;text-decoration:none}
+.logo span{color:#0ea5e9}
+.nav{margin-left:auto;display:flex;gap:4px}
+.nav a{font-size:12px;color:rgba(255,255,255,0.55);padding:5px 12px;border-radius:6px;text-decoration:none}
+.nav a:hover{color:#fff}
+
+.page-hero{background:#1e293b;padding:48px 48px 40px}
+.hero-inner{max-width:760px;margin:0 auto}
+.hero-eyebrow{font-size:11px;font-weight:600;color:#0ea5e9;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px}
+.hero-inner h1{font-size:clamp(28px,4vw,40px);font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:8px}
+.hero-inner p{font-size:14px;color:rgba(255,255,255,0.5);line-height:1.7}
+
+.content{flex:1;padding:56px 48px}
+.content-inner{max-width:760px;margin:0 auto}
+
+.section{margin-bottom:40px}
+.section-title{font-size:16px;font-weight:700;color:#1e293b;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e2e8f0}
+.section p{font-size:14px;color:#475569;line-height:1.8;margin-bottom:12px}
+.section p:last-child{margin-bottom:0}
+.section ul{padding-left:20px;margin-bottom:12px}
+.section ul li{font-size:14px;color:#475569;line-height:1.8;margin-bottom:4px}
+.section a{color:#0ea5e9;text-decoration:none}
+.section a:hover{text-decoration:underline}
+
+.callout{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:18px 20px;margin-bottom:40px;display:flex;gap:12px;align-items:flex-start}
+.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.callout p{font-size:14px;color:#0369a1;line-height:1.7;margin:0}
+
+.meta{font-size:12px;color:#94a3b8;margin-bottom:48px}
+
+footer{background:#1e293b;padding:14px 32px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:auto}
+footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
+footer a:hover{color:rgba(255,255,255,0.7)}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <a href="convert-landing-2.html" class="logo">Tableau<span>to</span>Dbt</a>
+  <nav class="nav">
+    <a href="convert-landing-2.html">Convert</a>
+    <a href="diff-landing-4.html">Diff</a>
+    <a href="docs-landing-2.html">Docs</a>
+    <a href="audit-landing-4.html">Audit</a>
+  </nav>
+</header>
+
+<div class="page-hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Legal</div>
+    <h1>Privacy Policy</h1>
+    <p>How we handle your data — and why most of it never reaches us.</p>
+  </div>
+</div>
+
+<div class="content">
+  <div class="content-inner">
+
+    <div class="meta">Last updated: March 2026</div>
+
+    <div class="callout">
+      <div class="callout-icon">🔒</div>
+      <p><strong>The short version:</strong> Your Tableau workbooks are parsed entirely in your browser. The XML, formulas, field names, and data source metadata in your .twb or .twbx files never leave your device — except for the calculated field formulas you explicitly choose to send through an AI translation pass. We collect minimal anonymous usage data to understand how the product is being used.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">What stays in your browser</div>
+      <p>The following data is processed locally in your browser and is never transmitted to our servers or any third party:</p>
+      <ul>
+        <li>The contents of any .twb or .twbx file you upload</li>
+        <li>Workbook XML, including calculated field formulas, parameter definitions, and data source metadata</li>
+        <li>Connection strings, server names, database names, and table names referenced in your workbook</li>
+        <li>Sheet names, dashboard names, and filter configurations</li>
+        <li>Field names, aliases, and internal Calculation_XXXX identifiers</li>
+      </ul>
+      <p>All parsing, diffing, documentation extraction, and audit analysis runs in your browser using JavaScript. Nothing is uploaded to a server.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AI translation (Convert tool only)</div>
+      <p>The Convert tool includes an optional AI translation pass for complex calculated fields that cannot be translated by rule-based logic alone. If you use this feature:</p>
+      <ul>
+        <li>Only the text of the calculated field formula is sent — not field names, data source names, or any other workbook metadata</li>
+        <li>Formulas are sent to the Anthropic API (Claude) for translation</li>
+        <li>We do not log or store formula content on our servers</li>
+        <li>Anthropic's data usage policies apply to any data sent through their API. See <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a></li>
+      </ul>
+      <p>The privacy scan step before translation explicitly shows you which data stays in your browser and which formulas will be sent for AI processing. You can proceed or cancel before any data is transmitted.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Analytics and usage data</div>
+      <p>We use PostHog to collect anonymous product usage events. This helps us understand which features are used, how often, and where people run into issues. The data we collect includes:</p>
+      <ul>
+        <li>Which tool was used (Convert, Diff, Docs, Audit)</li>
+        <li>Feature interactions (e.g., export clicked, panel vs split view selected)</li>
+        <li>Aggregate counts (e.g., number of fields in a workbook, number of diffs found)</li>
+        <li>Browser type and approximate geographic region</li>
+      </ul>
+      <p>We do not collect personally identifiable information through PostHog unless you voluntarily provide your email address (see below). Events are anonymous by default.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Email address</div>
+      <p>If you submit your email address through the "Stay in the loop" form on any page, we store it to send you product updates and announcements. We will not sell your email address or share it with third parties for marketing purposes. You can unsubscribe at any time using the link in any email we send.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Cookies</div>
+      <p>We use a single analytics cookie set by PostHog to track anonymous sessions across page loads. No advertising or tracking cookies are used. You can disable cookies in your browser settings at any time; the tools will continue to function without them.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Data retention</div>
+      <p>Anonymous analytics events are retained for 12 months. Email addresses submitted through signup forms are retained until you unsubscribe or request deletion. No workbook data is retained because none is transmitted to our servers.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Your rights</div>
+      <p>If you have submitted your email address and would like it removed, or if you have any questions about this privacy policy, contact us at <a href="mailto:privacy@tableautodbt.com">privacy@tableautodbt.com</a>.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Changes to this policy</div>
+      <p>We may update this policy from time to time. The "last updated" date at the top of this page reflects when the most recent change was made. Continued use of the site after an update constitutes acceptance of the revised policy.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Disclaimer</div>
+      <p>TableautoDbt is not affiliated with, endorsed by, or in any way officially connected with Salesforce, Inc. or Tableau Software. Tableau and Tableau Software are trademarks of Salesforce, Inc.</p>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <a href="convert-landing-2.html">Convert</a>
+  <a href="diff-landing-4.html">Diff</a>
+  <a href="docs-landing-2.html">Docs</a>
+  <a href="audit-landing-4.html">Audit</a>
+  <a href="privacy.html" style="color:rgba(255,255,255,0.7)">Privacy</a>
+  <a href="terms.html">Terms</a>
+  <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
+</footer>
+
+</body>
+</html>

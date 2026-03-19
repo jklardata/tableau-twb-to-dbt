@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Diff Landing 4 — Feature Showcase Hero</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.hdr{background:#1e293b;padding:10px 24px;display:flex;align-items:center;gap:12px}
+.logo{font-size:14px;font-weight:800;color:#fff;text-decoration:none}
+.logo span{color:#0ea5e9}
+.nav{margin-left:auto;display:flex;gap:4px}
+.nav a{font-size:12px;color:rgba(255,255,255,0.55);padding:5px 12px;border-radius:6px;text-decoration:none}
+.nav a.active{color:#fff;background:rgba(255,255,255,0.1);font-weight:600}
+
+/* Upload bar */
+.upload-bar{background:#fff;border-bottom:1px solid #e2e8f0;padding:12px 24px;display:flex;align-items:center;gap:12px}
+.dz{border:1.5px dashed #e2e8f0;border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:10px;background:#f8fafc;flex:1;max-width:280px;cursor:pointer}
+.dz:hover{border-color:#0ea5e9;background:#f0f9ff}
+.dz-icon{font-size:16px;color:#cbd5e1}
+.dz-inner{flex:1}
+.dz-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8}
+.dz-txt{font-size:12px;color:#94a3b8}
+.vs{font-size:18px;color:#e2e8f0;font-weight:700}
+.cmp-btn{padding:10px 22px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit;margin-left:auto}
+
+/* Hero section — wide, with mock UI on right */
+.hero-section{background:#1e293b;padding:56px 48px;overflow:hidden;position:relative}
+.hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 520px;gap:40px;align-items:center}
+.hero-left{}
+.hero-eyebrow{font-size:11px;font-weight:600;color:#0ea5e9;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px}
+.hero-left h1{font-size:clamp(32px,4vw,48px);font-weight:800;color:#fff;line-height:1.15;letter-spacing:-0.02em;margin-bottom:16px}
+.hero-left h1 em{color:#0ea5e9;font-style:normal}
+.hero-left p{font-size:15px;color:rgba(255,255,255,0.6);line-height:1.75;margin-bottom:28px;max-width:420px}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#0ea5e9;color:#fff;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;border:none;font-family:inherit}
+.hero-cta-ghost{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:transparent;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;font-family:inherit}
+.hero-btns{display:flex;gap:10px;align-items:center}
+
+/* Mock UI */
+.mock-ui{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.mock-header{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 12px;display:flex;gap:8px;align-items:center}
+.mock-dot{width:10px;height:10px;border-radius:50%}
+.mock-bar{flex:1;height:6px;background:#e2e8f0;border-radius:3px;margin-left:4px}
+.mock-kpis{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid #e2e8f0}
+.mock-kpi{padding:10px 12px;border-right:1px solid #e2e8f0;position:relative}
+.mock-kpi:last-child{border-right:none}
+.mock-kpi-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;margin-bottom:2px}
+.mock-kpi-val{font-size:22px;font-weight:800;line-height:1}
+.mock-kpi-bar{position:absolute;bottom:0;left:0;right:0;height:2px}
+.mock-toolbar{padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:6px;align-items:center}
+.mock-select{height:24px;width:90px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px}
+.mock-input{height:24px;flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px}
+.mock-table{width:100%}
+.mock-th{padding:6px 10px;font-size:8px;font-weight:700;text-transform:uppercase;color:#94a3b8;background:#f8fafc;text-align:left;border-bottom:1px solid #e2e8f0}
+.mock-tr{border-bottom:1px solid #f1f5f9;display:flex;align-items:center;padding:0}
+.mock-td{padding:7px 10px;font-size:10px;color:#475569;flex:1}
+.mock-td.name{font-weight:600;color:#1e293b;border-left-width:3px;border-left-style:solid}
+.badge{display:inline-flex;padding:2px 6px;border-radius:12px;font-size:9px;font-weight:700}
+.badge-a{background:#dcfce7;color:#166534}
+.badge-r{background:#fee2e2;color:#991b1b}
+.badge-m{background:#fef9c3;color:#854d0e}
+
+/* Feature section */
+.feature-section{padding:56px 48px;max-width:1100px;margin:0 auto;width:100%}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:16px}
+.section-title{font-size:28px;font-weight:800;color:#1e293b;margin-bottom:8px;letter-spacing:-0.02em}
+.section-sub{font-size:15px;color:#64748b;max-width:520px;line-height:1.65;margin-bottom:32px}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:56px}
+.feat-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:22px}
+.fc-icon{font-size:24px;margin-bottom:12px}
+.fc-title{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:6px}
+.fc-body{font-size:12px;color:#64748b;line-height:1.65}
+
+/* CTA banner */
+.cta-banner{background:#1e293b;border-radius:16px;padding:48px;text-align:center;margin-bottom:56px}
+.cta-title{font-size:28px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-0.02em}
+.cta-sub{font-size:15px;color:rgba(255,255,255,0.6);margin-bottom:28px;line-height:1.65}
+.cta-upload-grid{display:grid;grid-template-columns:1fr auto 1fr auto;gap:12px;max-width:600px;margin:0 auto 16px;align-items:center}
+.cta-dz{border:1.5px dashed rgba(255,255,255,0.2);border-radius:8px;padding:16px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.04);transition:all 0.15s}
+.cta-dz:hover{border-color:#0ea5e9;background:rgba(14,165,233,0.08)}
+.cta-dz-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.4);margin-bottom:6px}
+.cta-dz-txt{font-size:12px;color:rgba(255,255,255,0.6)}
+.cta-arrow{font-size:20px;color:rgba(255,255,255,0.3)}
+.cta-btn{padding:12px 24px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit;opacity:0.5}
+.cta-privacy{font-size:11px;color:rgba(255,255,255,0.35);margin-top:8px}
+
+/* Email */
+.email-strip{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:32px;text-align:center;margin-bottom:48px}
+.email-title{font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px}
+.email-sub{font-size:13px;color:#64748b;margin-bottom:16px}
+.email-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.email-row input{padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;width:220px;font-family:inherit;outline:none}
+.email-row button{padding:9px 18px;background:#1e293b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+
+footer{background:#1e293b;padding:14px 32px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
+
+.back-bar{background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:6px 16px;text-align:center;font-size:12px;color:#0369a1}
+.back-bar a{color:#0369a1;font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <a href="/" class="logo">Tableau<span>to</span>Dbt</a>
+  <nav class="nav">
+    <a href="/">Convert</a>
+    <a href="/diff" class="active">Diff</a>
+    <a href="/docs">Docs</a>
+    <a href="/audit">Audit</a>
+  </nav>
+</header>
+
+<div class="upload-bar">
+  <div class="dz">
+    <span class="dz-icon">↑</span>
+    <div class="dz-inner">
+      <div class="dz-label">Before</div>
+      <div class="dz-txt">Drop .twb or .twbx</div>
+    </div>
+  </div>
+  <span class="vs">→</span>
+  <div class="dz">
+    <span class="dz-icon">↑</span>
+    <div class="dz-inner">
+      <div class="dz-label">After</div>
+      <div class="dz-txt">Drop .twb or .twbx</div>
+    </div>
+  </div>
+  <button class="cmp-btn">Compare →</button>
+</div>
+
+<!-- Dark hero -->
+<div class="hero-section">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Free · Browser-only · Instant results</div>
+      <h1>See exactly what changed between<br/>two <em>Tableau workbooks</em></h1>
+      <p>Drop a before and after .twbx. Get a clean diff of every calculated field, parameter, data source, sheet, and filter in seconds.</p>
+      <div class="hero-btns">
+        <a href="#cta" class="hero-cta">Compare Workbooks →</a>
+        <a href="#features" class="hero-cta-ghost">See what it finds</a>
+      </div>
+    </div>
+
+    <!-- Mock UI preview -->
+    <div class="mock-ui">
+      <div class="mock-header">
+        <div class="mock-dot" style="background:#ef4444"></div>
+        <div class="mock-dot" style="background:#f59e0b"></div>
+        <div class="mock-dot" style="background:#22c55e"></div>
+        <div class="mock-bar"></div>
+      </div>
+      <div class="mock-kpis">
+        <div class="mock-kpi"><div class="mock-kpi-label">Total</div><div class="mock-kpi-val" style="color:#1e293b">6</div><div class="mock-kpi-bar" style="background:#e2e8f0"></div></div>
+        <div class="mock-kpi"><div class="mock-kpi-label">Added</div><div class="mock-kpi-val" style="color:#166534">+2</div><div class="mock-kpi-bar" style="background:#22c55e"></div></div>
+        <div class="mock-kpi"><div class="mock-kpi-label">Removed</div><div class="mock-kpi-val" style="color:#991b1b">−1</div><div class="mock-kpi-bar" style="background:#ef4444"></div></div>
+        <div class="mock-kpi"><div class="mock-kpi-label">Modified</div><div class="mock-kpi-val" style="color:#854d0e">~3</div><div class="mock-kpi-bar" style="background:#f59e0b"></div></div>
+      </div>
+      <div class="mock-toolbar">
+        <div class="mock-select"></div>
+        <div class="mock-select"></div>
+        <div class="mock-input"></div>
+      </div>
+      <table class="mock-table">
+        <thead><tr><th class="mock-th">Name</th><th class="mock-th">Category</th><th class="mock-th">Change</th><th class="mock-th">Before</th></tr></thead>
+        <tbody>
+          <tr class="mock-tr">
+            <td class="mock-td name" style="border-left-color:#f59e0b">Profit Margin</td>
+            <td class="mock-td"><span style="background:#f1f5f9;padding:1px 5px;border-radius:3px;font-size:9px">Calc Field</span></td>
+            <td class="mock-td"><span class="badge badge-m">~ Modified</span></td>
+            <td class="mock-td" style="font-family:monospace;font-size:9px;color:#94a3b8">SUM([Profit])…</td>
+          </tr>
+          <tr class="mock-tr">
+            <td class="mock-td name" style="border-left-color:#22c55e">Customer LTV</td>
+            <td class="mock-td"><span style="background:#f1f5f9;padding:1px 5px;border-radius:3px;font-size:9px">Calc Field</span></td>
+            <td class="mock-td"><span class="badge badge-a">+ Added</span></td>
+            <td class="mock-td" style="color:#cbd5e1;font-family:monospace;font-size:9px">—</td>
+          </tr>
+          <tr class="mock-tr">
+            <td class="mock-td name" style="border-left-color:#ef4444">Date Granularity</td>
+            <td class="mock-td"><span style="background:#f1f5f9;padding:1px 5px;border-radius:3px;font-size:9px">Parameter</span></td>
+            <td class="mock-td"><span class="badge badge-r">− Removed</span></td>
+            <td class="mock-td" style="font-family:monospace;font-size:9px;color:#94a3b8">string · Day…</td>
+          </tr>
+          <tr class="mock-tr">
+            <td class="mock-td name" style="border-left-color:#f59e0b">Region Filter</td>
+            <td class="mock-td"><span style="background:#f1f5f9;padding:1px 5px;border-radius:3px;font-size:9px">Filter</span></td>
+            <td class="mock-td"><span class="badge badge-m">~ Modified</span></td>
+            <td class="mock-td" style="font-family:monospace;font-size:9px;color:#94a3b8">condition: All</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Features -->
+<div id="features" class="feature-section">
+  <div class="section-label">What You Get</div>
+  <div class="section-title">Everything that changed, nothing that didn't.</div>
+  <div class="section-sub">A clean, filterable table covering all five Tableau diff categories. Click any row for formula-level detail.</div>
+
+  <div class="feat-grid">
+    <div class="feat-card"><div class="fc-icon">🔍</div><div class="fc-title">Token-level formula diffs</div><div class="fc-body">Side-by-side before/after with individual tokens highlighted. Know exactly which part of a formula changed, not just that it changed.</div></div>
+    <div class="feat-card"><div class="fc-icon">📋</div><div class="fc-title">Parameter changes</div><div class="fc-body">Spot new, removed, or reconfigured parameters at a glance. See value changes, type changes, and range modifications.</div></div>
+    <div class="feat-card"><div class="fc-icon">🗄️</div><div class="fc-title">Data source tracking</div><div class="fc-body">See which connections were added, removed, or renamed. Connection type, server, and database are all tracked.</div></div>
+    <div class="feat-card"><div class="fc-icon">📊</div><div class="fc-title">Sheet & dashboard diffs</div><div class="fc-body">Know which views changed across workbook versions. Track worksheet and dashboard additions and removals.</div></div>
+    <div class="feat-card"><div class="fc-icon">🎛️</div><div class="fc-title">Filter changes</div><div class="fc-body">Track filter additions and removals per sheet. Include/exclude values, range changes, and filter type modifications.</div></div>
+    <div class="feat-card"><div class="fc-icon">⊠</div><div class="fc-title">Panel &amp; split view</div><div class="fc-body">Click any row to see full detail. Toggle between a bottom panel slide-up or a 60/40 split layout to compare formulas.</div></div>
+  </div>
+
+  <!-- CTA banner -->
+  <div id="cta" class="cta-banner">
+    <div class="cta-title">Ready to compare?</div>
+    <div class="cta-sub">Drop your workbooks below or use the upload bar at the top of the page.</div>
+    <div class="cta-upload-grid">
+      <div class="cta-dz">
+        <div class="cta-dz-label">Before</div>
+        <div class="cta-dz-txt">↑ Drop .twbx</div>
+      </div>
+      <div class="cta-arrow">→</div>
+      <div class="cta-dz">
+        <div class="cta-dz-label">After</div>
+        <div class="cta-dz-txt">↑ Drop .twbx</div>
+      </div>
+      <button class="cta-btn">Compare →</button>
+    </div>
+    <div class="cta-privacy">🔒 Your files never leave your browser.</div>
+  </div>
+
+  <div class="email-strip">
+    <div class="email-title">Stay in the loop</div>
+    <div class="email-sub">Get notified when we add new Tableau tools. No spam.</div>
+    <div class="email-row">
+      <input type="email" placeholder="your@email.com"/>
+      <button>Notify Me</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="/">Convert</a><a href="/diff">Diff</a><a href="/docs">Docs</a><a href="/audit">Audit</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a>
+  <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
+</footer>
+<script>
+(function() {
+  const DEST = '/app/diff';
+  const dz = document.querySelectorAll('.upload-bar .dz');
+  const cmpBtn = document.querySelector('.upload-bar .cmp-btn');
+  const ctaDzs = document.querySelectorAll('.cta-dz');
+  const ctaBtn = document.querySelector('.cta-btn');
+
+  let stored = { before: false, after: false };
+
+  function makeInput(key, zone, label) {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.twb,.twbx';
+    inp.onchange = function(e) { if (e.target.files[0]) storeFile(key, zone, label, e.target.files[0]); };
+    return inp;
+  }
+
+  function storeFile(key, zone, label, file) {
+    const icon = zone.querySelector('.dz-icon') || zone;
+    const txt = zone.querySelector('.dz-txt');
+    if (txt) txt.textContent = file.name;
+    if (icon && icon.tagName !== 'DIV') icon.textContent = '✓';
+    zone.style.borderColor = '#22c55e';
+    const reader = new FileReader();
+    reader.onload = function() {
+      sessionStorage.setItem(key, JSON.stringify({ name: file.name, data: reader.result }));
+      stored[label] = true;
+      if (stored.before && stored.after) {
+        cmpBtn.style.opacity = '1'; cmpBtn.style.cursor = 'pointer';
+        cmpBtn.style.background = '#0ea5e9'; cmpBtn.style.color = '#fff';
+        window.location.href = DEST;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function wireZone(zone, key, label, inp) {
+    zone.style.cursor = 'pointer';
+    zone.addEventListener('click', function() { inp.click(); });
+    zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.style.borderColor = '#0ea5e9'; });
+    zone.addEventListener('dragleave', function() { if (!stored[label]) zone.style.borderColor = ''; });
+    zone.addEventListener('drop', function(e) { e.preventDefault(); if (e.dataTransfer.files[0]) storeFile(key, zone, label, e.dataTransfer.files[0]); });
+  }
+
+  const inp1 = makeInput('twb_pending_diff1', dz[0], 'before');
+  const inp2 = makeInput('twb_pending_diff2', dz[1], 'after');
+  wireZone(dz[0], 'twb_pending_diff1', 'before', inp1);
+  wireZone(dz[1], 'twb_pending_diff2', 'after', inp2);
+
+  // CTA section zones — before zone = first, after = second
+  if (ctaDzs.length >= 2) {
+    const cinp1 = makeInput('twb_pending_diff1', ctaDzs[0], 'before');
+    const cinp2 = makeInput('twb_pending_diff2', ctaDzs[1], 'after');
+    wireZone(ctaDzs[0], 'twb_pending_diff1', 'before', cinp1);
+    wireZone(ctaDzs[1], 'twb_pending_diff2', 'after', cinp2);
+  }
+
+  cmpBtn.style.cursor = 'pointer'; cmpBtn.style.opacity = '0.4';
+  cmpBtn.addEventListener('click', function() {
+    if (stored.before && stored.after) window.location.href = DEST;
+    else if (!stored.before) inp1.click();
+    else inp2.click();
+  });
+
+  if (ctaBtn) {
+    ctaBtn.style.cursor = 'pointer'; ctaBtn.style.opacity = '0.4';
+    ctaBtn.addEventListener('click', function() {
+      if (stored.before && stored.after) window.location.href = DEST;
+      else if (!stored.before) inp1.click();
+      else inp2.click();
+    });
+  }
+})();
+</script>
+</body>
+</html>

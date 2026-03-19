@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Audit Landing 4 — Feature Showcase Hero</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.hdr{background:#1e293b;padding:10px 24px;display:flex;align-items:center;gap:12px}
+.logo{font-size:14px;font-weight:800;color:#fff;text-decoration:none}
+.logo span{color:#0ea5e9}
+.nav{margin-left:auto;display:flex;gap:4px}
+.nav a{font-size:12px;color:rgba(255,255,255,0.55);padding:5px 12px;border-radius:6px;text-decoration:none}
+.nav a.active{color:#fff;background:rgba(255,255,255,0.1);font-weight:600}
+
+/* Upload bar */
+.upload-bar{background:#fff;border-bottom:1px solid #e2e8f0;padding:12px 24px;display:flex;align-items:center;gap:12px}
+.dz{border:1.5px dashed #e2e8f0;border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:10px;background:#f8fafc;flex:1;max-width:360px;cursor:pointer}
+.dz:hover{border-color:#0ea5e9;background:#f0f9ff}
+.dz-icon{font-size:16px;color:#cbd5e1}
+.dz-inner{flex:1}
+.dz-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8}
+.dz-txt{font-size:12px;color:#94a3b8}
+.cmp-btn{padding:10px 22px;background:#e2e8f0;color:#94a3b8;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit}
+
+/* Hero section */
+.hero-section{background:#1e293b;padding:56px 48px;overflow:hidden;position:relative}
+.hero-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 540px;gap:40px;align-items:center}
+.hero-eyebrow{font-size:11px;font-weight:600;color:#0ea5e9;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:16px}
+.hero-left h1{font-size:clamp(32px,4vw,48px);font-weight:800;color:#fff;line-height:1.15;letter-spacing:-0.02em;margin-bottom:16px}
+.hero-left h1 em{color:#0ea5e9;font-style:normal}
+.hero-left p{font-size:15px;color:rgba(255,255,255,0.6);line-height:1.75;margin-bottom:28px;max-width:420px}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#0ea5e9;color:#fff;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;cursor:pointer;border:none;font-family:inherit}
+.hero-cta-ghost{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:transparent;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.2);border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;cursor:pointer;font-family:inherit}
+.hero-btns{display:flex;gap:10px;align-items:center}
+
+/* Mock UI */
+.mock-ui{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.mock-header{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 12px;display:flex;gap:8px;align-items:center}
+.mock-dot{width:10px;height:10px;border-radius:50%}
+.mock-bar{flex:1;height:6px;background:#e2e8f0;border-radius:3px;margin-left:4px}
+/* Health strip */
+.mock-health{display:flex;align-items:center;gap:16px;padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#fff}
+.mock-gauge{width:44px;height:44px;flex-shrink:0}
+.mock-health-name{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.mock-health-sub{font-size:10px;color:#64748b}
+.mock-issues{margin-left:auto;display:flex;gap:6px}
+.issue-pill{padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
+/* Table */
+.mock-toolbar{padding:8px 12px;border-bottom:1px solid #e2e8f0;display:flex;gap:6px;align-items:center}
+.mock-input{height:22px;flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px}
+.mock-select{height:22px;width:72px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px}
+.mock-table{width:100%}
+.mock-th{padding:5px 10px;font-size:8px;font-weight:700;text-transform:uppercase;color:#94a3b8;background:#f8fafc;text-align:left;border-bottom:1px solid #e2e8f0}
+.mock-tr{border-bottom:1px solid #f1f5f9;display:flex;align-items:center}
+.mock-td{padding:6px 10px;font-size:10px;color:#475569;flex:1}
+.mock-td.name{font-weight:600;color:#1e293b;border-left-width:3px;border-left-style:solid}
+.severity{display:inline-flex;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;font-family:monospace}
+.sev-err{background:#fee2e2;color:#991b1b}
+.sev-warn{background:#fef9c3;color:#854d0e}
+.sev-info{background:#e0f2fe;color:#0369a1}
+
+/* Stats band */
+.stats-band{background:#0ea5e9;padding:24px 48px}
+.stats-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.stat-item{text-align:center}
+.stat-num{font-size:32px;font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1}
+.stat-lbl{font-size:12px;color:rgba(255,255,255,0.75);margin-top:4px}
+
+/* Feature section */
+.feature-section{padding:56px 48px;max-width:1100px;margin:0 auto;width:100%}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:16px}
+.section-title{font-size:28px;font-weight:800;color:#1e293b;margin-bottom:8px;letter-spacing:-0.02em}
+.section-sub{font-size:15px;color:#64748b;max-width:520px;line-height:1.65;margin-bottom:32px}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:56px}
+.feat-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:22px}
+.fc-icon{font-size:24px;margin-bottom:12px}
+.fc-title{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:6px}
+.fc-body{font-size:12px;color:#64748b;line-height:1.65}
+
+/* CTA banner */
+.cta-banner{background:#1e293b;border-radius:16px;padding:48px;text-align:center;margin-bottom:56px}
+.cta-title{font-size:28px;font-weight:800;color:#fff;margin-bottom:10px;letter-spacing:-0.02em}
+.cta-sub{font-size:15px;color:rgba(255,255,255,0.6);margin-bottom:28px;line-height:1.65}
+.cta-upload-row{display:flex;gap:12px;max-width:480px;margin:0 auto 16px;align-items:center}
+.cta-dz{border:1.5px dashed rgba(255,255,255,0.2);border-radius:8px;padding:16px 24px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.04);flex:1;transition:all 0.15s}
+.cta-dz:hover{border-color:#0ea5e9;background:rgba(14,165,233,0.08)}
+.cta-dz-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.4);margin-bottom:6px}
+.cta-dz-txt{font-size:12px;color:rgba(255,255,255,0.6)}
+.cta-btn{padding:12px 24px;background:#0ea5e9;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit;opacity:0.5}
+.cta-privacy{font-size:11px;color:rgba(255,255,255,0.35);margin-top:8px}
+
+/* Email */
+.email-strip{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:32px;text-align:center;margin-bottom:48px}
+.email-title{font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px}
+.email-sub{font-size:13px;color:#64748b;margin-bottom:16px}
+.email-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.email-row input{padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;width:220px;font-family:inherit;outline:none}
+.email-row button{padding:9px 18px;background:#1e293b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+
+footer{background:#1e293b;padding:14px 32px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
+
+.back-bar{background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:6px 16px;text-align:center;font-size:12px;color:#0369a1}
+.back-bar a{color:#0369a1;font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <a href="/" class="logo">Tableau<span>to</span>Dbt</a>
+  <nav class="nav">
+    <a href="/">Convert</a>
+    <a href="/diff">Diff</a>
+    <a href="/docs">Docs</a>
+    <a href="/audit" class="active">Audit</a>
+  </nav>
+</header>
+
+<div class="upload-bar">
+  <div class="dz">
+    <span class="dz-icon">↑</span>
+    <div class="dz-inner">
+      <div class="dz-label">Workbook</div>
+      <div class="dz-txt">Drop .twb or .twbx to audit</div>
+    </div>
+  </div>
+  <button class="cmp-btn">Run Audit →</button>
+</div>
+
+<!-- Dark hero -->
+<div class="hero-section">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Free · Browser-only · Instant results</div>
+      <h1>Instantly audit your <em>Tableau workbook</em> for quality issues</h1>
+      <p>Drop a .twb or .twbx and get a health score plus a full breakdown of errors, warnings, and improvements across every calculated field and formula.</p>
+      <div class="hero-btns">
+        <a href="#cta" class="hero-cta">Run Audit →</a>
+        <a href="#features" class="hero-cta-ghost">See what it checks</a>
+      </div>
+    </div>
+
+    <!-- Mock UI preview -->
+    <div class="mock-ui">
+      <div class="mock-header">
+        <div class="mock-dot" style="background:#ef4444"></div>
+        <div class="mock-dot" style="background:#f59e0b"></div>
+        <div class="mock-dot" style="background:#22c55e"></div>
+        <div class="mock-bar"></div>
+      </div>
+
+      <!-- Health strip with SVG gauge -->
+      <div class="mock-health">
+        <svg class="mock-gauge" viewBox="0 0 44 44">
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#e2e8f0" stroke-width="4"/>
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#f59e0b" stroke-width="4"
+            stroke-dasharray="79 34" stroke-dashoffset="28" stroke-linecap="round"/>
+          <text x="22" y="26" text-anchor="middle" font-size="11" font-weight="800" fill="#1e293b" font-family="Inter,sans-serif">72</text>
+        </svg>
+        <div>
+          <div class="mock-health-name">Sales Dashboard v3.twbx</div>
+          <div class="mock-health-sub">Health score: 72 / 100 · Fair</div>
+        </div>
+        <div class="mock-issues">
+          <span class="issue-pill sev-err">3 ERR</span>
+          <span class="issue-pill sev-warn">7 WARN</span>
+          <span class="issue-pill sev-info">4 INFO</span>
+        </div>
+      </div>
+
+      <div class="mock-toolbar">
+        <div class="mock-select"></div>
+        <div class="mock-input"></div>
+      </div>
+      <table class="mock-table">
+        <thead><tr><th class="mock-th">Field</th><th class="mock-th">Issue</th><th class="mock-th">Severity</th></tr></thead>
+        <tbody>
+          <tr class="mock-tr">
+            <td class="mock-td name" style="border-left-color:#ef4444">Profit Ratio</td>
+            <td class="mock-td" style="font-size:9px;color:#64748b">Division by zero risk: denominator may be 0</td>
+            <td class="mock-td"><span class="severity sev-err">ERR</span></td>
+          </tr>
+          <tr class="mock-tr">
+            <td class="mock-td name" style="border-left-color:#f59e0b">Customer Tier</td>
+            <td class="mock-td" style="font-size:9px;color:#64748b">Nested IF depth exceeds 3 levels</td>
+            <td class="mock-td"><span class="severity sev-warn">WARN</span></td>
+          </tr>
+          <tr class="mock-tr">
+            <td class="mock-td name" style="border-left-color:#f59e0b">YoY Growth</td>
+            <td class="mock-td" style="font-size:9px;color:#64748b">References deprecated parameter [Year]</td>
+            <td class="mock-td"><span class="severity sev-warn">WARN</span></td>
+          </tr>
+          <tr class="mock-tr">
+            <td class="mock-td name" style="border-left-color:#0ea5e9">Days Since Order</td>
+            <td class="mock-td" style="font-size:9px;color:#64748b">No description set on this field</td>
+            <td class="mock-td"><span class="severity sev-info">INFO</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Features -->
+<div id="features" class="feature-section">
+  <div class="section-label">What You Get</div>
+  <div class="section-title">Know exactly what's broken and what might break.</div>
+  <div class="section-sub">A health score plus a prioritized list of issues across your calculated fields. Fix errors first, review warnings, take note of improvements.</div>
+
+  <div class="feat-grid">
+    <div class="feat-card"><div class="fc-icon">💯</div><div class="fc-title">Health score</div><div class="fc-body">A 0–100 score summarizing overall workbook quality. Weighted by severity so critical errors pull the score down most.</div></div>
+    <div class="feat-card"><div class="fc-icon">🚨</div><div class="fc-title">Error detection</div><div class="fc-body">Catch division-by-zero risks, broken field references, missing data source connections, and other hard failures before they reach production.</div></div>
+    <div class="feat-card"><div class="fc-icon">⚠️</div><div class="fc-title">Warning analysis</div><div class="fc-body">Surface deeply nested IFs, deprecated parameter references, duplicate field names, and other patterns that degrade maintainability.</div></div>
+    <div class="feat-card"><div class="fc-icon">🔍</div><div class="fc-title">Formula inspection</div><div class="fc-body">Click any flagged field to view the full syntax-highlighted formula alongside the specific issue, with context to understand the problem.</div></div>
+    <div class="feat-card"><div class="fc-icon">🔗</div><div class="fc-title">Dependency tracing</div><div class="fc-body">See which other fields are downstream of a broken one. Understand the blast radius of an issue before fixing it.</div></div>
+    <div class="feat-card"><div class="fc-icon">⬇️</div><div class="fc-title">JSON export</div><div class="fc-body">Download the full audit report as structured JSON for documentation, Jira tickets, or feeding into your own tooling.</div></div>
+  </div>
+
+  <!-- CTA banner -->
+  <div id="cta" class="cta-banner">
+    <div class="cta-title">Ready to audit?</div>
+    <div class="cta-sub">Drop your workbook below or use the upload bar at the top of the page.</div>
+    <div class="cta-upload-row">
+      <div class="cta-dz">
+        <div class="cta-dz-label">Workbook</div>
+        <div class="cta-dz-txt">↑ Drop .twb or .twbx</div>
+      </div>
+      <button class="cta-btn">Run Audit →</button>
+    </div>
+    <div class="cta-privacy">🔒 Your files never leave your browser.</div>
+  </div>
+
+  <div class="email-strip">
+    <div class="email-title">Stay in the loop</div>
+    <div class="email-sub">Get notified when we add new Tableau tools. No spam.</div>
+    <div class="email-row">
+      <input type="email" placeholder="your@email.com"/>
+      <button>Notify Me</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="/">Convert</a><a href="/diff">Diff</a><a href="/docs">Docs</a><a href="/audit">Audit</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a>
+  <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
+</footer>
+<script>
+(function() {
+  const DEST = '/app/audit';
+  const KEY = 'twb_pending_audit';
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.twb,.twbx';
+
+  function storeAndGo(file) {
+    const reader = new FileReader();
+    reader.onload = function() {
+      sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result }));
+      window.location.href = DEST;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  inp.onchange = function(e) { if (e.target.files[0]) storeAndGo(e.target.files[0]); };
+
+  // Wire up every upload zone and button on the page
+  document.querySelectorAll('.dz, .cta-dz').forEach(function(zone) {
+    zone.style.cursor = 'pointer';
+    zone.addEventListener('click', function() { inp.click(); });
+    zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.style.borderColor = '#0ea5e9'; zone.style.background = 'rgba(14,165,233,0.08)'; });
+    zone.addEventListener('dragleave', function() { zone.style.borderColor = ''; zone.style.background = ''; });
+    zone.addEventListener('drop', function(e) { e.preventDefault(); zone.style.borderColor = ''; zone.style.background = ''; if (e.dataTransfer.files[0]) storeAndGo(e.dataTransfer.files[0]); });
+  });
+
+  document.querySelectorAll('.cmp-btn, .cta-btn').forEach(function(btn) {
+    btn.style.cursor = 'pointer'; btn.style.opacity = '1';
+    btn.addEventListener('click', function() { inp.click(); });
+  });
+})();
+</script>
+</body>
+</html>

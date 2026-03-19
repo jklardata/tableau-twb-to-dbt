@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Docs Landing 2: Split, Copy Left / Upload Right</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.hdr{background:#1e293b;padding:10px 24px;display:flex;align-items:center;gap:12px}
+.logo{font-size:14px;font-weight:800;color:#fff;text-decoration:none}
+.logo span{color:#0ea5e9}
+.nav{margin-left:auto;display:flex;gap:4px}
+.nav a{font-size:12px;color:rgba(255,255,255,0.55);padding:5px 12px;border-radius:6px;text-decoration:none}
+.nav a.active{color:#fff;background:rgba(255,255,255,0.1);font-weight:600}
+
+/* Split hero */
+.split-hero{display:grid;grid-template-columns:1fr 420px;min-height:calc(100vh - 46px);background:#fff;border-bottom:2px solid #e2e8f0}
+
+/* Left: Copy */
+.copy-side{padding:64px 48px;display:flex;flex-direction:column;justify-content:center}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:20px;font-size:11px;font-weight:600;color:#0ea5e9;margin-bottom:20px;width:fit-content}
+.copy-side h1{font-size:clamp(36px,4vw,52px);font-weight:800;color:#1e293b;line-height:1.1;letter-spacing:-0.03em;margin-bottom:20px}
+.copy-side h1 em{color:#0ea5e9;font-style:normal}
+.copy-side p{font-size:16px;color:#64748b;max-width:440px;line-height:1.75;margin-bottom:32px}
+.feature-list{display:flex;flex-direction:column;gap:10px;margin-bottom:40px}
+.feature-row{display:flex;align-items:center;gap:10px;font-size:13px;color:#475569}
+.feature-row .dot{width:6px;height:6px;background:#0ea5e9;border-radius:50%;flex-shrink:0}
+.social-proof{font-size:12px;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:20px}
+
+/* Right: Upload */
+.upload-side{background:#f8fafc;border-left:2px solid #e2e8f0;padding:40px 32px;display:flex;flex-direction:column;justify-content:center;gap:20px;position:sticky;top:0;height:fit-content}
+.us-title{font-size:14px;font-weight:700;color:#1e293b;text-align:center;margin-bottom:4px}
+.us-sub{font-size:11px;color:#94a3b8;text-align:center;margin-bottom:20px}
+.upload-zone{border:1.5px dashed #e2e8f0;border-radius:10px;padding:36px 16px;text-align:center;cursor:pointer;background:#fff;transition:all 0.15s}
+.upload-zone:hover{border-color:#0ea5e9;background:#f0f9ff}
+.uz-icon{font-size:28px;color:#cbd5e1;margin-bottom:8px}
+.uz-title{font-size:13px;font-weight:600;color:#64748b;margin-bottom:2px}
+.uz-sub{font-size:11px;color:#94a3b8}
+.extract-btn{width:100%;padding:14px;background:#1e293b;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:not-allowed;opacity:0.4;margin-top:4px}
+.privacy-note{text-align:center;font-size:11px;color:#94a3b8}
+
+/* Below fold */
+.below-fold{padding:64px 48px;max-width:960px;margin:0 auto;width:100%}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:16px}
+.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:56px}
+.how-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px}
+.how-num{font-size:28px;font-weight:800;color:#e2e8f0;margin-bottom:8px}
+.how-title{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px}
+.how-body{font-size:12px;color:#64748b;line-height:1.6}
+.email-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:36px 32px;text-align:center}
+.email-title{font-size:20px;font-weight:700;color:#1e293b;margin-bottom:6px}
+.email-sub{font-size:14px;color:#64748b;margin-bottom:20px}
+.email-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.email-row input{padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;width:240px;font-family:inherit;color:#1e293b;outline:none}
+.email-row button{padding:10px 20px;background:#1e293b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+
+footer{background:#1e293b;padding:14px 32px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
+
+.back-bar{background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:6px 16px;text-align:center;font-size:12px;color:#0369a1}
+.back-bar a{color:#0369a1;font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <a href="convert-landing-2.html" class="logo">Tableau<span>to</span>Dbt</a>
+  <nav class="nav">
+    <a href="convert-landing-2.html">Convert</a>
+    <a href="diff-landing-4.html">Diff</a>
+    <a href="docs-landing-2.html" class="active">Docs</a>
+    <a href="audit-landing-4.html">Audit</a>
+  </nav>
+</header>
+
+<div class="split-hero">
+  <!-- Left: Copy -->
+  <div class="copy-side">
+    <div class="eyebrow">⚡ Free · Browser-only · Instant</div>
+    <h1>Browse every formula and field in your <em>Tableau workbook</em></h1>
+    <p>Drop a .twb or .twbx. Get a complete, searchable view of every calculated field, parameter, data source, sheet, and filter in seconds.</p>
+
+    <div class="feature-list">
+      <div class="feature-row"><div class="dot"></div>Full syntax-highlighted formula for every calculated field</div>
+      <div class="feature-row"><div class="dot"></div>Parameter values, types, and allowable ranges</div>
+      <div class="feature-row"><div class="dot"></div>Data source connections with field inventories</div>
+      <div class="feature-row"><div class="dot"></div>Sheet and dashboard breakdowns with field usage</div>
+      <div class="feature-row"><div class="dot"></div>Field dependency tracking across formulas</div>
+      <div class="feature-row"><div class="dot"></div>Export to JSON, Markdown, or a structured AI prompt</div>
+      <div class="feature-row"><div class="dot"></div>Your files never leave your browser</div>
+    </div>
+
+    <div class="social-proof">Used by data teams onboarding new analysts and organizations preparing for Tableau-to-dbt migrations.</div>
+  </div>
+
+  <!-- Right: Upload -->
+  <div class="upload-side">
+    <div>
+      <div class="us-title">Extract Workbook Docs</div>
+      <div class="us-sub">Drop any .twb or .twbx file below</div>
+    </div>
+
+    <div class="upload-zone">
+      <div class="uz-icon">↑</div>
+      <div class="uz-title">Drop .twb or .twbx</div>
+      <div class="uz-sub">or click to browse</div>
+    </div>
+
+    <button class="extract-btn">Extract Docs →</button>
+    <div class="privacy-note">🔒 All processing is local. Nothing is uploaded.</div>
+  </div>
+</div>
+
+<!-- Below fold -->
+<div class="below-fold">
+  <div class="section-label">How It Works</div>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-num">01</div>
+      <div class="how-title">Upload Your Workbook</div>
+      <div class="how-body">Drop any .twb or .twbx file. Everything runs in your browser. Your workbook never leaves your machine.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">02</div>
+      <div class="how-title">Browse the Extracted Docs</div>
+      <div class="how-body">Five tabs: Calc Fields, Data Sources, Sheets, Parameters, and Filters, each with search and click-to-expand formula view.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">03</div>
+      <div class="how-title">Export in Any Format</div>
+      <div class="how-body">Download JSON, generate Markdown for Notion or Confluence, or copy a structured prompt to paste into Claude or ChatGPT.</div>
+    </div>
+  </div>
+
+  <div class="email-wrap">
+    <div class="email-title">Stay in the loop</div>
+    <div class="email-sub">Get notified when we add new Tableau tools. No spam.</div>
+    <div class="email-row">
+      <input type="email" placeholder="your@email.com"/>
+      <button>Notify Me</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="convert-landing-2.html">Convert</a><a href="diff-landing-4.html">Diff</a><a href="docs-landing-2.html">Docs</a><a href="audit-landing-4.html">Audit</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a>
+  <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
+</footer>
+<script>
+(function() {
+  const DEST = '../docs';
+  const KEY = 'twb_pending_docs';
+  const zone = document.querySelector('.upload-zone');
+  const btn = document.querySelector('.extract-btn');
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.twb,.twbx';
+
+  function storeAndGo(file) {
+    zone.innerHTML = '<div class="uz-icon" style="color:#22c55e;margin-bottom:8px">✓</div><div class="uz-title">' + file.name + '</div><div class="uz-sub">Loading...</div>';
+    zone.style.borderColor = '#22c55e';
+    btn.style.opacity = '1'; btn.style.cursor = 'pointer'; btn.textContent = 'Loading...';
+    const reader = new FileReader();
+    reader.onload = function() {
+      sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result }));
+      window.location.href = DEST;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  inp.onchange = function(e) { if (e.target.files[0]) storeAndGo(e.target.files[0]); };
+  zone.style.cursor = 'pointer';
+  zone.addEventListener('click', function() { inp.click(); });
+  zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.style.borderColor = '#0ea5e9'; zone.style.background = '#f0f9ff'; });
+  zone.addEventListener('dragleave', function() { zone.style.borderColor = ''; zone.style.background = ''; });
+  zone.addEventListener('drop', function(e) { e.preventDefault(); zone.style.borderColor = ''; zone.style.background = ''; if (e.dataTransfer.files[0]) storeAndGo(e.dataTransfer.files[0]); });
+  btn.style.cursor = 'pointer'; btn.style.opacity = '1';
+  btn.addEventListener('click', function() { inp.click(); });
+})();
+</script>
+</body>
+</html>

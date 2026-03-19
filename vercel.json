@@ -1,6 +1,16 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/app/diff", "destination": "/diff.html" },
+    { "source": "/app/docs", "destination": "/docs.html" },
+    { "source": "/app/audit", "destination": "/audit.html" },
+    { "source": "/app", "destination": "/index.html" },
+    { "source": "/diff", "destination": "/landing-diff.html" },
+    { "source": "/docs", "destination": "/landing-docs.html" },
+    { "source": "/audit", "destination": "/landing-audit.html" },
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/", "destination": "/landing-convert.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

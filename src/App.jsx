@@ -1,4 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import DiffPage from "./pages/DiffPage.jsx";
+import DocsPage from "./pages/DocsPage.jsx";
+import AuditPage from "./pages/AuditPage.jsx";
 import posthog from "posthog-js";
 import JSZip from "jszip";
 import {
@@ -185,6 +188,86 @@ const styles = {
 const logColors = { info: "#6b7280", success: "#34d399", error: "#f87171", warning: "#fbbf24" };
 
 // ================================================================
+// SCREENSHOT CAROUSEL
+// ================================================================
+
+const SCREENSHOTS = [
+  {
+    src: "/tableau2dbt_1.png",
+    label: "Translation Report",
+    caption: "Side-by-side Tableau formula → SQL with dependency chains and LOD CTE notes",
+  },
+  {
+    src: "/tableau2dbt_2.png",
+    label: "SQL Models",
+    caption: "Staging, FCT, and DIM model files — download individually or grab the full .zip",
+  },
+  {
+    src: "/tableau2dbt_3.png",
+    label: "schema.yml",
+    caption: "AI-generated field descriptions and not_null tests, ready to paste into your project",
+  },
+  {
+    src: "/tableau2dbt_4.png",
+    label: "metrics.yml",
+    caption: "MetricFlow semantic layer wired to your dbt models — just swap the TODO entity columns",
+  },
+];
+
+function ScreenshotCarousel() {
+  const [active, setActive] = useState(0);
+  const s = SCREENSHOTS[active];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+      {/* Tab pills */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center" }}>
+        {SCREENSHOTS.map((sc, i) => (
+          <button
+            key={i}
+            onClick={() => setActive(i)}
+            style={{
+              padding: "6px 14px",
+              borderRadius: "9999px",
+              border: "1.5px solid",
+              borderColor: i === active ? "#34d399" : "#374151",
+              background: i === active ? "rgba(52,211,153,0.1)" : "transparent",
+              color: i === active ? "#34d399" : "#9ca3af",
+              fontSize: "12px",
+              fontFamily: "inherit",
+              cursor: "pointer",
+              transition: "all 0.15s",
+            }}
+          >
+            {sc.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Screenshot */}
+      <div style={{
+        width: "100%",
+        maxWidth: "720px",
+        border: "1px solid #1f2937",
+        borderRadius: "8px",
+        overflow: "hidden",
+        boxShadow: "0 4px 32px rgba(0,0,0,0.5)",
+      }}>
+        <img
+          src={s.src}
+          alt={s.label}
+          style={{ width: "100%", display: "block" }}
+        />
+      </div>
+
+      {/* Caption */}
+      <div style={{ fontSize: "13px", color: "#6b7280", textAlign: "center", maxWidth: "560px" }}>
+        {s.caption}
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
 // STATIC PAGES
 // ================================================================
 
@@ -245,7 +328,7 @@ function TermsPage() {
 
 function EmailCapture() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState(null); // null | "loading" | "done" | "error"
+  const [status, setStatus] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -255,9 +338,9 @@ function EmailCapture() {
       await fetch("/api/capture-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, source: "newsletter" }),
+        body: JSON.stringify({ email, source: "convert" }),
       });
-      posthog.capture("email_captured", { source: "newsletter" });
+      posthog.capture("email_captured", { source: "convert" });
       setStatus("done");
     } catch {
       setStatus("error");
@@ -265,32 +348,32 @@ function EmailCapture() {
   };
 
   return (
-    <div style={{ borderTop: "1px solid #0d2b1e", padding: "32px", display: "flex", justifyContent: "center" }}>
-      <div style={{ maxWidth: "480px", width: "100%", textAlign: "center" }}>
-        <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "4px" }}>Get updates</div>
-        <div style={{ fontSize: "11px", color: "#4b5563", marginBottom: "16px" }}>New dialects, features, and migration guides.</div>
-        {status === "done" ? (
-          <div style={{ fontSize: "12px", color: "#34d399" }}>You're on the list ✓</div>
-        ) : (
-          <form onSubmit={handleSubmit} style={{ display: "flex", gap: "8px" }}>
-            <input
-              type="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ flex: 1, background: "#040d08", border: "1px solid #0d4a2e", borderRadius: "6px", padding: "8px 12px", fontSize: "12px", color: "#e2ede8", fontFamily: "monospace", outline: "none" }}
-            />
-            <button
-              type="submit"
-              disabled={status === "loading"}
-              style={{ ...styles.btnSecondary, whiteSpace: "nowrap", opacity: status === "loading" ? 0.6 : 1 }}
-            >
-              {status === "loading" ? "..." : "Subscribe"}
-            </button>
-          </form>
-        )}
-        {status === "error" && <div style={{ fontSize: "11px", color: "#f87171", marginTop: "6px" }}>Something went wrong — try again.</div>}
-      </div>
+    <div style={{ marginTop: "72px", background: "#0a1f15", border: "1px solid #0d2b1e", borderRadius: "12px", padding: "40px 32px", textAlign: "center" }}>
+      <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#34d399", marginBottom: "10px" }}>Stay in the loop</div>
+      <div style={{ fontSize: "20px", fontWeight: 700, color: "#f0f0f0", marginBottom: "8px" }}>New dialects, features, and migration guides.</div>
+      <div style={{ fontSize: "14px", color: "#6b7280", marginBottom: "24px" }}>No spam. Unsubscribe anytime.</div>
+      {status === "done" ? (
+        <div style={{ fontSize: "14px", color: "#34d399" }}>You're on the list.</div>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+          <input
+            type="email"
+            placeholder="your@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{ padding: "12px 16px", background: "#071a12", border: "1px solid #0d4a2e", borderRadius: "6px", color: "#e2ede8", fontSize: "13px", fontFamily: "inherit", width: "280px", outline: "none" }}
+          />
+          <button
+            type="submit"
+            disabled={status === "loading"}
+            style={{ padding: "12px 20px", background: "linear-gradient(135deg, #059669, #0891b2)", color: "#fff", border: "none", borderRadius: "6px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", letterSpacing: "0.04em" }}
+          >
+            {status === "loading" ? "..." : "Notify Me"}
+          </button>
+        </form>
+      )}
+      {status === "error" && <div style={{ fontSize: "12px", color: "#f87171", marginTop: "8px" }}>Something went wrong — try again.</div>}
     </div>
   );
 }
@@ -352,6 +435,9 @@ export default function App() {
   const path = window.location.pathname;
   if (path === "/privacy") return <PrivacyPage />;
   if (path === "/terms") return <TermsPage />;
+  if (path === "/app/diff" || path === "/diff") return <DiffPage />;
+  if (path === "/app/docs" || path === "/docs") return <DocsPage />;
+  if (path === "/app/audit" || path === "/audit") return <AuditPage />;
 
   const [stage, setStage] = useState("upload");
   const [calcs, setCalcs] = useState([]);
@@ -486,6 +572,14 @@ export default function App() {
     },
     [handleFile, dialect]
   );
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem("twb_pending_convert");
+    if (!raw) return;
+    sessionStorage.removeItem("twb_pending_convert");
+    const { name, data } = JSON.parse(raw);
+    fetch(data).then(r => r.blob()).then(blob => handleFile(new File([blob], name)));
+  }, [handleFile]);
 
   const runTranslation = useCallback(async () => {
     setStage("translating");
@@ -766,6 +860,9 @@ export default function App() {
                 a MetricFlow semantic layer, schema tests, and source definitions — in Snowflake or BigQuery SQL.
                 With a clear list of what still needs your judgment.
               </div>
+              <div style={{ fontSize: "12px", color: "#34d399", marginTop: "12px", letterSpacing: "0.04em" }}>
+                Used by analytics engineers at mid-size and enterprise companies migrating complex Tableau deployments to a modern data stack.
+              </div>
             </div>
 
             {/* Benefits row */}
@@ -924,6 +1021,15 @@ export default function App() {
               </div>
             )}
 
+
+            {/* See it in action */}
+            <div style={{ marginTop: "56px" }}>
+              <div style={{ ...styles.h2, marginBottom: "8px", textAlign: "center" }}>See it in action</div>
+              <div style={{ fontSize: "14px", color: "#9ca3af", textAlign: "center", marginBottom: "28px" }}>
+                Upload a .twb — walk away with a full dbt package
+              </div>
+              <ScreenshotCarousel />
+            </div>
 
             {/* What you get */}
             <div style={{ marginTop: "48px" }}>
@@ -1618,11 +1724,36 @@ export default function App() {
       <EmailCapture />
 
       {/* Footer */}
-      <div style={{ borderTop: "1px solid #0d2b1e", padding: "16px 32px", textAlign: "center", fontSize: "10px", color: "#374151", letterSpacing: "0.04em", display: "flex", justifyContent: "center", gap: "24px" }}>
-        <span>Not affiliated with or endorsed by Salesforce or Tableau.</span>
-        <a href="/privacy" style={{ color: "#374151", textDecoration: "none" }}>Privacy</a>
-        <a href="/terms" style={{ color: "#374151", textDecoration: "none" }}>Terms</a>
-      </div>
+      <footer style={{ borderTop: "1px solid #0d2b1e", marginTop: "80px" }}>
+        {/* Consulting CTA */}
+        <div style={{ background: "#0a1f15", padding: "40px 32px", textAlign: "center" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#34d399", marginBottom: "10px" }}>Need hands-on help?</div>
+          <div style={{ fontSize: "20px", fontWeight: 700, color: "#f0f0f0", marginBottom: "8px" }}>
+            We do this for clients too.
+          </div>
+          <div style={{ fontSize: "14px", color: "#6b7280", maxWidth: "480px", margin: "0 auto 20px", lineHeight: 1.7 }}>
+            Klardata helps data teams migrate Tableau workbooks to dbt, build semantic layers, and modernize their analytics stack.
+          </div>
+          <a
+            href="https://www.klardata.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: "inline-block", padding: "12px 28px", background: "linear-gradient(135deg, #059669, #0891b2)", color: "#fff", borderRadius: "6px", fontSize: "13px", fontWeight: 700, textDecoration: "none", letterSpacing: "0.06em", boxShadow: "0 2px 16px rgba(5,150,105,0.3)" }}
+          >
+            Learn More at klardata.com →
+          </a>
+        </div>
+        {/* Links bar */}
+        <div style={{ padding: "16px 32px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap" }}>
+          <a href="/" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Convert</a>
+          <a href="/diff" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Diff</a>
+          <a href="/docs" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Docs</a>
+          <a href="/audit" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Audit</a>
+          <a href="/privacy" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Privacy</a>
+          <a href="/terms" style={{ fontSize: "11px", color: "#374151", textDecoration: "none" }}>Terms</a>
+          <span style={{ marginLeft: "auto", fontSize: "10px", color: "#1f2937" }}>Not affiliated with Salesforce or Tableau.</span>
+        </div>
+      </footer>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }

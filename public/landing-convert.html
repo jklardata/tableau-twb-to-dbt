@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Convert Landing 2: Split, Copy Left / Upload Right</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.hdr{background:#1e293b;padding:10px 24px;display:flex;align-items:center;gap:12px}
+.logo{font-size:14px;font-weight:800;color:#fff;text-decoration:none}
+.logo span{color:#0ea5e9}
+.nav{margin-left:auto;display:flex;gap:4px}
+.nav a{font-size:12px;color:rgba(255,255,255,0.55);padding:5px 12px;border-radius:6px;text-decoration:none}
+.nav a.active{color:#fff;background:rgba(255,255,255,0.1);font-weight:600}
+
+/* Split hero */
+.split-hero{display:grid;grid-template-columns:1fr 440px;min-height:calc(100vh - 46px);background:#fff;border-bottom:2px solid #e2e8f0}
+
+/* Left: Copy */
+.copy-side{padding:64px 48px;display:flex;flex-direction:column;justify-content:center}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:20px;font-size:11px;font-weight:600;color:#0ea5e9;margin-bottom:20px;width:fit-content}
+.copy-side h1{font-size:clamp(32px,3.5vw,48px);font-weight:800;color:#1e293b;line-height:1.1;letter-spacing:-0.03em;margin-bottom:8px}
+.copy-side h1 em{color:#0ea5e9;font-style:normal}
+.copy-side h1 .dim{color:#94a3b8}
+.copy-side p{font-size:15px;color:#64748b;max-width:480px;line-height:1.75;margin-bottom:28px}
+.feature-list{display:flex;flex-direction:column;gap:10px;margin-bottom:40px}
+.feature-row{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#475569;line-height:1.5}
+.feature-row .dot{width:6px;height:6px;background:#0ea5e9;border-radius:50%;flex-shrink:0;margin-top:5px}
+.social-proof{font-size:12px;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:20px}
+
+/* Right: Upload widget */
+.upload-side{background:#f8fafc;border-left:2px solid #e2e8f0;padding:40px 32px;display:flex;flex-direction:column;justify-content:center;gap:0;position:sticky;top:0;height:fit-content}
+
+/* Widget card */
+.widget{background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06)}
+
+/* Widget chrome bar */
+.widget-chrome{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 14px;display:flex;align-items:center;gap:7px}
+.wd{width:10px;height:10px;border-radius:50%}
+.widget-title{font-size:11px;font-weight:600;color:#64748b;margin-left:6px}
+
+/* Widget body */
+.widget-body{padding:24px}
+.wb-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin-bottom:8px}
+
+/* Dialect toggle */
+.dialect-row{display:flex;gap:6px;margin-bottom:20px}
+.dialect-btn{flex:1;padding:8px 0;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border:1px solid #e2e8f0;background:#f8fafc;color:#94a3b8;text-align:center}
+.dialect-btn.active{background:#f0f9ff;border-color:#0ea5e9;color:#0369a1}
+
+/* Upload zone */
+.upload-zone{border:1.5px dashed #e2e8f0;border-radius:10px;padding:32px 16px;text-align:center;cursor:pointer;background:#f8fafc;transition:all 0.15s;margin-bottom:16px}
+.upload-zone:hover{border-color:#0ea5e9;background:#f0f9ff}
+.uz-icon{font-size:28px;color:#cbd5e1;margin-bottom:8px}
+.uz-title{font-size:13px;font-weight:600;color:#64748b;margin-bottom:3px}
+.uz-sub{font-size:11px;color:#94a3b8}
+
+/* Output preview */
+.output-preview{background:#1e293b;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-family:'JetBrains Mono',monospace}
+.op-file{display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.op-file:last-child{border-bottom:none}
+.op-icon{font-size:11px;width:14px;text-align:center;flex-shrink:0}
+.op-name{font-size:10px;color:#94a3b8;flex:1}
+.op-badge{font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700}
+.op-stg{background:rgba(14,165,233,0.15);color:#0ea5e9}
+.op-fct{background:rgba(139,92,246,0.15);color:#a78bfa}
+.op-dim{background:rgba(34,197,94,0.15);color:#4ade80}
+.op-yml{background:rgba(251,146,60,0.15);color:#fb923c}
+
+.convert-btn{width:100%;padding:13px;background:#1e293b;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:not-allowed;font-family:inherit;opacity:0.4}
+.privacy-note{text-align:center;font-size:11px;color:#94a3b8;margin-top:12px}
+
+/* Below fold */
+.below-fold{padding:64px 48px;max-width:960px;margin:0 auto;width:100%}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:16px}
+
+/* How it works */
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:56px}
+.how-card{background:#fff;border:1px solid #e2e8f0;border-right:none;padding:20px}
+.how-card:first-child{border-radius:10px 0 0 10px}
+.how-card:last-child{border-radius:0 10px 10px 0;border-right:1px solid #e2e8f0}
+.how-num{font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:8px}
+.how-step{font-size:13px;font-weight:700;color:#0ea5e9;margin-bottom:4px}
+.how-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px}
+.how-body{font-size:12px;color:#64748b;line-height:1.6}
+
+/* What you get grid */
+.wyg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:56px}
+.wyg-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;display:flex;gap:14px}
+.wyg-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.wyg-file{font-size:10px;font-family:'JetBrains Mono',monospace;color:#0ea5e9;margin-bottom:4px}
+.wyg-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px}
+.wyg-body{font-size:12px;color:#64748b;line-height:1.6}
+
+.email-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:36px 32px;text-align:center}
+.email-title{font-size:20px;font-weight:700;color:#1e293b;margin-bottom:6px}
+.email-sub{font-size:14px;color:#64748b;margin-bottom:20px}
+.email-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.email-row input{padding:10px 14px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;width:240px;font-family:inherit;color:#1e293b;outline:none}
+.email-row button{padding:10px 20px;background:#1e293b;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+
+footer{background:#1e293b;padding:14px 32px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+footer a{font-size:11px;color:rgba(255,255,255,0.4);text-decoration:none}
+
+.back-bar{background:#f0f9ff;border-bottom:1px solid #bae6fd;padding:6px 16px;text-align:center;font-size:12px;color:#0369a1}
+.back-bar a{color:#0369a1;font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <a href="/" class="logo">Tableau<span>to</span>Dbt</a>
+  <nav class="nav">
+    <a href="/" class="active">Convert</a>
+    <a href="/diff">Diff</a>
+    <a href="/docs">Docs</a>
+    <a href="/audit">Audit</a>
+  </nav>
+</header>
+
+<div class="split-hero">
+  <!-- Left: Copy -->
+  <div class="copy-side">
+    <div class="eyebrow">⚡ Free tier · Browser-only · Snowflake &amp; BigQuery</div>
+    <h1>You're not starting from scratch.<br/><em>You're starting from 80% done.</em></h1>
+    <p>Upload a .twb or .twbx and get a complete, layered dbt package: staging models, fct_ and dim_ marts, LOD-to-CTE translation, a MetricFlow semantic layer, schema tests, and source definitions.</p>
+
+    <div class="feature-list">
+      <div class="feature-row"><div class="dot"></div>Staging layer per datasource, fct_ and dim_ models properly split</div>
+      <div class="feature-row"><div class="dot"></div>LOD expressions (FIXED / INCLUDE / EXCLUDE) translated to CTE patterns</div>
+      <div class="feature-row"><div class="dot"></div>MetricFlow metrics.yml generated for a queryable semantic layer</div>
+      <div class="feature-row"><div class="dot"></div>sources.yml and schema tests ready for dbt test on day one</div>
+      <div class="feature-row"><div class="dot"></div>Multi-workbook merge mode with conflict report</div>
+      <div class="feature-row"><div class="dot"></div>SETUP.md and full translation report included in every export</div>
+      <div class="feature-row"><div class="dot"></div>Formula data never leaves your browser</div>
+    </div>
+
+    <div class="social-proof">Used by analytics engineers at mid-size and enterprise companies migrating complex Tableau deployments to a modern data stack.</div>
+  </div>
+
+  <!-- Right: Upload widget -->
+  <div class="upload-side">
+    <div class="widget">
+      <!-- Chrome bar -->
+      <div class="widget-chrome">
+        <div class="wd" style="background:#ef4444"></div>
+        <div class="wd" style="background:#f59e0b"></div>
+        <div class="wd" style="background:#22c55e"></div>
+        <span class="widget-title">Convert Workbook to dbt</span>
+      </div>
+
+      <div class="widget-body">
+        <!-- Dialect toggle -->
+        <div class="wb-label">Target warehouse</div>
+        <div class="dialect-row">
+          <div class="dialect-btn active">Snowflake</div>
+          <div class="dialect-btn">BigQuery</div>
+        </div>
+
+        <!-- Upload zone -->
+        <div class="upload-zone">
+          <div class="uz-icon">↑</div>
+          <div class="uz-title">Drop .twb or .twbx</div>
+          <div class="uz-sub">or click to browse</div>
+        </div>
+
+        <!-- Output preview -->
+        <div class="wb-label">Output preview</div>
+        <div class="output-preview">
+          <div class="op-file"><span class="op-icon">📁</span><span class="op-name">staging/</span></div>
+          <div class="op-file" style="padding-left:14px"><span class="op-icon">📄</span><span class="op-name">stg_sales.sql</span><span class="op-badge op-stg">STG</span></div>
+          <div class="op-file"><span class="op-icon">📁</span><span class="op-name">marts/</span></div>
+          <div class="op-file" style="padding-left:14px"><span class="op-icon">📄</span><span class="op-name">fct_orders.sql</span><span class="op-badge op-fct">FCT</span></div>
+          <div class="op-file" style="padding-left:14px"><span class="op-icon">📄</span><span class="op-name">dim_customers.sql</span><span class="op-badge op-dim">DIM</span></div>
+          <div class="op-file"><span class="op-icon">📄</span><span class="op-name">metrics.yml</span><span class="op-badge op-yml">YML</span></div>
+          <div class="op-file"><span class="op-icon">📄</span><span class="op-name">sources.yml</span><span class="op-badge op-yml">YML</span></div>
+          <div class="op-file"><span class="op-icon">📄</span><span class="op-name">SETUP.md</span></div>
+        </div>
+
+        <button class="convert-btn">Convert to dbt →</button>
+      </div>
+    </div>
+    <div class="privacy-note">🔒 All processing is local. Nothing is uploaded.</div>
+  </div>
+</div>
+
+<!-- Below fold -->
+<div class="below-fold">
+  <div class="section-label">How It Works</div>
+  <div class="how-grid" style="margin-bottom:56px">
+    <div class="how-card">
+      <div class="how-num">01</div>
+      <div class="how-step">Parse</div>
+      <div class="how-body">Reads every calculated field from .twb or .twbx. Resolves internal Calculation_XXXX IDs to human-readable names. Maps each field to its datasource. .twbx files are unzipped automatically.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">02</div>
+      <div class="how-step">Classify</div>
+      <div class="how-body">Categorises fields by complexity: simple expressions, date/conditional logic, LOD expressions (FIXED/INCLUDE/EXCLUDE), and table calcs flagged for window function rewrites.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">03</div>
+      <div class="how-step">Translate</div>
+      <div class="how-body">Rule-based pass converts Tableau syntax to your target dialect. LOD expressions generate CTE templates. Complex calcs go through an AI pass. Dependency chains are resolved.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-num">04</div>
+      <div class="how-step">Structure</div>
+      <div class="how-body">Aggregates land in fct_ models with GROUP BY. Row-level expressions go into dim_ models. LOD CTEs are injected into the WITH clause. MetricFlow metrics.yml is generated.</div>
+    </div>
+  </div>
+
+  <div class="section-label">What You Get</div>
+  <div class="wyg-grid">
+    <div class="wyg-card">
+      <div class="wyg-icon">🗂️</div>
+      <div>
+        <div class="wyg-file">staging/stg_*.sql</div>
+        <div class="wyg-title">Staging layer, one per datasource</div>
+        <div class="wyg-body">A clean, typed view over your raw source table. Column names referenced in your Tableau formulas are pre-populated. All downstream models reference this.</div>
+      </div>
+    </div>
+    <div class="wyg-card">
+      <div class="wyg-icon">📐</div>
+      <div>
+        <div class="wyg-file">marts/fct_*.sql + dim_*.sql</div>
+        <div class="wyg-title">fct_ and dim_ models, properly split</div>
+        <div class="wyg-body">Aggregate expressions land in a fct_ model with a GROUP BY you configure. Row-level expressions land in a dim_ model. No more invalid SQL mixing both in one SELECT.</div>
+      </div>
+    </div>
+    <div class="wyg-card">
+      <div class="wyg-icon">📡</div>
+      <div>
+        <div class="wyg-file">metrics.yml</div>
+        <div class="wyg-title">MetricFlow semantic layer (dbt 1.6+)</div>
+        <div class="wyg-body">Simple aggregations become proper semantic_model measures. Derived expressions are generated as type: derived metrics. Fill in your primary key, run dbt sl validate.</div>
+      </div>
+    </div>
+    <div class="wyg-card">
+      <div class="wyg-icon">🔗</div>
+      <div>
+        <div class="wyg-file">FIXED / INCLUDE / EXCLUDE to CTEs</div>
+        <div class="wyg-title">LOD expressions translated to CTE patterns</div>
+        <div class="wyg-body">FIXED LODs are converted to SQL CTE templates and injected directly into your fct_ model's WITH clause. No manual rewrite required.</div>
+      </div>
+    </div>
+    <div class="wyg-card">
+      <div class="wyg-icon">🧪</div>
+      <div>
+        <div class="wyg-file">sources.yml + schema.yml</div>
+        <div class="wyg-title">Source definitions and schema tests</div>
+        <div class="wyg-body">Datasource names extracted from your workbook XML and pre-populated in sources.yml. not_null tests on every measure, unique + not_null on staging primary keys.</div>
+      </div>
+    </div>
+    <div class="wyg-card">
+      <div class="wyg-icon">🔀</div>
+      <div>
+        <div class="wyg-file">conflict_report.md</div>
+        <div class="wyg-title">Multi-workbook merge mode</div>
+        <div class="wyg-body">Upload 2+ workbooks. Identical fields across workbooks are auto-merged into one canonical definition. Formula conflicts are flagged with both versions side by side.</div>
+      </div>
+    </div>
+    <div class="wyg-card">
+      <div class="wyg-icon">🗺️</div>
+      <div>
+        <div class="wyg-file">STG / FCT / DIM preview before you run</div>
+        <div class="wyg-title">Models breakdown before you commit</div>
+        <div class="wyg-body">Before the AI pass, see the full output structure: every staging model, which datasources get a fct_ vs dim_ model, field counts, grain status, and LOD CTE count.</div>
+      </div>
+    </div>
+    <div class="wyg-card">
+      <div class="wyg-icon">📋</div>
+      <div>
+        <div class="wyg-file">SETUP.md + translation_report.md</div>
+        <div class="wyg-title">Step-by-step docs and full translation report</div>
+        <div class="wyg-body">SETUP.md lists every datasource, grain instructions, and dbt commands to run. The translation report shows original formula to SQL output side by side.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="email-wrap">
+    <div class="email-title">Stay in the loop</div>
+    <div class="email-sub">Get notified when we add new Tableau tools and dialects. No spam.</div>
+    <div class="email-row">
+      <input type="email" placeholder="your@email.com"/>
+      <button>Notify Me</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="/">Convert</a><a href="/diff">Diff</a><a href="/docs">Docs</a><a href="/audit">Audit</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a>
+  <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
+</footer>
+<script>
+(function() {
+  const DEST = '/app';
+  const KEY = 'twb_pending_convert';
+  const zone = document.querySelector('.upload-zone');
+  const btn = document.querySelector('.convert-btn');
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.twb,.twbx';
+
+  function storeAndGo(file) {
+    zone.innerHTML = '<div class="uz-icon" style="color:#22c55e;margin-bottom:8px">✓</div><div class="uz-title">' + file.name + '</div><div class="uz-sub">Loading...</div>';
+    zone.style.borderColor = '#22c55e';
+    btn.style.opacity = '1'; btn.style.cursor = 'default'; btn.textContent = 'Loading...';
+    const reader = new FileReader();
+    reader.onload = function() {
+      sessionStorage.setItem(KEY, JSON.stringify({ name: file.name, data: reader.result }));
+      window.location.href = DEST;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  inp.onchange = function(e) { if (e.target.files[0]) storeAndGo(e.target.files[0]); };
+  zone.style.cursor = 'pointer';
+  zone.addEventListener('click', function() { inp.click(); });
+  zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.style.borderColor = '#0ea5e9'; zone.style.background = '#f0f9ff'; });
+  zone.addEventListener('dragleave', function() { zone.style.borderColor = ''; zone.style.background = ''; });
+  zone.addEventListener('drop', function(e) { e.preventDefault(); zone.style.borderColor = ''; zone.style.background = ''; if (e.dataTransfer.files[0]) storeAndGo(e.dataTransfer.files[0]); });
+  btn.style.cursor = 'pointer'; btn.style.opacity = '1';
+  btn.addEventListener('click', function() { inp.click(); });
+})();
+</script>
+</body>
+</html>
