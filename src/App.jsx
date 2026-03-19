@@ -281,13 +281,16 @@ function PrivacyPage() {
           ["What is sent to AI", "When you run the export, Tableau formula expressions (the logic only — no connection metadata, no server names, no data values) are sent to Anthropic's Claude API for translation. These are batched and sent over HTTPS. Anthropic's data handling policies apply to this data."],
           ["Analytics", "We use PostHog to collect anonymous product usage events — which features are used, field counts, dialect selection, and export completions. No personally identifiable information is collected unless you voluntarily provide your email address."],
           ["Email capture", "If you provide your email address for updates, it is stored in Resend. You can unsubscribe at any time. We do not sell or share your email address."],
-          ["Contact", "Questions? Email justin@klardata.com"],
         ].map(([title, body]) => (
           <div key={title} style={{ marginBottom: "24px" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "8px" }}>{title}</div>
             <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.8 }}>{body}</div>
           </div>
         ))}
+        <div style={{ marginBottom: "24px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "8px" }}>Contact</div>
+          <a href="mailto:justin@klardata.com" style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.8 }}>justin@klardata.com</a>
+        </div>
         <p style={{ fontSize: "10px", color: "#374151", marginTop: "40px" }}>Not affiliated with or endorsed by Salesforce or Tableau.</p>
       </div>
     </div>
@@ -307,13 +310,16 @@ function TermsPage() {
           ["Intellectual property", "You retain full ownership of your Tableau workbooks and all generated output files. We claim no rights over the SQL or YAML files generated from your workbooks."],
           ["Limitations", "We are not liable for any damages arising from the use of generated SQL in production systems. You are responsible for testing and validating all output."],
           ["Changes", "We may update these terms at any time. Continued use of the service constitutes acceptance of the current terms."],
-          ["Contact", "Questions? Email justin@klardata.com"],
         ].map(([title, body]) => (
           <div key={title} style={{ marginBottom: "24px" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "8px" }}>{title}</div>
             <div style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.8 }}>{body}</div>
           </div>
         ))}
+        <div style={{ marginBottom: "24px" }}>
+          <div style={{ fontSize: "13px", fontWeight: 700, color: "#e2ede8", marginBottom: "8px" }}>Contact</div>
+          <a href="mailto:justin@klardata.com" style={{ fontSize: "12px", color: "#9ca3af", lineHeight: 1.8 }}>justin@klardata.com</a>
+        </div>
         <p style={{ fontSize: "10px", color: "#374151", marginTop: "40px" }}>Not affiliated with or endorsed by Salesforce or Tableau.</p>
       </div>
     </div>
