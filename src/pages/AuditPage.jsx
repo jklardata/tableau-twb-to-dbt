@@ -17,6 +17,27 @@ const T = {
 };
 
 // ================================================================
+// COPY BUTTON
+// ================================================================
+
+function CopyBtn({ text }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async (e) => {
+        e.stopPropagation();
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={{ padding: "2px 8px", fontSize: "10px", fontWeight: 600, background: copied ? "#f0fdf4" : "#f8fafc", color: copied ? "#166534" : T.dim, border: `1px solid ${copied ? "#86efac" : T.border}`, borderRadius: "4px", cursor: "pointer", fontFamily: T.font, flexShrink: 0 }}
+    >
+      {copied ? "✓ Copied" : "⎘ Copy"}
+    </button>
+  );
+}
+
+// ================================================================
 // FORMULA BLOCK — light syntax highlighting
 // ================================================================
 
@@ -95,7 +116,7 @@ function complexColor(label) {
 // FIELD DETAIL PANEL
 // ================================================================
 
-function FieldDetail({ field }) {
+function FieldDetail({ field, usedBy }) {
   if (!field) return null;
   const maxSev = field.issues.find(i => i.severity === "error") ? "error"
     : field.issues.find(i => i.severity === "warning") ? "warning"
@@ -111,6 +132,12 @@ function FieldDetail({ field }) {
         <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", background: sevBg(field.complexity_label === "simple" ? "clean" : field.complexity_label === "critical" ? "error" : field.complexity_label === "complex" ? "warning" : "info"), color: complexColor(field.complexity_label), textTransform: "uppercase" }}>
           {field.complexity_label}
         </span>
+        {usedBy && usedBy.length > 0 && (
+          <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 8px", borderRadius: "4px", background: "#eff6ff", color: "#1d4ed8" }}>
+            ↑ used by {usedBy.length}
+          </span>
+        )}
+        <CopyBtn text={field.formula} />
       </div>
 
       {field.issues.length > 0 && (
@@ -128,9 +155,17 @@ function FieldDetail({ field }) {
 
       {field.dependencies.length > 0 && (
         <div style={{ marginTop: "10px" }}>
-          <span style={{ fontSize: "10px", fontWeight: 700, color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: "8px" }}>Deps:</span>
+          <span style={{ fontSize: "10px", fontWeight: 700, color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: "8px" }}>Depends on:</span>
           {field.dependencies.map((d, i) => (
-            <span key={i} style={{ display: "inline-flex", fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "9999px", background: "#dcfce7", color: "#166534", marginRight: "4px", marginBottom: "4px" }}>{d}</span>
+            <span key={i} style={{ display: "inline-flex", fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "9999px", background: "#fef3c7", color: "#92400e", marginRight: "4px", marginBottom: "4px" }}>{d}</span>
+          ))}
+        </div>
+      )}
+      {usedBy && usedBy.length > 0 && (
+        <div style={{ marginTop: "8px" }}>
+          <span style={{ fontSize: "10px", fontWeight: 700, color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: "8px" }}>Used by:</span>
+          {usedBy.map((d, i) => (
+            <span key={i} style={{ display: "inline-flex", fontSize: "10px", fontWeight: 600, padding: "2px 8px", borderRadius: "9999px", background: "#dbeafe", color: "#1d4ed8", marginRight: "4px", marginBottom: "4px" }}>{d}</span>
           ))}
         </div>
       )}
@@ -149,7 +184,7 @@ function FieldDetail({ field }) {
 // AUDIT TABLE
 // ================================================================
 
-function AuditTable({ fields, result, selectedField, onSelectField, panelMode }) {
+function AuditTable({ fields, result, selectedField, onSelectField, panelMode, usedByMap }) {
   const [severityFilter, setSeverityFilter] = useState("all");
   const [complexityFilter, setComplexityFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -227,7 +262,7 @@ function AuditTable({ fields, result, selectedField, onSelectField, panelMode })
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
             <thead>
               <tr style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
-                {["Field Name", "Datasource", "Complexity", "Issues", "Nesting", "Used"].map(h => (
+                {["Field Name", "Datasource", "Complexity", "Issues", "Nesting", "Used", "Impact"].map(h => (
                   <th key={h} style={{ textAlign: "left", padding: "8px 14px", fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: T.dim, whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
@@ -260,6 +295,11 @@ function AuditTable({ fields, result, selectedField, onSelectField, panelMode })
                     <td style={{ padding: "10px 14px", fontSize: "13px" }}>
                       {field.unused ? <span style={{ color: T.warning }}>⚠</span> : <span style={{ color: T.clean }}>✓</span>}
                     </td>
+                    <td style={{ padding: "10px 14px", fontSize: "12px" }}>
+                      {(usedByMap[field.caption] || []).length > 0
+                        ? <span style={{ fontWeight: 700, color: "#1d4ed8" }}>↑{(usedByMap[field.caption] || []).length}</span>
+                        : <span style={{ color: T.dim }}>—</span>}
+                    </td>
                   </tr>
                 );
               })}
@@ -275,7 +315,7 @@ function AuditTable({ fields, result, selectedField, onSelectField, panelMode })
               <span style={{ fontSize: "12px", fontWeight: 600, color: T.muted }}>Field Detail</span>
               <button onClick={() => onSelectField(null)} style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: "16px" }}>×</button>
             </div>
-            <FieldDetail field={selectedField} />
+            <FieldDetail field={selectedField} usedBy={usedByMap[selectedField?.caption] || []} />
           </div>
         )}
       </div>
@@ -465,6 +505,18 @@ export default function AuditPage() {
 
   const { meta, summary, fields } = result || {};
 
+  const usedByMap = useMemo(() => {
+    if (!fields) return {};
+    const map = {};
+    for (const f of fields) {
+      for (const dep of f.dependencies) {
+        if (!map[dep]) map[dep] = [];
+        map[dep].push(f.caption);
+      }
+    }
+    return map;
+  }, [fields]);
+
   const handleSelectField = (field, modeOverride) => {
     if (modeOverride) setPanelMode(modeOverride);
     setSelectedField(field);
@@ -567,6 +619,7 @@ export default function AuditPage() {
                 selectedField={selectedField}
                 onSelectField={handleSelectField}
                 panelMode={panelMode}
+                usedByMap={usedByMap}
               />
             ) : (
               <div style={{ textAlign: "center", padding: "48px", color: T.dim, fontSize: "15px" }}>No calculated fields found in this workbook.</div>
@@ -581,7 +634,7 @@ export default function AuditPage() {
                 <button onClick={() => setSelectedField(null)} style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: "18px" }}>×</button>
               </div>
               <div style={{ flex: 1, overflow: "auto" }}>
-                <FieldDetail field={selectedField} />
+                <FieldDetail field={selectedField} usedBy={usedByMap[selectedField?.caption] || []} />
               </div>
             </div>
           )}

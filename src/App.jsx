@@ -26,6 +26,23 @@ import PaywallBanner from "./components/PaywallBanner.jsx";
 
 const FREE_TIER_LIMIT = 10;
 
+function CopyBtn({ text }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async (e) => {
+        e.stopPropagation();
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={{ padding: "2px 8px", fontSize: "10px", fontWeight: 600, background: copied ? "#f0fdf4" : "#f8fafc", color: copied ? "#166534" : "#94a3b8", border: `1px solid ${copied ? "#86efac" : "#e2e8f0"}`, borderRadius: "4px", cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}
+    >
+      {copied ? "✓" : "⎘"}
+    </button>
+  );
+}
+
 // ================================================================
 // STYLES
 // ================================================================
@@ -1360,42 +1377,61 @@ export default function App() {
             })()}
 
             <div style={styles.h2}>Calculated Fields</div>
-            {calcs
-              .filter((c) => c.complexity !== "skip")
-              .map((c, i) => (
-                <div
-                  key={i}
-                  style={{ ...styles.calcRow, borderColor: expandedCalc === i ? "#bae6fd" : "#e2e8f0" }}
-                  onClick={() => setExpandedCalc(expandedCalc === i ? null : i)}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={styles.calcName}>{c.caption}</span>
-                      <Badge type={c.complexity} />
-                      {c.needsClaude && <Badge type="complex" label="✨ AI" />}
-                      {c.dependsOn?.length > 0 && <Badge type="simple" label={`deps:${c.dependsOn.length}`} />}
-                    </div>
-                    {expandedCalc === i && (
-                      <div style={{ marginTop: "12px" }}>
-                        <div style={{ fontSize: "10px", color: "#94a3b8", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Formula</div>
-                        <div style={{ ...styles.code, maxHeight: "120px", fontSize: "11px" }}>
-                          {c.formula}
+            {(() => {
+              const usedByMap = {};
+              for (const c of calcs) {
+                for (const dep of (c.dependsOn || [])) {
+                  if (!usedByMap[dep]) usedByMap[dep] = [];
+                  usedByMap[dep].push(c.caption);
+                }
+              }
+              return calcs
+                .filter((c) => c.complexity !== "skip")
+                .map((c, i) => {
+                  const usedBy = usedByMap[c.caption] || [];
+                  return (
+                    <div
+                      key={i}
+                      style={{ ...styles.calcRow, borderColor: expandedCalc === i ? "#bae6fd" : "#e2e8f0" }}
+                      onClick={() => setExpandedCalc(expandedCalc === i ? null : i)}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                          <span style={styles.calcName}>{c.caption}</span>
+                          <Badge type={c.complexity} />
+                          {c.needsClaude && <Badge type="complex" label="✨ AI" />}
+                          {c.dependsOn?.length > 0 && <Badge type="simple" label={`deps:${c.dependsOn.length}`} />}
+                          {usedBy.length > 0 && <Badge type="simple" label={`↑${usedBy.length}`} />}
+                          <CopyBtn text={c.formula} />
                         </div>
-                        {c.claudeReasons?.length > 0 && (
-                          <div style={{ marginTop: "8px", fontSize: "11px", color: "#0ea5e9" }}>
-                            AI flags: {c.claudeReasons.join(" · ")}
-                          </div>
-                        )}
-                        {c.dependsOn?.length > 0 && (
-                          <div style={{ marginTop: "4px", fontSize: "11px", color: "#f59e0b" }}>
-                            Depends on: {c.dependsOn.join(", ")}
+                        {expandedCalc === i && (
+                          <div style={{ marginTop: "12px" }}>
+                            <div style={{ fontSize: "10px", color: "#94a3b8", marginBottom: "4px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Formula</div>
+                            <div style={{ ...styles.code, maxHeight: "120px", fontSize: "11px" }}>
+                              {c.formula}
+                            </div>
+                            {c.claudeReasons?.length > 0 && (
+                              <div style={{ marginTop: "8px", fontSize: "11px", color: "#0ea5e9" }}>
+                                AI flags: {c.claudeReasons.join(" · ")}
+                              </div>
+                            )}
+                            {c.dependsOn?.length > 0 && (
+                              <div style={{ marginTop: "4px", fontSize: "11px", color: "#f59e0b" }}>
+                                Depends on: {c.dependsOn.join(", ")}
+                              </div>
+                            )}
+                            {usedBy.length > 0 && (
+                              <div style={{ marginTop: "4px", fontSize: "11px", color: "#0ea5e9" }}>
+                                Used by: {usedBy.join(", ")}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                    </div>
+                  );
+                });
+            })()}
           </div>
         )}
 

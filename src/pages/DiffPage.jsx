@@ -53,6 +53,27 @@ function rowSummary(obj) {
 }
 
 // ================================================================
+// COPY BUTTON
+// ================================================================
+
+function CopyBtn({ text }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async (e) => {
+        e.stopPropagation();
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={{ padding: "3px 10px", fontSize: "10px", fontWeight: 600, background: copied ? "#f0fdf4" : T.bg, color: copied ? "#166534" : T.dim, border: `1px solid ${copied ? "#86efac" : T.border}`, borderRadius: "4px", cursor: "pointer", fontFamily: T.font, flexShrink: 0 }}
+    >
+      {copied ? "✓ Copied" : "⎘ Copy"}
+    </button>
+  );
+}
+
+// ================================================================
 // FORMULA DIFF (light theme)
 // ================================================================
 
@@ -100,7 +121,13 @@ function RowDetail({ row }) {
       </div>
 
       {isCalcModified ? (
-        <FormulaDiff before={row.before.formula} after={row.after.formula} />
+        <>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+            {row.before?.formula && <CopyBtn text={row.before.formula} />}
+            {row.after?.formula && <CopyBtn text={row.after.formula} />}
+          </div>
+          <FormulaDiff before={row.before.formula} after={row.after.formula} />
+        </>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           {[["Before", row.before, "#991b1b", "#fef2f2", "#fca5a5"], ["After", row.after, "#166534", "#f0fdf4", "#86efac"]].map(([label, data, labelColor, bg, brd]) => (
@@ -119,8 +146,13 @@ function RowDetail({ row }) {
       )}
 
       {!isCalcModified && row.catKey === "calculated_fields" && (row.before?.formula || row.after?.formula) && (
-        <div style={{ marginTop: "12px", background: T.bg, border: `1px solid ${T.border}`, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", fontFamily: T.mono, color: T.muted, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-          {row.before?.formula || row.after?.formula}
+        <div style={{ marginTop: "12px" }}>
+          <div style={{ marginBottom: "6px" }}>
+            <CopyBtn text={row.before?.formula || row.after?.formula} />
+          </div>
+          <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: "6px", padding: "8px 12px", fontSize: "11px", fontFamily: T.mono, color: T.muted, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+            {row.before?.formula || row.after?.formula}
+          </div>
         </div>
       )}
     </div>
@@ -267,6 +299,21 @@ export default function DiffPage() {
   };
 
   const allRows = useMemo(() => result ? flattenResult(result) : [], [result]);
+
+  // Impact map: for each changed calc field name, how many other changed fields reference it
+  const impactMap = useMemo(() => {
+    const calcRows = allRows.filter(r => r.catKey === "calculated_fields");
+    const map = {};
+    for (const row of calcRows) {
+      const formula = row.after?.formula || row.before?.formula || "";
+      const deps = [...formula.matchAll(/\[([^\]]+)\]/g)].map(m => m[1]);
+      for (const dep of deps) {
+        if (!map[dep]) map[dep] = [];
+        if (!map[dep].includes(row.name)) map[dep].push(row.name);
+      }
+    }
+    return map;
+  }, [allRows]);
   const added = allRows.filter(r => r.type === "added").length;
   const removed = allRows.filter(r => r.type === "removed").length;
   const modified = allRows.filter(r => r.type === "modified").length;
@@ -445,7 +492,7 @@ export default function DiffPage() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", fontFamily: T.font }}>
                     <thead>
                       <tr style={{ background: T.bg, borderBottom: `1px solid ${T.border}` }}>
-                        {["Name", "Category", "Change", "Before", "After"].map(h => (
+                        {["Name", "Category", "Change", "Before", "After", "Affects"].map(h => (
                           <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: T.muted, letterSpacing: "0.06em", textTransform: "uppercase", whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
@@ -474,6 +521,11 @@ export default function DiffPage() {
                             </td>
                             <td style={{ padding: "10px 16px", fontFamily: T.mono, fontSize: "11px", color: row.type === "added" ? "#166534" : T.dim, maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {rowSummary(row.after)}
+                            </td>
+                            <td style={{ padding: "10px 16px", fontSize: "12px", whiteSpace: "nowrap" }}>
+                              {row.catKey === "calculated_fields" && (impactMap[row.name] || []).length > 0
+                                ? <span style={{ fontWeight: 700, color: "#f59e0b" }} title={(impactMap[row.name] || []).join(", ")}>⚡{(impactMap[row.name] || []).length}</span>
+                                : <span style={{ color: T.dim }}>—</span>}
                             </td>
                           </tr>
                         );

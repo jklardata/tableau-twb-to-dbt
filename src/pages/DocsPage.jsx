@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { extractWorkbook } from "../lib/docsEngine.js";
 import posthog from "posthog-js";
-import { generateMarkdown, generateAIPrompt } from "../lib/markdownExport.js";
+import { generateMarkdown, generateAIPrompt, generateNotionMarkdown, generateConfluenceMarkup } from "../lib/markdownExport.js";
 import { readPendingFile } from "../lib/pendingFile.js";
 
 // ================================================================
@@ -49,6 +49,27 @@ function FormulaBlock({ formula }) {
     <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: "6px", padding: "12px 14px", fontSize: "12px", fontFamily: T.mono, whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.9, marginTop: "8px" }}>
       {tokens.map((tk, i) => <span key={i} style={{ color: colors[tk.type] }}>{tk.text}</span>)}
     </div>
+  );
+}
+
+// ================================================================
+// COPY BUTTON
+// ================================================================
+
+function CopyBtn({ text, label }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={async (e) => {
+        e.stopPropagation();
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={{ padding: "2px 8px", fontSize: "10px", fontWeight: 600, background: copied ? "#f0fdf4" : T.bg, color: copied ? "#166534" : T.dim, border: `1px solid ${copied ? "#86efac" : T.border}`, borderRadius: "4px", cursor: "pointer", fontFamily: T.font, flexShrink: 0 }}
+    >
+      {copied ? "✓ Copied" : (label || "⎘ Copy")}
+    </button>
   );
 }
 
@@ -145,6 +166,7 @@ function CalculatedFieldsTab({ fields, selectedField, onSelectField, panelMode, 
                   <Pill color="blue">{cf.datasource}</Pill>
                   <Pill color="gray">{cf.datatype}</Pill>
                   <Pill color={cf.role === "measure" ? "green" : "gray"}>{cf.role}</Pill>
+                  <CopyBtn text={cf.formula} />
                 </div>
                 {cf.description && <div style={{ fontSize: "11px", color: T.muted, marginTop: "4px", lineHeight: 1.5 }}>{cf.description}</div>}
                 {cf.dependencies.length > 0 && (
@@ -782,6 +804,22 @@ export default function DocsPage() {
     posthog.capture("docs_exported", { format: "ai_prompt" });
   };
 
+  const copyNotion = async () => {
+    await navigator.clipboard.writeText(generateNotionMarkdown(result));
+    setCopyStatus("notion");
+    setTimeout(() => setCopyStatus(null), 2000);
+    posthog.capture("docs_exported", { format: "notion" });
+  };
+
+  const downloadConfluence = () => {
+    const name = result.meta.workbook_name.replace(/\.[^.]+$/, "");
+    const blob = new Blob([generateConfluenceMarkup(result)], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `tableau-docs-${name}.confluence.txt`; a.click();
+    URL.revokeObjectURL(url);
+    posthog.capture("docs_exported", { format: "confluence" });
+  };
+
   const tabCounts = result ? {
     calculated_fields: result.calculated_fields.length,
     data_sources: result.datasources.length,
@@ -861,6 +899,8 @@ export default function DocsPage() {
             <button style={btnStyle(false)} onClick={downloadMarkdown}>↓ Markdown</button>
             <button style={btnStyle(copyStatus === "md")} onClick={copyMarkdown}>{copyStatus === "md" ? "✓ Copied!" : "⎘ Copy MD"}</button>
             <button style={{ ...btnStyle(copyStatus === "ai"), color: "#7c3aed", borderColor: copyStatus === "ai" ? "#c4b5fd" : T.border, background: copyStatus === "ai" ? "#f5f3ff" : T.white }} onClick={copyForAI}>{copyStatus === "ai" ? "✓ Copied!" : "✦ Copy for AI"}</button>
+            <button style={{ ...btnStyle(copyStatus === "notion"), color: "#000", borderColor: copyStatus === "notion" ? "#000" : T.border, background: copyStatus === "notion" ? "#f8f8f8" : T.white }} onClick={copyNotion}>{copyStatus === "notion" ? "✓ Copied!" : "⬡ Copy for Notion"}</button>
+            <button style={btnStyle(false)} onClick={downloadConfluence}>↓ Confluence</button>
           </div>
         )}
       </div>
