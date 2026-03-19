@@ -208,7 +208,7 @@ function AuditTable({ fields, result, selectedField, onSelectField, panelMode })
         </select>
         <div style={{ display: "flex", gap: "4px", marginLeft: "auto" }}>
           {["panel", "split"].map(mode => (
-            <button key={mode} onClick={() => { if (panelMode !== mode) onSelectField(null, mode); }} style={selBtnStyle(panelMode === mode)}>
+            <button key={mode} onClick={() => { if (panelMode !== mode) onSelectField(selectedField, mode); }} style={selBtnStyle(panelMode === mode)}>
               {mode === "panel" ? "⊟ Panel" : "⊠ Split"}
             </button>
           ))}

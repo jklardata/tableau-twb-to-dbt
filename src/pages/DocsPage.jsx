@@ -119,7 +119,7 @@ function CalculatedFieldsTab({ fields, selectedField, onSelectField, panelMode }
         </select>
         <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
           {["panel", "split"].map(mode => (
-            <button key={mode} onClick={() => { if (panelMode === mode) onSelectField(null, "toggle"); }} style={{ padding: "5px 10px", border: `1px solid ${T.border}`, borderRadius: "6px", fontSize: "11px", cursor: "pointer", fontFamily: T.font, color: T.muted, background: T.white }}>
+            <button key={mode} onClick={() => { if (panelMode !== mode) onSelectField(selectedField, mode); }} style={{ padding: "5px 10px", border: `1px solid ${panelMode === mode ? "#bae6fd" : T.border}`, borderRadius: "6px", fontSize: "11px", cursor: "pointer", fontFamily: T.font, color: panelMode === mode ? T.primary : T.muted, background: panelMode === mode ? "#f0f9ff" : T.white }}>
               {mode === "panel" ? "⊟ Panel" : "⊠ Split"}
             </button>
           ))}
@@ -672,7 +672,7 @@ export default function DocsPage() {
               <CalculatedFieldsTab
                 fields={result.calculated_fields}
                 selectedField={selectedField}
-                onSelectField={(field) => setSelectedField(field)}
+                onSelectField={(field, modeOverride) => { if (modeOverride) setPanelMode(modeOverride); setSelectedField(field); }}
                 panelMode={panelMode}
               />
             )}
