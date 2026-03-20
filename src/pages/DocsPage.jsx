@@ -251,7 +251,20 @@ function DataSourcesTab({ datasources }) {
             {isOpen && (
               <div style={{ borderTop: `1px solid ${T.border}`, padding: "14px 16px" }}>
                 {ds.connection_server && <div style={{ fontSize: "11px", color: T.muted, marginBottom: "10px" }}>Server: {ds.connection_server}</div>}
-                <input style={{ width: "100%", padding: "6px 10px", border: `1px solid ${T.border}`, borderRadius: "6px", fontSize: "12px", fontFamily: T.font, color: T.text, outline: "none", marginBottom: "10px" }} placeholder="Filter fields…" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <div style={{ display: "flex", gap: "8px", marginBottom: "10px", alignItems: "center" }}>
+                  <input style={{ flex: 1, padding: "6px 10px", border: `1px solid ${T.border}`, borderRadius: "6px", fontSize: "12px", fontFamily: T.font, color: T.text, outline: "none" }} placeholder="Filter fields…" value={search} onChange={(e) => setSearch(e.target.value)} />
+                  <CopyBtn text={["field,caption,type,role,calculated", ...ds.fields.map(f => `${f.name},${f.caption},${f.datatype},${f.role},${f.is_calculated ? "yes" : "no"}`)].join("\n")} label="⎘ Copy CSV" />
+                  <button
+                    onClick={() => {
+                      const csv = ["field,caption,type,role,calculated", ...ds.fields.map(f => `${f.name},${f.caption},${f.datatype},${f.role},${f.is_calculated ? "yes" : "no"}`)].join("\n");
+                      const a = document.createElement("a");
+                      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+                      a.download = `${(ds.caption || ds.name).replace(/\s+/g, "_")}_fields.csv`;
+                      a.click();
+                    }}
+                    style={{ padding: "2px 8px", fontSize: "10px", fontWeight: 600, background: T.bg, color: T.dim, border: `1px solid ${T.border}`, borderRadius: "4px", cursor: "pointer", fontFamily: T.font, flexShrink: 0 }}
+                  >↓ CSV</button>
+                </div>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                     <thead>
@@ -298,9 +311,18 @@ function SheetsTab({ sheets }) {
     const fields = sheet.fields_used;
     const visible = fields.slice(0, maxPills);
     const extra = fields.length - maxPills;
+    const sheetText = [
+      sheet.name,
+      sheet.datasources_used.length > 0 ? `Sources: ${sheet.datasources_used.join(", ")}` : null,
+      sheet.filters_applied.length > 0 ? `Filters: ${sheet.filters_applied.map(f => f.replace(/^\[|\]$/g, "")).join(", ")}` : null,
+      fields.length > 0 ? `Fields: ${fields.map(f => f.replace(/^\[|\]$/g, "")).join(", ")}` : null,
+    ].filter(Boolean).join("\n");
     return (
       <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: "8px", padding: "14px 16px", marginBottom: "6px" }}>
-        <div style={{ fontSize: "14px", fontWeight: 600, color: T.text, marginBottom: "6px" }}>{sheet.name}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+          <div style={{ fontSize: "14px", fontWeight: 600, color: T.text, flex: 1 }}>{sheet.name}</div>
+          <CopyBtn text={sheetText} />
+        </div>
         {sheet.datasources_used.length > 0 && (
           <div style={{ marginBottom: "4px" }}>
             <span style={{ fontSize: "9px", color: T.dim, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: "6px" }}>Sources:</span>
@@ -351,12 +373,21 @@ function ParametersTab({ parameters }) {
 
   return (
     <div>
-      {parameters.map((p, i) => (
+      {parameters.map((p, i) => {
+        const paramText = [
+          p.caption || p.name,
+          `Type: ${p.datatype} | Domain: ${p.domain_type}`,
+          `Current value: ${p.current_value || "n/a"}`,
+          p.domain_type === "list" && p.allowable_values.length > 0 ? `Values: ${p.allowable_values.join(", ")}` : null,
+          p.domain_type === "range" && p.range_min !== null ? `Range: ${p.range_min} to ${p.range_max}${p.step_size ? ` (step: ${p.step_size})` : ""}` : null,
+        ].filter(Boolean).join("\n");
+        return (
         <div key={i} style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: "8px", padding: "14px 16px", marginBottom: "6px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }}>
             <div style={{ fontSize: "14px", fontWeight: 600, color: T.text, flex: 1 }}>{p.caption || p.name}</div>
             <Pill color="gray">{p.datatype}</Pill>
             <Pill color={p.domain_type === "list" ? "blue" : p.domain_type === "range" ? "amber" : "gray"}>{p.domain_type}</Pill>
+            <CopyBtn text={paramText} />
           </div>
           <div style={{ fontSize: "11px", color: T.muted, marginBottom: "8px" }}>
             Current value: <span style={{ color: T.primary }}>{p.current_value || "n/a"}</span>
@@ -376,7 +407,8 @@ function ParametersTab({ parameters }) {
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -600,7 +632,10 @@ function LineageTab({ fields, usedByMap, sheetUsageMap }) {
 
           {/* Formula */}
           <div style={{ background: T.white, border: `1px solid ${T.border}`, borderRadius: "8px", padding: "16px" }}>
-            <div style={{ fontSize: "10px", fontWeight: 700, color: T.dim, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "4px" }}>Formula</div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, color: T.dim, letterSpacing: "0.08em", textTransform: "uppercase", flex: 1 }}>Formula</div>
+              <CopyBtn text={selected.formula} label="⎘ Copy" />
+            </div>
             <FormulaBlock formula={selected.formula} />
           </div>
         </div>
@@ -863,46 +898,63 @@ export default function DocsPage() {
         </nav>
       </header>
 
-      {/* Upload Bar */}
-      <div style={{ background: T.white, borderBottom: `1px solid ${T.border}`, padding: "12px 24px", display: "flex", alignItems: "center", gap: "12px", flexShrink: 0, flexWrap: "wrap" }}>
-        <div
-          style={{ border: `1.5px dashed ${file ? "#22c55e" : drag ? T.primary : T.border}`, borderRadius: "8px", padding: "10px 16px", display: "flex", alignItems: "center", gap: "10px", cursor: file ? "default" : "pointer", background: file ? "#f0fdf4" : drag ? "#f0f9ff" : T.bg, flex: 1, maxWidth: "320px", transition: "all 0.15s" }}
-          onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
-          onDragLeave={() => setDrag(false)}
-          onDrop={handleDrop}
-          onClick={() => !file && document.getElementById("docs-upload").click()}
-        >
-          <input id="docs-upload" type="file" accept=".twb,.twbx" style={{ display: "none" }} onChange={(e) => { if (e.target.files[0]) { setFile(e.target.files[0]); setResult(null); } }} />
-          <span style={{ fontSize: "16px", color: file ? "#22c55e" : T.dim }}>{file ? "✓" : "↑"}</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {file ? (
-              <>
-                <div style={{ fontSize: "12px", fontFamily: T.mono, color: T.primary, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
-                <div style={{ fontSize: "10px", color: T.dim }}>{(file.size / 1024).toFixed(1)} KB</div>
-              </>
-            ) : <div style={{ fontSize: "12px", color: T.muted }}>Drop .twb or .twbx</div>}
+      {/* Dark Band — title + upload */}
+      <div style={{ background: T.hdr, borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "18px 24px 20px", textAlign: "center", flexShrink: 0 }}>
+        <div style={{ maxWidth: "680px", margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+          {!result && (
+            <div style={{ fontSize: "clamp(24px, 4vw, 48px)", fontWeight: 900, color: "#fff", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
+              Browse every formula, field, and source in your <span style={{ color: T.primary }}>Tableau workbook</span>
+            </div>
+          )}
+          {!result && (
+            <div style={{ fontSize: "15px", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, maxWidth: "500px" }}>
+              Drop a .twb and instantly explore all calculated fields, parameters, data sources, sheets, and filters with full syntax-highlighted formulas.
+            </div>
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+            <div
+              style={{ border: `1.5px dashed ${file ? "#22c55e" : drag ? T.primary : "rgba(255,255,255,0.2)"}`, borderRadius: "8px", padding: "10px 16px", display: "flex", alignItems: "center", gap: "10px", cursor: file ? "default" : "pointer", background: file ? "rgba(34,197,94,0.1)" : drag ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.04)", minWidth: "260px", transition: "all 0.15s" }}
+              onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+              onDragLeave={() => setDrag(false)}
+              onDrop={handleDrop}
+              onClick={() => !file && document.getElementById("docs-upload").click()}
+            >
+              <input id="docs-upload" type="file" accept=".twb,.twbx" style={{ display: "none" }} onChange={(e) => { if (e.target.files[0]) { setFile(e.target.files[0]); setResult(null); } }} />
+              <span style={{ fontSize: "16px", color: file ? "#22c55e" : "rgba(255,255,255,0.3)" }}>{file ? "✓" : "↑"}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                {file ? (
+                  <>
+                    <div style={{ fontSize: "12px", fontFamily: T.mono, color: "#22c55e", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>{(file.size / 1024).toFixed(1)} KB</div>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>Drop .twb to get started</div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.22)", marginTop: "2px" }}>Processed in your browser. Nothing uploaded.</div>
+                  </>
+                )}
+              </div>
+              {file && <button style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "16px", padding: "0 2px" }} onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); }}>×</button>}
+            </div>
+            <button
+              style={{ padding: "10px 20px", background: file && !loading ? T.primary : "#334155", color: file && !loading ? "#fff" : "#64748b", border: "none", borderRadius: "8px", fontSize: "13px", fontWeight: 700, cursor: file && !loading ? "pointer" : "not-allowed", fontFamily: T.font, whiteSpace: "nowrap" }}
+              onClick={handleExtract}
+              disabled={!file || loading}
+            >
+              {loading ? "Extracting…" : "Generate Docs →"}
+            </button>
           </div>
-          {file && <button style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: "16px", padding: "0 2px" }} onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); }}>×</button>}
+          {result && (
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center" }}>
+              <button style={btnStyle(false)} onClick={downloadJSON}>↓ JSON</button>
+              <button style={btnStyle(false)} onClick={downloadMarkdown}>↓ Markdown</button>
+              <button style={btnStyle(copyStatus === "md")} onClick={copyMarkdown}>{copyStatus === "md" ? "✓ Copied!" : "⎘ Copy MD"}</button>
+              <button style={{ ...btnStyle(copyStatus === "ai"), color: "#7c3aed", borderColor: copyStatus === "ai" ? "#c4b5fd" : T.border, background: copyStatus === "ai" ? "#f5f3ff" : T.white }} onClick={copyForAI}>{copyStatus === "ai" ? "✓ Copied!" : "✦ Copy for AI"}</button>
+              <button style={{ ...btnStyle(copyStatus === "notion"), color: "#000", borderColor: copyStatus === "notion" ? "#000" : T.border, background: copyStatus === "notion" ? "#f8f8f8" : T.white }} onClick={copyNotion}>{copyStatus === "notion" ? "✓ Copied!" : "⬡ Copy for Notion"}</button>
+              <button style={btnStyle(false)} onClick={downloadConfluence}>↓ Confluence</button>
+            </div>
+          )}
         </div>
-
-        <button
-          style={{ padding: "10px 20px", background: file && !loading ? T.hdr : T.border, color: file && !loading ? "#fff" : T.dim, border: "none", borderRadius: "8px", fontSize: "13px", fontWeight: 700, cursor: file && !loading ? "pointer" : "not-allowed", fontFamily: T.font, whiteSpace: "nowrap" }}
-          onClick={handleExtract}
-          disabled={!file || loading}
-        >
-          {loading ? "Extracting…" : "Generate Docs →"}
-        </button>
-
-        {result && (
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginLeft: "auto" }}>
-            <button style={btnStyle(false)} onClick={downloadJSON}>↓ JSON</button>
-            <button style={btnStyle(false)} onClick={downloadMarkdown}>↓ Markdown</button>
-            <button style={btnStyle(copyStatus === "md")} onClick={copyMarkdown}>{copyStatus === "md" ? "✓ Copied!" : "⎘ Copy MD"}</button>
-            <button style={{ ...btnStyle(copyStatus === "ai"), color: "#7c3aed", borderColor: copyStatus === "ai" ? "#c4b5fd" : T.border, background: copyStatus === "ai" ? "#f5f3ff" : T.white }} onClick={copyForAI}>{copyStatus === "ai" ? "✓ Copied!" : "✦ Copy for AI"}</button>
-            <button style={{ ...btnStyle(copyStatus === "notion"), color: "#000", borderColor: copyStatus === "notion" ? "#000" : T.border, background: copyStatus === "notion" ? "#f8f8f8" : T.white }} onClick={copyNotion}>{copyStatus === "notion" ? "✓ Copied!" : "⬡ Copy for Notion"}</button>
-            <button style={btnStyle(false)} onClick={downloadConfluence}>↓ Confluence</button>
-          </div>
-        )}
       </div>
 
       {error && (
@@ -1013,16 +1065,7 @@ export default function DocsPage() {
 
       {/* Marketing (no results) */}
       {!result && (
-        <main style={{ flex: 1, padding: "40px 24px", maxWidth: "1000px", width: "100%", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
-            <h1 style={{ fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 800, color: T.text, marginBottom: "12px", letterSpacing: "-0.02em" }}>Tableau Workbook Docs</h1>
-            <p style={{ fontSize: "16px", color: T.muted, maxWidth: "520px", margin: "0 auto", lineHeight: 1.7 }}>
-              Upload any .twb or .twbx file. Get full documentation of every field, formula, data source, and filter, instantly.
-            </p>
-            <p style={{ fontSize: "12px", color: T.primary, marginTop: "12px" }}>
-              Used by data teams onboarding new analysts and organizations preparing for Tableau-to-dbt migrations.
-            </p>
-          </div>
+        <main style={{ flex: 1, padding: "40px 24px", maxWidth: "1200px", width: "100%", margin: "0 auto" }}>
 
           <div style={{ fontSize: "10px", fontWeight: 700, color: T.dim, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "16px" }}>What You Get</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px", marginBottom: "48px" }}>
@@ -1047,7 +1090,7 @@ export default function DocsPage() {
           <div style={{ fontSize: "10px", fontWeight: 700, color: T.dim, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "16px" }}>How It Works</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "48px" }}>
             {[
-              ["01", "Upload your workbook", "Drop any .twb or .twbx file. Your workbook never leaves your browser."],
+              ["01", "Upload your workbook", "Drop any .twb file. Your workbook never leaves your browser."],
               ["02", "Browse the extracted docs", "Six tabs: Calc Fields, Lineage, Data Sources, Sheets, Parameters, and Filters."],
               ["03", "Export in any format", "Download JSON, Markdown, or copy a structured AI prompt for Claude or ChatGPT."],
             ].map(([num, title, body]) => (
@@ -1076,7 +1119,7 @@ export default function DocsPage() {
           </a>
         </div>
         <div style={{ padding: "14px 32px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap", background: T.white, borderTop: `1px solid ${T.border}` }}>
-          {[["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
+          {[["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Methodology", "/methodology"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
             <a key={label} href={href} style={{ fontSize: "11px", color: T.muted, textDecoration: "none" }}>{label}</a>
           ))}
           <span style={{ marginLeft: "auto", fontSize: "10px", color: T.border }}>Not affiliated with Salesforce or Tableau.</span>

@@ -3,9 +3,31 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tableau to dbt Converter — Free, Browser-Based | tableautodbt.com</title>
-<meta name="description" content="Upload a .twb or .twbx and get a complete dbt package: staging models, marts, LOD-to-CTE translation, MetricFlow semantic layer, schema tests. Free and browser-based."/>
+<link rel="icon" href="/favicon_tableautodbt2.png" type="image/png" />
+<title>Free Tableau to dbt Converter — Migrate Calculated Fields to dbt Models | tableautodbt.com</title>
+<meta name="description" content="Convert your Tableau workbook to a complete dbt package in minutes. Staging models, fct/dim marts, LOD-to-CTE translation, MetricFlow semantic layer, and schema tests — all generated from your .twb. Free and browser-based."/>
+<meta name="keywords" content="tableau to dbt converter, tableau to dbt migration, tableau calculated fields to dbt models, convert tableau workbook to dbt, tableau to dbt semantic layer, migrate tableau to dbt, tableau prep to dbt, tableau dbt integration"/>
 <link rel="canonical" href="https://tableautodbt.com/"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://tableautodbt.com/"/>
+<meta property="og:title" content="Free Tableau to dbt Converter — Migrate Calculated Fields to dbt Models"/>
+<meta property="og:description" content="Upload a .twb and get a complete dbt package: staging models, fct/dim marts, LOD-to-CTE translation, MetricFlow semantic layer, and schema tests. Free, browser-based, no signup required."/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Free Tableau to dbt Converter — Migrate Calculated Fields to dbt Models"/>
+<meta name="twitter:description" content="Upload a .twb and get a complete dbt package: staging models, fct/dim marts, LOD-to-CTE translation, MetricFlow semantic layer, and schema tests. Free, browser-based."/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Tableau to dbt Converter",
+  "url": "https://tableautodbt.com/",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "description": "Convert Tableau workbook calculated fields to a production-ready dbt package. Generates staging models, fct/dim marts, LOD-to-CTE translations, MetricFlow metrics.yml, schema tests, and source definitions from any .twb file.",
+  "featureList": ["Tableau calculated fields to dbt models", "LOD expression to CTE translation", "MetricFlow semantic layer generation", "Multi-workbook merge and conflict detection", "Browser-based, no upload to server"]
+}
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -25,7 +47,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;m
 /* Left: Copy */
 .copy-side{padding:64px 48px;display:flex;flex-direction:column;justify-content:center}
 .eyebrow{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:20px;font-size:11px;font-weight:600;color:#0ea5e9;margin-bottom:20px;width:fit-content}
-.copy-side h1{font-size:clamp(32px,3.5vw,48px);font-weight:800;color:#1e293b;line-height:1.1;letter-spacing:-0.03em;margin-bottom:8px}
+.copy-side h1{font-size:clamp(32px,3.8vw,54px);font-weight:900;color:#1e293b;line-height:1.05;letter-spacing:-0.03em;margin-bottom:8px}
 .copy-side h1 em{color:#0ea5e9;font-style:normal}
 .copy-side h1 .dim{color:#94a3b8}
 .copy-side p{font-size:15px;color:#64748b;max-width:480px;line-height:1.75;margin-bottom:28px}
@@ -33,6 +55,12 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;m
 .feature-row{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#475569;line-height:1.5}
 .feature-row .dot{width:6px;height:6px;background:#0ea5e9;border-radius:50%;flex-shrink:0;margin-top:5px}
 .social-proof{font-size:12px;color:#94a3b8;border-top:1px solid #f1f5f9;padding-top:20px}
+
+/* Swish arrow */
+.copy-side{position:relative;overflow:visible}
+.swish-arrow{position:absolute;right:-50px;top:42%;transform:translateY(-50%);pointer-events:none;z-index:10}
+.swish-arrow .swish-label{display:block;font-size:13px;font-weight:700;color:#94a3b8;font-style:italic;text-align:center;margin-top:4px;white-space:nowrap}
+@media(max-width:900px){.swish-arrow{display:none}}
 
 /* Right: Upload widget */
 .upload-side{background:#f8fafc;border-left:2px solid #e2e8f0;padding:40px 32px;display:flex;flex-direction:column;justify-content:center;gap:0;position:sticky;top:0;height:fit-content}
@@ -78,25 +106,25 @@ body{font-family:'Inter',system-ui,sans-serif;background:#f8fafc;color:#1e293b;m
 
 /* Below fold */
 .below-fold{padding:64px 48px;max-width:960px;margin:0 auto;width:100%}
-.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:16px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#94a3b8;margin-bottom:20px}
 
 /* How it works */
 .how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:56px}
-.how-card{background:#fff;border:1px solid #e2e8f0;border-right:none;padding:20px}
+.how-card{background:#fff;border:1px solid #e2e8f0;border-right:none;padding:24px}
 .how-card:first-child{border-radius:10px 0 0 10px}
 .how-card:last-child{border-radius:0 10px 10px 0;border-right:1px solid #e2e8f0}
-.how-num{font-size:22px;font-weight:800;color:#e2e8f0;margin-bottom:8px}
-.how-step{font-size:13px;font-weight:700;color:#0ea5e9;margin-bottom:4px}
-.how-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px}
-.how-body{font-size:12px;color:#64748b;line-height:1.6}
+.how-num{font-size:26px;font-weight:800;color:#e2e8f0;margin-bottom:10px}
+.how-step{font-size:15px;font-weight:700;color:#0ea5e9;margin-bottom:5px}
+.how-title{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:5px}
+.how-body{font-size:13px;color:#64748b;line-height:1.65}
 
 /* What you get grid */
-.wyg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:56px}
-.wyg-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px 20px;display:flex;gap:14px}
-.wyg-icon{font-size:20px;flex-shrink:0;margin-top:2px}
-.wyg-file{font-size:10px;font-family:'JetBrains Mono',monospace;color:#0ea5e9;margin-bottom:4px}
-.wyg-title{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:4px}
-.wyg-body{font-size:12px;color:#64748b;line-height:1.6}
+.wyg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:56px}
+.wyg-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;display:flex;gap:16px}
+.wyg-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.wyg-file{font-size:11px;font-family:'JetBrains Mono',monospace;color:#0ea5e9;margin-bottom:5px}
+.wyg-title{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:5px}
+.wyg-body{font-size:13px;color:#64748b;line-height:1.65}
 
 .email-wrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:36px 32px;text-align:center}
 .email-title{font-size:20px;font-weight:700;color:#1e293b;margin-bottom:6px}
@@ -151,8 +179,8 @@ footer{background:#1e293b}
   <!-- Left: Copy -->
   <div class="copy-side">
     <div class="eyebrow">⚡ Free tier · Browser-only · Snowflake &amp; BigQuery</div>
-    <h1>You're not starting from scratch.<br/><em>You're starting from 80% done.</em></h1>
-    <p>Upload a .twb or .twbx and get a complete, layered dbt package: staging models, fct_ and dim_ marts, LOD-to-CTE translation, a MetricFlow semantic layer, schema tests, and source definitions.</p>
+    <h1>Convert your <span style="color:#0ea5e9">Tableau workbook</span> to <span style="color:#f97316">dbt</span> in minutes</h1>
+    <p>Upload a .twb and get a complete, layered dbt package: staging models, fct_ and dim_ marts, LOD-to-CTE translation, a MetricFlow semantic layer, schema tests, and source definitions.</p>
 
     <div class="feature-list">
       <div class="feature-row"><div class="dot"></div>Staging layer per datasource, fct_ and dim_ models properly split</div>
@@ -165,6 +193,15 @@ footer{background:#1e293b}
     </div>
 
     <div class="social-proof">Used by analytics engineers at mid-size and enterprise companies migrating complex Tableau deployments to a modern data stack.</div>
+
+    <!-- Swish arrow pointing toward upload widget -->
+    <div class="swish-arrow" aria-hidden="true">
+      <svg width="160" height="110" viewBox="0 0 110 80" fill="none" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+        <path d="M 12,72 C 18,28 58,8 100,32" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.5"/>
+        <path d="M 92,24 L 103,33 L 91,41" stroke="#0ea5e9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5"/>
+      </svg>
+      <span class="swish-label">upload here</span>
+    </div>
   </div>
 
   <!-- Right: Upload widget -->
@@ -189,7 +226,7 @@ footer{background:#1e293b}
         <!-- Upload zone -->
         <div class="upload-zone">
           <div class="uz-icon">↑</div>
-          <div class="uz-title">Drop .twb or .twbx</div>
+          <div class="uz-title">Drop .twb</div>
           <div class="uz-sub">or click to browse</div>
         </div>
 
@@ -220,7 +257,7 @@ footer{background:#1e293b}
     <div class="how-card">
       <div class="how-num">01</div>
       <div class="how-step">Parse</div>
-      <div class="how-body">Reads every calculated field from .twb or .twbx. Resolves internal Calculation_XXXX IDs to human-readable names. Maps each field to its datasource. .twbx files are unzipped automatically.</div>
+      <div class="how-body">Reads every calculated field from .twb. Resolves internal Calculation_XXXX IDs to human-readable names. Maps each field to its datasource.</div>
     </div>
     <div class="how-card">
       <div class="how-num">02</div>
@@ -325,7 +362,7 @@ footer{background:#1e293b}
     <a href="https://www.klardata.com" class="footer-cta-link" target="_blank" rel="noopener noreferrer">Learn More at klardata.com →</a>
   </div>
   <div class="footer-links">
-    <a href="/">Convert</a><a href="/diff">Diff</a><a href="/docs">Docs</a><a href="/audit">Audit</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a>
+    <a href="/">Convert</a><a href="/diff">Diff</a><a href="/docs">Docs</a><a href="/audit">Audit</a><a href="/methodology">Methodology</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a>
     <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,0.2)">Not affiliated with Salesforce or Tableau.</span>
   </div>
 </footer>

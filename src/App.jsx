@@ -3,6 +3,8 @@ import { readPendingFile } from "./lib/pendingFile.js";
 import DiffPage from "./pages/DiffPage.jsx";
 import DocsPage from "./pages/DocsPage.jsx";
 import AuditPage from "./pages/AuditPage.jsx";
+import InsightsPage from "./pages/InsightsPage.jsx";
+import MethodologyPage from "./pages/MethodologyPage.jsx";
 import posthog from "posthog-js";
 import JSZip from "jszip";
 import {
@@ -294,7 +296,7 @@ function PrivacyPage() {
         <h1 style={{ fontSize: "22px", fontWeight: 700, color: "#f0f0f0", margin: "24px 0 8px" }}>Privacy Policy</h1>
         <p style={{ fontSize: "11px", color: "#4b5563", marginBottom: "32px" }}>Last updated March 2026</p>
         {[
-          ["Your workbook data never leaves your browser", "Parsing, classification, and rule-based translation happen entirely in your browser. Your .twb or .twbx file is never uploaded to our servers. Server URLs, database names, connection strings, and Tableau site paths extracted from your workbook are processed locally and never transmitted."],
+          ["Your workbook data never leaves your browser", "Parsing, classification, and rule-based translation happen entirely in your browser. Your .twb file is never uploaded to our servers. Server URLs, database names, connection strings, and Tableau site paths extracted from your workbook are processed locally and never transmitted."],
           ["What is sent to AI", "When you run the export, Tableau formula expressions (the logic only — no connection metadata, no server names, no data values) are sent to Anthropic's Claude API for translation. These are batched and sent over HTTPS. Anthropic's data handling policies apply to this data."],
           ["Analytics", "We use PostHog to collect anonymous product usage events — which features are used, field counts, dialect selection, and export completions. No personally identifiable information is collected unless you voluntarily provide your email address."],
           ["Email capture", "If you provide your email address for updates, it is stored in Resend. You can unsubscribe at any time. We do not sell or share your email address."],
@@ -458,6 +460,8 @@ export default function App() {
   if (path === "/app/diff" || path === "/diff") return <DiffPage />;
   if (path === "/app/docs" || path === "/docs") return <DocsPage />;
   if (path === "/app/audit" || path === "/audit") return <AuditPage />;
+  if (path === "/app/insights" || path === "/insights") return <InsightsPage />;
+  if (path === "/methodology") return <MethodologyPage />;
 
   const [stage, setStage] = useState("upload");
   const [calcs, setCalcs] = useState([]);
@@ -519,12 +523,12 @@ export default function App() {
     try {
       let xmlText;
       if (file.name.toLowerCase().endsWith(".twbx")) {
-        addLog("Detected .twbx — extracting inner workbook...", "info");
+        addLog("Extracting workbook...", "info");
         const zip = await JSZip.loadAsync(file);
         const twbEntry = Object.values(zip.files).find((f) => f.name.endsWith(".twb") && !f.dir);
         if (!twbEntry) throw new Error("No .twb found inside .twbx archive");
         xmlText = await twbEntry.async("string");
-        addLog("Extracted .twb from .twbx ✓", "success");
+        addLog("Workbook extracted ✓", "success");
       } else {
         xmlText = await file.text();
       }
@@ -900,7 +904,7 @@ export default function App() {
                   <span style={{ color: "#0ea5e9" }}>You're starting from 80% done.</span>
                 </h1>
                 <p style={{ fontSize: "15px", color: "#64748b", maxWidth: "480px", lineHeight: 1.75, marginBottom: "28px" }}>
-                  Upload a .twb or .twbx and get a complete, layered dbt package: staging models, fct_ and dim_ marts, LOD-to-CTE translation, a MetricFlow semantic layer, schema tests, and source definitions.
+                  Upload a .twb and get a complete, layered dbt package: staging models, fct_ and dim_ marts, LOD-to-CTE translation, a MetricFlow semantic layer, schema tests, and source definitions.
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "36px" }}>
                   {[
@@ -966,7 +970,7 @@ export default function App() {
                     >
                       <div style={{ fontSize: "26px", color: "#cbd5e1", marginBottom: "8px" }}>↑</div>
                       <div style={{ fontSize: "13px", fontWeight: 600, color: "#64748b", marginBottom: "3px" }}>
-                        {multiMode ? "Drop workbooks here to add" : "Drop .twb or .twbx"}
+                        {multiMode ? "Drop workbooks here to add" : "Drop .twb"}
                       </div>
                       <div style={{ fontSize: "11px", color: "#94a3b8" }}>or click to browse</div>
                     </div>
@@ -1069,7 +1073,7 @@ export default function App() {
               <div style={{ ...styles.h2, marginBottom: "20px" }}>How it works</div>
               <div style={{ display: "flex", gap: "0", marginBottom: "56px" }}>
                 {[
-                  { step: "01", label: "Parse", desc: "Reads every calculated field from .twb or .twbx. Resolves Calculation_XXXX internal IDs to human-readable names. Maps each field to its datasource. .twbx files are unzipped automatically." },
+                  { step: "01", label: "Parse", desc: "Reads every calculated field from .twb. Resolves Calculation_XXXX internal IDs to human-readable names. Maps each field to its datasource." },
                   { step: "02", label: "Classify", desc: "Categorises fields by complexity: simple expressions, date/conditional logic, LOD expressions (FIXED/INCLUDE/EXCLUDE), and table calcs flagged for window function rewrites." },
                   { step: "03", label: "Translate", desc: "Rule-based pass converts Tableau syntax to your target dialect (Snowflake or BigQuery). LOD expressions generate CTE templates. Complex calcs go through an AI pass to resolve intent. Dependency chains are resolved." },
                   { step: "04", label: "Structure", desc: "Aggregates go into fct_ models with GROUP BY. Row-level expressions go into dim_ models. LOD CTEs are injected into the WITH clause. MetricFlow metrics.yml is generated for a queryable semantic layer." },
@@ -1751,6 +1755,7 @@ export default function App() {
           <a href="/diff" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Diff</a>
           <a href="/docs" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Docs</a>
           <a href="/audit" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Audit</a>
+          <a href="/methodology" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Methodology</a>
           <a href="/privacy" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Privacy</a>
           <a href="/terms" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Terms</a>
           <span style={{ marginLeft: "auto", fontSize: "10px", color: "rgba(255,255,255,0.2)" }}>Not affiliated with Salesforce or Tableau.</span>

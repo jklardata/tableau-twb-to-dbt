@@ -1,5 +1,4 @@
-# Tableau → dbt Calculated Field Exporter
-## Project Architecture, Engine Design & Development Context
+# TableautoDbt — Architecture & Engine Design
 
 > **Purpose of this document:** Full handoff context for continuing development in Claude Code. Everything built, decided, and deferred — in one place. Kept up to date as features ship.
 
@@ -7,22 +6,31 @@
 
 ## 1. What We're Building
 
-A web-based tool that parses Tableau workbook files (`.twb` / `.twbx`) and exports the calculated fields as a production-ready dbt semantic layer — staging models, consolidated mart models, MetricFlow metrics, schema tests, and source definitions — targeting Snowflake and BigQuery SQL dialects.
+A suite of free, browser-based tools for Tableau users and analytics engineers:
 
-**The one-line pitch:** *"Turn your Tableau workbook's business logic into a documented, reusable dbt semantic layer."*
+| Tool | Path | Description |
+|---|---|---|
+| Convert | `/` | Parse a `.twb` and export a production-ready dbt semantic layer |
+| Docs | `/docs` | Auto-generate structured documentation from any workbook |
+| Audit | `/audit` | Health score + issue detection across all calculated fields |
+| Diff | `/diff` | Side-by-side comparison of two workbook versions |
+| Insights | `/insights` | Cross-workbook portfolio analysis — duplicates + migration effort |
+| Methodology | `/methodology` | Reference docs for audit rules and scoring formulas |
 
-**Target persona:** Analytics engineers (AEs) and BI engineers migrating business logic out of Tableau and into a dbt project. Typically a small team (1–3 AEs) setting up dbt for the first time. This is the person who inherits a workbook with 100+ calculated fields and needs to reconstruct that logic in SQL — documented, version-controlled, and maintainable — not just for the one dashboard they're migrating, but as a reusable foundation for other reports.
+**The one-line pitch:** *"Everything you need to understand, audit, and migrate your Tableau workbooks — in your browser, free."*
+
+**Target persona:** Analytics engineers (AEs) and BI engineers migrating business logic out of Tableau and into a dbt project. Typically a small team (1–3 AEs) setting up dbt for the first time, inheriting a workbook with 100+ calculated fields.
+
+All tools run 100% in the browser. No files are uploaded to a server. The only outbound network call is the AI translation pass (`/api/translate`), which sends formula expressions only — no connection metadata, no server URLs.
 
 ---
 
-## 2. Architecture
+## 2. Architecture Overview
 
-### Data Flow
+### Convert Tool Data Flow
 
 ```
-User selects .twb or .twbx (single or multi-workbook mode)
-        ↓
-[BROWSER] .twbx? → JSZip extracts inner .twb XML
+User selects .twb (single or multi-workbook mode)
         ↓
 [BROWSER] XML parsing (DOMParser) — parseTWB()
         ↓
@@ -42,14 +50,29 @@ User selects .twb or .twbx (single or multi-workbook mode)
 User downloads .zip
 ```
 
+### Docs / Audit / Diff Data Flow
+
+```
+User selects .twb
+        ↓
+[BROWSER] XML parsing (DOMParser) — same parseTWB() used by Convert
+        ↓
+[BROWSER] Tool-specific processing:
+  /docs   → structured metadata extraction → tabbed browser UI + export
+  /audit  → auditWorkbook() → health score + issue list + complexity scores
+  /diff   → diffWorkbooks() → added/removed/modified per category
+        ↓
+User browses, copies, or downloads results — no server involved
+```
+
 ---
 
-## 3. App Stages / UX Flow
+## 3. Convert Tool — App Stages
 
 | Stage | Trigger | What Happens |
 |---|---|---|
 | `upload` | Default | Dialect selector + drop zone + feature cards + multi-workbook toggle |
-| `parsing` | File selected | .twbx unzip if needed, XML parse, classify, rule-based translate, LOD CTE generation |
+| `parsing` | File selected | XML parse, classify, rule-based translate, LOD CTE generation |
 | `scan` | Parse complete | Privacy disclosure screen |
 | `conflicts` | Multi-workbook merge | Auto-merged count + conflict list, continue button |
 | `preview` | User approves scan | Models breakdown (STG/FCT/DIM per datasource) + grain config + field list |
@@ -113,8 +136,6 @@ lod_customer_id as (
 
 **EXCLUDE LODs** → CTE template with coarser grain; requires manual grain column specification.
 
-LOD calcs with a rule-based CTE are not sent to Claude for the LOD itself — only if other signals (unresolved refs, long formula, etc.) also apply.
-
 ### 4e. AI Refinement Layer (`claudeTranslate` / `needsClaude`)
 
 AI pass triggers on calcs with any of these signals:
@@ -130,7 +151,7 @@ Batched in groups of 8. Prompt includes: original formula, rule-based attempt, c
 
 **API model:** `claude-sonnet-4-6`
 
-### 4f. Aggregate Detection + Datasource Grouping (`isAggregate`, `groupByDatasource`)
+### 4f. Aggregate Detection + Datasource Grouping
 
 After all translation passes, calcs are grouped by datasource and split into two buckets:
 - **aggregates** — SQL contains `SUM(`, `COUNT(`, `AVG(`, `MIN(`, `MAX(`, etc.
@@ -142,17 +163,99 @@ Uses SQL-based detection (`isAggregate()`) rather than Tableau's `role` attribut
 
 Groups calcs across multiple workbooks by `datasourceSlug::slug` key.
 
-- **Exact formula match** → auto-merged, one canonical definition used, listed in `conflict_report.md` as confirmed matches
+- **Exact formula match** → auto-merged, one canonical definition used
 - **Different formula** → conflict flagged, first version used in output, all versions shown in conflict report
 - **Untranslatables** → deduplicated separately
 
-`generateConflictReport()` produces a markdown file included in the zip summarising auto-merged fields and detailing each conflict with all formula versions side by side.
+---
+
+## 5. Audit Engine (`src/lib/auditEngine.js`)
+
+### Health Score
+
+```
+score = 100 − (errors × 10) − (warnings × 3) − (info × 1)
+clamped to 0–100
+```
+
+### Audit Rules
+
+| Rule | Severity | Description |
+|---|---|---|
+| Circular dependency | Error | Field A depends on field B which depends on field A |
+| Division without null protection | Error | Raw division without `ZN()` or `NULLIF()` guard |
+| Nested LOD expressions | Error | LOD inside another LOD — Tableau often rejects these |
+| Unused calculated fields | Warning | Field defined but not referenced in any sheet or other field |
+| Deep nesting | Warning | More than 3 levels of nested IF/CASE |
+| Excessive nesting | Warning | More than 5 levels |
+| Non-additive window function | Warning | `RUNNING_SUM`, `RANK`, etc. cannot be aggregated further |
+| Long IF chain | Info | More than 5 ELSEIF branches |
+| High overall complexity | Info | Field complexity score above 75 |
+| Hardcoded DATETRUNC | Info | Date truncation with a literal string instead of a parameter |
+
+### Per-Field Complexity Scoring
+
+Each calculated field is scored 0–100 based on:
+- Formula length
+- Number of nested functions
+- Presence of LOD expressions
+- Use of table calculations
+- Number of dependencies
+- IF chain depth
+
+| Tier | Score | Description |
+|---|---|---|
+| Simple | 0–25 | Basic math, comparisons, single aggregations |
+| Moderate | 26–50 | Date functions, CASE/WHEN, IF/ELSEIF, COUNTD |
+| Complex | 51–75 | LOD expressions, nested conditions, multi-step logic |
+| Critical | 76–100 | Deeply nested LODs, circular patterns, untranslatable table calcs |
 
 ---
 
-## 5. Output Files
+## 6. Cross-Workbook Analysis (`src/lib/multiWorkbookAnalysis.js`)
 
-All outputs are bundled into a `.zip` download:
+### Duplicate Detection (`detectDuplicates`)
+
+Groups fields by normalized caption across all uploaded workbooks.
+
+- **Identical** — same caption, same formula across 2+ workbooks → safe to deduplicate
+- **Diverged** — same caption, different formulas → potential conflict, needs review
+
+Sorted with diverged fields first (bigger problem), then by workbook spread.
+
+### Migration Effort Estimation (`estimateEffort`)
+
+Buckets fields by complexity tier and applies hour ranges:
+
+| Tier | Hours per field |
+|---|---|
+| Low (simple) | 0.25–0.5h |
+| Medium (moderate) | 1–2h |
+| High (complex/critical) | 4–8h |
+
+Outputs per-workbook breakdown and portfolio totals.
+
+### Portfolio Summary (`summarizePortfolio`)
+
+Aggregates across all workbooks: total fields, total datasources, unique fields, duplicate groups, total estimated hours.
+
+---
+
+## 7. Docs Export (`src/lib/markdownExport.js`)
+
+Generates structured export formats from parsed workbook metadata:
+
+| Format | Description |
+|---|---|
+| JSON | Full metadata as structured JSON |
+| Markdown | Human-readable doc with sections per category |
+| Copy for AI | Prompt-optimized format with workbook context header (Claude/ChatGPT) |
+| Copy for Notion | Markdown compatible with Notion paste |
+| Download Confluence | Confluence-compatible storage format |
+
+---
+
+## 8. Output Files (Convert Tool)
 
 ```
 dbt_export/
@@ -171,50 +274,9 @@ dbt_export/
 └── conflict_report.md                 ← multi-workbook merge summary (only in multi mode)
 ```
 
-### Staging model (`stg_{slug}.sql`)
-
-A clean `materialized='view'` over the raw source. Raw column names referenced in Tableau formulas are pre-populated as the column list. Source table reference uses `{{ source() }}` macro with `TODO_TABLE` placeholder.
-
-### Fact model (`fct_{slug}.sql`)
-
-`materialized='table'`. Contains only aggregate expressions (SUM/COUNT/AVG). GROUP BY uses grain columns specified by the user in the preview step. LOD CTEs are injected into the `WITH` clause. Grain placeholder is dialect-specific.
-
-### Dimension model (`dim_{slug}.sql`)
-
-`materialized='view'`. Contains only row-level expressions. No GROUP BY. Safe to join to any grain.
-
-### metrics.yml
-
-MetricFlow semantic layer starter template. Simple aggregations (SUM/COUNT/AVG of a single column) are generated as proper `semantic_model` measures with correct `agg:` type. Derived expressions (e.g. `SUM(a) / COUNT(b)`) are generated as `type: derived` metrics with a TODO decomposition note.
-
-Requires: fill in `TODO_primary_entity` and `TODO_ID_COLUMN`, then run `dbt sl validate`.
-
 ---
 
-## 6. Preview Stage — Models Breakdown
-
-Before running the AI pass, the preview stage shows a full models breakdown:
-
-```
-MODELS TO BE GENERATED
-
-STG  stg_orders.sql          12 fields
-  └  FCT  fct_orders.sql     8 aggregates    GROUP BY date_day, customer_id
-  └  DIM  dim_orders.sql     4 row-level     2 LOD CTEs
-
-STG  stg_customers.sql       6 fields
-  └  DIM  dim_customers.sql  6 row-level
-```
-
-- FCT rows show grain badge (green if set, amber warning if not configured)
-- DIM rows show LOD CTE count if any
-- Summary footer: total datasources, total models, LOD CTEs to wire up, table calcs needing manual rewrite
-
-This gives the AE a structural preview of the output before committing to the full translation run.
-
----
-
-## 7. Privacy Scan Feature
+## 9. Privacy Scan
 
 Between the `parsing` stage and `preview`, the app shows a disclosure screen:
 
@@ -226,7 +288,7 @@ All sensitive metadata extraction happens in the browser via `DOMParser`. No add
 
 ---
 
-## 8. Analytics (PostHog)
+## 10. Analytics (PostHog)
 
 PostHog initialized in `main.jsx`. Events captured:
 
@@ -242,7 +304,7 @@ PostHog initialized in `main.jsx`. Events captured:
 
 ---
 
-## 9. UI / Design
+## 11. UI / Design
 
 **Emerald / Teal dark theme** — monospace throughout.
 
@@ -258,57 +320,75 @@ Font: `'IBM Plex Mono', 'Fira Code', 'Cascadia Code', monospace`
 
 ---
 
-## 10. Known Limitations
+## 12. SEO
 
-### Technical Limitations
+Each tool has a dedicated SEO landing page in `public/` with full title tags, meta descriptions, Open Graph, Twitter cards, and JSON-LD `SoftwareApplication` structured data.
 
-- **Multi-datasource workbooks** — calcs across all datasources are collected and grouped by their declared datasource. Fields that reference columns from a different datasource than their own may produce incorrect `{{ source() }}` references in the staging model. Requires manual review.
-- **LOD inner expressions** — CTE templates are generated rule-based, but the `stg_TODO` source reference and join key in the CTE must be manually updated to the actual staging model and primary key. The inner expression SQL is correct for simple cases; review complex nested LODs.
-- **LOD INCLUDE** — adds a note to add the specified dimension to the GROUP BY, but cannot automatically determine whether this is correct for the user's grain. Requires AE judgment.
-- **Table calculations** — `INDEX()`, `WINDOW_SUM()`, `RUNNING_SUM()`, `RANK()`, etc. are classified as `untranslatable`. Window function rewrite hints (with SQL templates) are provided in the translation report, but the PARTITION BY / ORDER BY columns must be determined by the AE.
-- **Parameters** — annotated with `/* 🔧 PARAM */` inline but not auto-resolved. Requires AE judgment per parameter: hardcode, dbt var, or seed.
-- **BigQuery dialect coverage** — DATE_TRUNC arg order, IF(), DATE() casts, and CURRENT_DATE() are handled rule-based. Complex BigQuery-specific functions (SAFE_DIVIDE, FORMAT_DATE, TIMESTAMP_DIFF, COUNTIF) are covered by the AI pass but not by the rule-based layer.
-- **MetricFlow entity setup** — metrics.yml outputs `TODO_primary_entity` and `TODO_ID_COLUMN` as placeholders. Primary key auto-detection from workbook XML is not implemented. Must be filled in manually before `dbt sl validate` passes.
-- **Grain config is manual** — grain columns for `fct_` models are entered by the user in the preview step. The AI suggests a grain per aggregate field, but the final GROUP BY is user-controlled.
+| Landing page | Target keywords |
+|---|---|
+| `/landing-convert` | tableau to dbt converter, tableau calculated fields to dbt models |
+| `/landing-docs` | tableau workbook documentation generator, read twb file without tableau |
+| `/landing-audit` | tableau workbook audit tool, tableau workbook health check |
+| `/landing-diff` | tableau workbook diff tool, compare tableau workbooks |
 
-### Deferred Features
-
-- [ ] Redshift and DuckDB dialects
-- [ ] Primary key / entity auto-detection from workbook XML join relationships
-- [ ] LOD INCLUDE automatic grain expansion
-- [ ] `dbt source()` macro substitution — currently staging models use `source('slug', 'TODO_TABLE')`, which is correct; sources.yml must be filled in first
-- [ ] Tableau Server / Cloud API mode — pull workbooks directly instead of uploading a file
-- [ ] Power BI DAX → dbt exporter (same concept, different parser)
+Sitemap: `/sitemap.xml` — covers all landing pages, tool pages, and utility pages.
 
 ---
 
-## 11. Current File Inventory
+## 13. File Inventory
 
 | File | Description |
 |---|---|
-| `src/App.jsx` | Main React SPA — all UI stages, state management, file handling |
+| `src/App.jsx` | Convert tool — all UI stages, state management, file handling |
 | `src/lib/engine.js` | Core engine — parsing, classification, translation, LOD handling, multi-workbook merge, output generation |
 | `src/lib/zip.js` | Output assembly — calls engine generators, bundles into JSZip |
+| `src/lib/auditEngine.js` | Audit rules engine — health scoring, complexity scoring, issue detection |
+| `src/lib/multiWorkbookAnalysis.js` | Cross-workbook duplicate detection, effort estimation, portfolio summary |
+| `src/lib/markdownExport.js` | AI prompt generator, Markdown/Notion/Confluence exporters |
+| `src/pages/DocsPage.jsx` | /docs — tabbed workbook documentation browser |
+| `src/pages/AuditPage.jsx` | /audit — health check, issue list, complexity breakdown |
+| `src/pages/DiffPage.jsx` | /diff — side-by-side workbook diff |
+| `src/pages/InsightsPage.jsx` | /insights — cross-workbook portfolio analysis |
+| `src/pages/MethodologyPage.jsx` | /methodology — audit rules and scoring reference |
 | `src/components/Badge.jsx` | Complexity badge component |
 | `src/components/ProgressBar.jsx` | Translation progress bar |
 | `src/components/EmailGateModal.jsx` | Email capture modal (free tier gate) |
 | `src/components/PaywallBanner.jsx` | Paid tier paywall banner |
 | `api/translate.js` | Vercel function — Anthropic API proxy |
-| `api/create-checkout.js` | Vercel function — Stripe Checkout session ($19) |
+| `api/create-checkout.js` | Vercel function — Stripe Checkout session |
 | `api/verify-session.js` | Vercel function — Stripe payment verification on redirect |
 | `api/capture-email.js` | Vercel function — Supabase insert + Resend audience add |
+| `public/landing-convert.html` | SEO landing page for /convert |
+| `public/landing-docs.html` | SEO landing page for /docs |
+| `public/landing-audit.html` | SEO landing page for /audit |
+| `public/landing-diff.html` | SEO landing page for /diff |
+| `public/sitemap.xml` | XML sitemap covering all pages |
+| `public/robots.txt` | Robots directives |
 | `vercel.json` | SPA rewrites + API routing |
-| `.env.example` | Required env vars |
 
 ---
 
-## 12. Next Development Priorities
+## 14. Known Limitations
 
-1. **Redshift dialect** — similar to Snowflake with DATEDIFF/DATEADD differences; lower effort than BigQuery was
-2. **Primary key detection** — parse join relationships from the workbook XML to pre-populate MetricFlow entity fields
-3. **LOD INCLUDE auto-grain** — detect current grain from the fct_ model and suggest whether the INCLUDE dimension needs to be added
-4. **Tableau Server API mode** — authenticate to Tableau Server/Cloud and pull workbooks without file upload; major UX improvement for enterprise users
-5. **Power BI DAX → dbt** — same architecture, different parser; significant market expansion
+- **Multi-datasource workbooks** — calcs across all datasources are collected and grouped by their declared datasource. Fields that reference columns from a different datasource than their own may produce incorrect `{{ source() }}` references. Requires manual review.
+- **LOD inner expressions** — CTE templates are generated rule-based, but the `stg_TODO` source reference and join key must be manually updated. Review complex nested LODs.
+- **LOD INCLUDE** — adds a note to add the specified dimension to the GROUP BY, but cannot automatically determine whether this is correct for the user's grain.
+- **Table calculations** — `INDEX()`, `WINDOW_SUM()`, `RUNNING_SUM()`, `RANK()`, etc. are classified as `untranslatable`. Window function rewrite hints are provided but PARTITION BY / ORDER BY columns must be determined by the AE.
+- **Parameters** — annotated with `/* 🔧 PARAM */` inline but not auto-resolved. Requires AE judgment per parameter: hardcode, dbt var, or seed.
+- **BigQuery dialect** — DATE_TRUNC arg order, IF(), DATE() casts, and CURRENT_DATE() are handled rule-based. Complex BigQuery-specific functions are covered by the AI pass but not rule-based.
+- **MetricFlow entity setup** — metrics.yml outputs `TODO_primary_entity` and `TODO_ID_COLUMN` as placeholders. Primary key auto-detection not implemented.
+- **Grain config is manual** — grain columns for `fct_` models are entered by the user in the preview step.
+
+---
+
+## 15. Deferred Features
+
+- [ ] Redshift and DuckDB dialects
+- [ ] Primary key / entity auto-detection from workbook XML join relationships
+- [ ] LOD INCLUDE automatic grain expansion
+- [ ] Tableau Server / Cloud API mode — pull workbooks directly instead of file upload
+- [ ] Power BI DAX → dbt exporter
+- [ ] Desktop app (Electron or Tauri) for air-gapped / security-sensitive environments
 
 ---
 

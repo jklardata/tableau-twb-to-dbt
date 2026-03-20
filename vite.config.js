@@ -11,6 +11,8 @@ export default defineConfig({
         diff: resolve(__dirname, "diff.html"),
         docs: resolve(__dirname, "docs.html"),
         audit: resolve(__dirname, "audit.html"),
+        insights: resolve(__dirname, "insights.html"),
+        methodology: resolve(__dirname, "methodology.html"),
       },
     },
   },

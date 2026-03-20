@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect } from "react";
 import { auditWorkbook } from "../lib/auditEngine.js";
 import posthog from "posthog-js";
 import { readPendingFile } from "../lib/pendingFile.js";
+import { generateAuditMarkdown, generateAuditAIPrompt, generateAuditNotionMarkdown, generateAuditConfluenceMarkup } from "../lib/markdownExport.js";
 
 // ================================================================
 // DESIGN TOKENS
@@ -468,6 +469,7 @@ export default function AuditPage() {
   const [result, setResult] = useState(null);
   const [selectedField, setSelectedField] = useState(null);
   const [panelMode, setPanelMode] = useState("panel");
+  const [copyStatus, setCopyStatus] = useState({});
 
   const currentPath = window.location.pathname;
 
@@ -556,9 +558,9 @@ export default function AuditPage() {
             {file ? (
               <>
                 <div style={{ fontSize: "12px", fontFamily: T.mono, color: T.primary, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file.name}</div>
-                <div style={{ fontSize: "10px", color: T.dim }}>{(file.size / 1024).toFixed(1)} KB · .twb and .twbx supported</div>
+                <div style={{ fontSize: "10px", color: T.dim }}>{(file.size / 1024).toFixed(1)} KB · .twb supported</div>
               </>
-            ) : <div style={{ fontSize: "12px", color: T.muted }}>Drop .twb or .twbx. Processed in your browser.</div>}
+            ) : <div style={{ fontSize: "12px", color: T.muted }}>Drop .twb. Processed in your browser.</div>}
           </div>
           {file && <button style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: "16px", padding: "0 2px" }} onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); }}>×</button>}
         </div>
@@ -570,6 +572,28 @@ export default function AuditPage() {
         >
           {loading ? "Auditing…" : "Run Audit →"}
         </button>
+
+        {result && (
+          <>
+            <div style={{ width: "1px", height: "28px", background: T.border, flexShrink: 0 }} />
+            {[
+              { key: "json", label: "↓ JSON", action: () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(result, null, 2)], { type: "application/json" })); a.download = `${result.meta.workbook_name.replace(/\s+/g, "_")}_audit.json`; a.click(); } },
+              { key: "md", label: "↓ Markdown", action: () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([generateAuditMarkdown(result)], { type: "text/markdown" })); a.download = `${result.meta.workbook_name.replace(/\s+/g, "_")}_audit.md`; a.click(); } },
+              { key: "copymd", label: "⎘ Copy MD", action: async () => { await navigator.clipboard.writeText(generateAuditMarkdown(result)); setCopyStatus(s => ({ ...s, copymd: true })); setTimeout(() => setCopyStatus(s => ({ ...s, copymd: false })), 1500); } },
+              { key: "copyai", label: "✦ Copy for AI", action: async () => { await navigator.clipboard.writeText(generateAuditAIPrompt(result)); setCopyStatus(s => ({ ...s, copyai: true })); setTimeout(() => setCopyStatus(s => ({ ...s, copyai: false })), 1500); } },
+              { key: "notion", label: "⬡ Copy for Notion", action: async () => { await navigator.clipboard.writeText(generateAuditNotionMarkdown(result)); setCopyStatus(s => ({ ...s, notion: true })); setTimeout(() => setCopyStatus(s => ({ ...s, notion: false })), 1500); } },
+              { key: "confluence", label: "↓ Confluence", action: () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([generateAuditConfluenceMarkup(result)], { type: "text/plain" })); a.download = `${result.meta.workbook_name.replace(/\s+/g, "_")}_audit_confluence.txt`; a.click(); } },
+            ].map(({ key, label, action }) => (
+              <button
+                key={key}
+                onClick={action}
+                style={{ padding: "6px 12px", fontSize: "11px", fontWeight: 600, background: copyStatus[key] ? "#f0fdf4" : T.bg, color: copyStatus[key] ? "#166534" : T.muted, border: `1px solid ${copyStatus[key] ? "#86efac" : T.border}`, borderRadius: "6px", cursor: "pointer", fontFamily: T.font, whiteSpace: "nowrap" }}
+              >
+                {copyStatus[key] ? "✓ Copied" : label}
+              </button>
+            ))}
+          </>
+        )}
       </div>
 
       {error && (
@@ -688,7 +712,7 @@ export default function AuditPage() {
             <div style={{ fontSize: "10px", fontWeight: 700, color: T.dim, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "16px" }}>How It Works</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "48px" }}>
               {[
-                ["01", "Upload your workbook", "Drop any .twb or .twbx file. We parse the workbook XML directly in your browser. Nothing is stored on our servers."],
+                ["01", "Upload your workbook", "Drop any .twb file. We parse the workbook XML directly in your browser. Nothing is stored on our servers."],
                 ["02", "Seven checks run instantly", "We scan every calculated field for unused references, performance anti-patterns, circular dependencies, deep nesting, and complexity."],
                 ["03", "Prioritize and fix", "Errors first, then warnings. Every issue includes a plain-English explanation. Export the full report for your team."],
               ].map(([num, title, body]) => (
@@ -718,7 +742,7 @@ export default function AuditPage() {
           </a>
         </div>
         <div style={{ padding: "14px 32px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap", background: T.white, borderTop: `1px solid ${T.border}` }}>
-          {[["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
+          {[["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Methodology", "/methodology"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
             <a key={label} href={href} style={{ fontSize: "11px", color: T.muted, textDecoration: "none" }}>{label}</a>
           ))}
           <span style={{ marginLeft: "auto", fontSize: "10px", color: T.border }}>Not affiliated with Salesforce or Tableau.</span>

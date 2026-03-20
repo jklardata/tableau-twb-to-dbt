@@ -382,7 +382,7 @@ export default function DiffPage() {
                 <div style={{ fontSize: "12px", fontFamily: T.mono, color: T.primary, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file1.name}</div>
                 <div style={{ fontSize: "10px", color: T.dim }}>{(file1.size / 1024).toFixed(1)} KB</div>
               </>
-            ) : <div style={{ fontSize: "12px", color: T.muted }}>Drop .twb or .twbx</div>}
+            ) : <div style={{ fontSize: "12px", color: T.muted }}>Drop .twb</div>}
           </div>
           {file1 && <button style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: "16px", padding: "0 2px" }} onClick={(e) => { e.stopPropagation(); setFile1(null); setResult(null); }}>×</button>}
         </div>
@@ -405,7 +405,7 @@ export default function DiffPage() {
                 <div style={{ fontSize: "12px", fontFamily: T.mono, color: T.primary, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{file2.name}</div>
                 <div style={{ fontSize: "10px", color: T.dim }}>{(file2.size / 1024).toFixed(1)} KB</div>
               </>
-            ) : <div style={{ fontSize: "12px", color: T.muted }}>Drop .twb or .twbx</div>}
+            ) : <div style={{ fontSize: "12px", color: T.muted }}>Drop .twb</div>}
           </div>
           {file2 && <button style={{ background: "none", border: "none", color: T.dim, cursor: "pointer", fontSize: "16px", padding: "0 2px" }} onClick={(e) => { e.stopPropagation(); setFile2(null); setResult(null); }}>×</button>}
         </div>
@@ -582,10 +582,10 @@ export default function DiffPage() {
                   See exactly what changed between two <span style={{ color: T.primary }}>Tableau workbooks</span>
                 </h1>
                 <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.6)", lineHeight: 1.75, marginBottom: "28px", maxWidth: "420px" }}>
-                  Drop a before and after .twbx. Get a clean diff of every calculated field, parameter, data source, sheet, and filter in seconds.
+                  Drop a before and after .twb. Get a clean diff of every calculated field, parameter, data source, sheet, and filter in seconds.
                 </p>
                 <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {["Free forever", "No account required", "Files stay in your browser", ".twb and .twbx"].map(p => (
+                  {["Free forever", "No account required", "Files stay in your browser", ".twb"].map(p => (
                     <span key={p} style={{ padding: "5px 12px", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "20px", fontSize: "11px", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{p}</span>
                   ))}
                 </div>
@@ -661,7 +661,7 @@ export default function DiffPage() {
                 Drop your workbooks in the bar at the top of the page. Your files never leave your browser.
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: "12px", maxWidth: "600px", margin: "0 auto 12px", alignItems: "center" }}>
-                {[["Before", "↑ Drop .twbx"], ["After", "↑ Drop .twbx"]].map(([label, txt], i) => (
+                {[["Before", "↑ Drop .twb"], ["After", "↑ Drop .twb"]].map(([label, txt], i) => (
                   <>
                     {i === 1 && <div key="arrow" style={{ fontSize: "20px", color: "rgba(255,255,255,0.25)", fontWeight: 700 }}>→</div>}
                     <div key={label} style={{ border: "1.5px dashed rgba(255,255,255,0.2)", borderRadius: "8px", padding: "16px", textAlign: "center", cursor: "pointer" }}>
@@ -693,7 +693,7 @@ export default function DiffPage() {
           </a>
         </div>
         <div style={{ padding: "14px 32px", display: "flex", gap: "20px", alignItems: "center", flexWrap: "wrap", background: T.white, borderTop: `1px solid ${T.border}` }}>
-          {[["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
+          {[["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Methodology", "/methodology"], ["Privacy", "/privacy"], ["Terms", "/terms"]].map(([label, href]) => (
             <a key={label} href={href} style={{ fontSize: "11px", color: T.muted, textDecoration: "none" }}>{label}</a>
           ))}
           <span style={{ marginLeft: "auto", fontSize: "10px", color: T.border }}>Not affiliated with Salesforce or Tableau.</span>
