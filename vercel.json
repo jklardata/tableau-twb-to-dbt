@@ -10,6 +10,8 @@
     { "source": "/audit", "destination": "/landing-audit.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
+    { "source": "/scorecard", "destination": "/scorecard/index.html" },
+    { "source": "/scorecard/(.*)", "destination": "/scorecard/$1" },
     { "source": "/", "destination": "/landing-convert.html" },
     { "source": "/(.*)", "destination": "/app.html" }
   ]
