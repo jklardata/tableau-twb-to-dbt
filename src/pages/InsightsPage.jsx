@@ -15,7 +15,7 @@ const T = {
   mono: "'JetBrains Mono', 'Fira Code', monospace",
 };
 
-const NAV = [["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Insights", "/insights"]];
+const NAV = [["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Insights", "/insights"], ["Scorecard", "https://tableautodbt.com/scorecard"]];
 
 // ================================================================
 // SHARED PILL

@@ -10,7 +10,7 @@ const T = {
   mono: "'JetBrains Mono', 'Fira Code', monospace",
 };
 
-const NAV = [["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"]];
+const NAV = [["Convert", "/"], ["Diff", "/diff"], ["Docs", "/docs"], ["Audit", "/audit"], ["Scorecard", "https://tableautodbt.com/scorecard"]];
 
 function Section({ id, title, children }) {
   return (

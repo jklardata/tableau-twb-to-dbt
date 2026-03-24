@@ -868,6 +868,7 @@ export default function App() {
             { label: "Diff", href: "/diff" },
             { label: "Docs", href: "/docs" },
             { label: "Audit", href: "/audit" },
+            { label: "Scorecard", href: "https://tableautodbt.com/scorecard" },
           ].map(({ label, href }) => (
             <a
               key={label}
@@ -1755,6 +1756,7 @@ export default function App() {
           <a href="/diff" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Diff</a>
           <a href="/docs" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Docs</a>
           <a href="/audit" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Audit</a>
+          <a href="https://tableautodbt.com/scorecard" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Scorecard</a>
           <a href="/methodology" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Methodology</a>
           <a href="/privacy" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Privacy</a>
           <a href="/terms" style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textDecoration: "none" }}>Terms</a>
