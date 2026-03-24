@@ -68,7 +68,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           from: "Scorecard <support@tableautodbt.com>",
-          to: ["justin@solofi.io"],
+          to: ["justin@klardata.com"],
           subject: `New scorecard lead: ${name} (${tier} — ${score}/90)`,
           html: `
             <p><strong>${name}</strong> (${email}) completed the Semantic Layer Scorecard.</p>
