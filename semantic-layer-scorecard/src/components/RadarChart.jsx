@@ -14,15 +14,16 @@ function CustomTooltip({ active, payload }) {
     const data = payload[0].payload;
     return (
       <div
-        className="rounded-lg px-3 py-2 text-sm"
+        className="rounded-lg px-3 py-2 text-sm border"
         style={{
-          background: '#1e293b',
-          border: '1px solid rgba(255,255,255,0.15)',
-          color: '#e2e8f0',
+          background: '#ffffff',
+          borderColor: '#e2e8f0',
+          color: '#1e293b',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
         }}
       >
         <div className="font-semibold">{data.dimension}</div>
-        <div style={{ color: '#94a3b8' }}>
+        <div style={{ color: '#64748b' }}>
           {data.score} / {data.fullMark}
         </div>
       </div>
@@ -36,22 +37,22 @@ export default function ScorecardRadarChart({ radarData, tierColor }) {
     <ResponsiveContainer width="100%" height={280}>
       <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
         <PolarGrid
-          stroke="rgba(255,255,255,0.1)"
+          stroke="#e2e8f0"
           gridType="polygon"
         />
         <PolarAngleAxis
           dataKey="dimension"
-          tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
+          tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
         />
         <Tooltip content={<CustomTooltip />} />
         <Radar
           name="Score"
           dataKey="score"
-          stroke={tierColor || '#6366f1'}
-          fill={tierColor || '#6366f1'}
-          fillOpacity={0.2}
+          stroke={tierColor || '#0ea5e9'}
+          fill={tierColor || '#0ea5e9'}
+          fillOpacity={0.15}
           strokeWidth={2}
-          dot={{ fill: tierColor || '#6366f1', strokeWidth: 0, r: 4 }}
+          dot={{ fill: tierColor || '#0ea5e9', strokeWidth: 0, r: 4 }}
         />
       </RadarChart>
     </ResponsiveContainer>

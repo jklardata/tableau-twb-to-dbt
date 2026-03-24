@@ -21,23 +21,27 @@ export default function ResultsScreen({ results, onGetRoadmap, onRestart }) {
   const scorePct = Math.round((totalScore / 90) * 100);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0d1b2e' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#f8fafc' }}>
       {/* Header */}
       <header
-        className="border-b border-white/10 px-4 sm:px-6 py-3 flex items-center gap-3"
-        style={{ background: 'rgba(13,27,46,0.97)' }}
+        className="border-b px-4 sm:px-6 py-3 flex items-center gap-3"
+        style={{ background: '#ffffff', borderColor: '#e2e8f0' }}
       >
-        <a href="https://tableautodbt.com" className="text-sm font-bold text-white no-underline">
+        <a
+          href="https://tableautodbt.com"
+          className="text-sm font-bold no-underline"
+          style={{ color: '#1e293b' }}
+        >
           Tableau<span style={{ color: '#0ea5e9' }}>to</span>Dbt
         </a>
-        <span className="text-white/20 text-xs">·</span>
-        <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>
+        <span style={{ color: '#cbd5e1' }} className="text-xs">·</span>
+        <span className="text-xs font-medium" style={{ color: '#64748b' }}>
           Semantic Layer Scorecard
         </span>
         <button
           onClick={onRestart}
-          className="ml-auto text-xs px-3 py-1.5 rounded-md transition-colors"
-          style={{ color: '#64748b', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          className="ml-auto text-xs px-3 py-1.5 rounded-md transition-colors border"
+          style={{ color: '#64748b', background: '#f8fafc', borderColor: '#e2e8f0' }}
         >
           ↩ Restart
         </button>
@@ -49,7 +53,7 @@ export default function ResultsScreen({ results, onGetRoadmap, onRestart }) {
           <div className="text-center mb-10">
             <div
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold mb-4"
-              style={{ background: `${tier.color}20`, color: tier.color, border: `1px solid ${tier.color}40` }}
+              style={{ background: `${tier.color}15`, color: tier.color, border: `1px solid ${tier.color}30` }}
             >
               <span
                 className="w-2 h-2 rounded-full"
@@ -61,14 +65,14 @@ export default function ResultsScreen({ results, onGetRoadmap, onRestart }) {
             <div className="text-7xl sm:text-8xl font-black mb-2" style={{ color: tier.color }}>
               {totalScore}
             </div>
-            <div className="text-base font-medium mb-4" style={{ color: '#64748b' }}>
+            <div className="text-base font-medium mb-4" style={{ color: '#94a3b8' }}>
               out of 90
             </div>
 
             {/* Score bar */}
             <div
               className="max-w-sm mx-auto h-3 rounded-full mb-6 overflow-hidden"
-              style={{ background: 'rgba(255,255,255,0.08)' }}
+              style={{ background: '#e2e8f0' }}
             >
               <div
                 className="h-full rounded-full transition-all duration-700"
@@ -76,7 +80,7 @@ export default function ResultsScreen({ results, onGetRoadmap, onRestart }) {
               />
             </div>
 
-            <p className="text-base leading-relaxed max-w-2xl mx-auto" style={{ color: '#94a3b8' }}>
+            <p className="text-base leading-relaxed max-w-2xl mx-auto" style={{ color: '#64748b' }}>
               {tier.description}
             </p>
           </div>
@@ -85,11 +89,15 @@ export default function ResultsScreen({ results, onGetRoadmap, onRestart }) {
           <div
             className="rounded-2xl p-6 border mb-8"
             style={{
-              background: 'rgba(30,41,59,0.5)',
-              borderColor: 'rgba(255,255,255,0.08)',
+              background: '#ffffff',
+              borderColor: '#e2e8f0',
+              boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
             }}
           >
-            <h3 className="text-sm font-semibold uppercase tracking-widest mb-4" style={{ color: '#64748b' }}>
+            <h3
+              className="text-sm font-semibold uppercase tracking-widest mb-4"
+              style={{ color: '#94a3b8' }}
+            >
               Dimension Scores
             </h3>
             <ScorecardRadarChart radarData={radarData} tierColor={tier.color} />
@@ -111,22 +119,22 @@ export default function ResultsScreen({ results, onGetRoadmap, onRestart }) {
           <div
             className="rounded-2xl p-6 sm:p-8 border text-center mb-6"
             style={{
-              background: 'rgba(99,102,241,0.08)',
-              borderColor: 'rgba(99,102,241,0.2)',
+              background: '#f0f9ff',
+              borderColor: '#bae6fd',
             }}
           >
             <div className="text-2xl mb-3">📋</div>
-            <h3 className="text-xl font-black text-white mb-2">
+            <h3 className="text-xl font-black mb-2" style={{ color: '#1e293b' }}>
               Get Your Full Remediation Roadmap
             </h3>
-            <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: '#94a3b8' }}>
+            <p className="text-sm mb-6 max-w-md mx-auto" style={{ color: '#64748b' }}>
               Get a personalized action plan for each of your weak dimensions — specific tools, frameworks,
               and steps to close your governance gaps before deploying agents.
             </p>
             <button
               onClick={onGetRoadmap}
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:scale-105"
-              style={{ background: 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)' }}
+              style={{ background: '#1e293b' }}
             >
               Get Full Remediation Roadmap →
             </button>
@@ -147,8 +155,8 @@ export default function ResultsScreen({ results, onGetRoadmap, onRestart }) {
 
             <button
               onClick={handleTwitterShare}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105"
-              style={{ background: '#000', color: '#fff', border: '1px solid rgba(255,255,255,0.15)' }}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:scale-105 border"
+              style={{ background: '#000000', color: '#fff', borderColor: '#374151' }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.737l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -158,11 +166,11 @@ export default function ResultsScreen({ results, onGetRoadmap, onRestart }) {
 
             <button
               onClick={onRestart}
-              className="text-sm px-5 py-2.5 rounded-xl transition-colors"
+              className="text-sm px-5 py-2.5 rounded-xl transition-colors border"
               style={{
                 color: '#64748b',
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: '#ffffff',
+                borderColor: '#e2e8f0',
               }}
             >
               ↩ Restart Assessment

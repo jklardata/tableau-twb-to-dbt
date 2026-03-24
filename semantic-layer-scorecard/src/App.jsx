@@ -76,7 +76,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#0d1b2e' }}>
+    <div className="min-h-screen" style={{ background: '#f8fafc' }}>
       {screen === SCREENS.LANDING && (
         <LandingScreen onStart={handleStartAssessment} />
       )}

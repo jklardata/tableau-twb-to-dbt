@@ -42,36 +42,37 @@ export default function AssessmentScreen({ answers, setAnswers, onComplete, onDi
   const isLastDimension = currentDimIndex === totalDimensions - 1;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0d1b2e' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#f8fafc' }}>
       {/* Header */}
       <header
-        className="border-b border-white/10 px-4 sm:px-6 py-3 flex items-center gap-3 sticky top-0 z-10"
-        style={{ background: 'rgba(13,27,46,0.97)', backdropFilter: 'blur(8px)' }}
+        className="border-b px-4 sm:px-6 py-3 flex items-center gap-3 sticky top-0 z-10"
+        style={{ background: '#ffffff', borderColor: '#e2e8f0', backdropFilter: 'blur(8px)' }}
       >
         <a
           href="https://tableautodbt.com"
-          className="text-sm font-bold text-white no-underline"
+          className="text-sm font-bold no-underline"
+          style={{ color: '#1e293b' }}
         >
           Tableau<span style={{ color: '#0ea5e9' }}>to</span>Dbt
         </a>
-        <span className="text-white/20 text-xs">·</span>
-        <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>
+        <span style={{ color: '#cbd5e1' }} className="text-xs">·</span>
+        <span className="text-xs font-medium" style={{ color: '#64748b' }}>
           Semantic Layer Scorecard
         </span>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-xs font-medium" style={{ color: '#64748b' }}>
+          <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>
             Dimension {currentDimIndex + 1} of {totalDimensions}
           </span>
         </div>
       </header>
 
       {/* Progress bar */}
-      <div className="h-1 w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+      <div className="h-1 w-full" style={{ background: '#e2e8f0' }}>
         <div
           className="h-full progress-fill"
           style={{
             width: `${progressPct}%`,
-            background: 'linear-gradient(90deg, #6366f1, #0ea5e9)',
+            background: '#0ea5e9',
           }}
         />
       </div>
@@ -85,18 +86,18 @@ export default function AssessmentScreen({ answers, setAnswers, onComplete, onDi
               <span
                 className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded"
                 style={{
-                  background: 'rgba(99,102,241,0.15)',
-                  color: '#a5b4fc',
-                  border: '1px solid rgba(99,102,241,0.25)',
+                  background: '#f0f9ff',
+                  color: '#0369a1',
+                  border: '1px solid #bae6fd',
                 }}
               >
                 Dimension {currentDimIndex + 1} of {totalDimensions}
               </span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+            <h2 className="text-2xl sm:text-3xl font-black mb-2" style={{ color: '#1e293b' }}>
               {currentDim.icon} {currentDim.name}
             </h2>
-            <p className="text-sm sm:text-base" style={{ color: '#94a3b8' }}>
+            <p className="text-sm sm:text-base" style={{ color: '#64748b' }}>
               {currentDim.description}
             </p>
 
@@ -109,10 +110,10 @@ export default function AssessmentScreen({ answers, setAnswers, onComplete, onDi
                   style={{
                     background:
                       i < currentDimIndex
-                        ? '#6366f1'
+                        ? '#0ea5e9'
                         : i === currentDimIndex
-                        ? '#a5b4fc'
-                        : 'rgba(255,255,255,0.1)',
+                        ? '#7dd3fc'
+                        : '#e2e8f0',
                   }}
                 />
               ))}
@@ -125,10 +126,13 @@ export default function AssessmentScreen({ answers, setAnswers, onComplete, onDi
               const selectedOption = answers[question.id];
               return (
                 <div key={question.id}>
-                  <p className="text-sm font-semibold mb-3 leading-relaxed text-white">
+                  <p
+                    className="text-sm font-semibold mb-3 leading-relaxed"
+                    style={{ color: '#1e293b' }}
+                  >
                     <span
                       className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold mr-2 flex-shrink-0"
-                      style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' }}
+                      style={{ background: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' }}
                     >
                       {qIdx + 1}
                     </span>
@@ -141,25 +145,22 @@ export default function AssessmentScreen({ answers, setAnswers, onComplete, onDi
                         <button
                           key={optIdx}
                           onClick={() => handleOptionSelect(question.id, optIdx)}
-                          className={`option-card w-full text-left px-4 py-3 rounded-xl border text-sm transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 focus:ring-offset-transparent ${
+                          className={`option-card w-full text-left px-4 py-3 rounded-xl border text-sm transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-1 ${
                             isSelected ? 'selected' : ''
                           }`}
                           style={{
-                            background: isSelected
-                              ? 'rgba(99,102,241,0.12)'
-                              : 'rgba(30,41,59,0.5)',
-                            borderColor: isSelected
-                              ? '#6366f1'
-                              : 'rgba(255,255,255,0.08)',
-                            color: isSelected ? '#e2e8f0' : '#94a3b8',
+                            background: isSelected ? '#f0f9ff' : '#ffffff',
+                            borderColor: isSelected ? '#0ea5e9' : '#e2e8f0',
+                            color: isSelected ? '#0c4a6e' : '#64748b',
+                            boxShadow: isSelected ? '0 0 0 1px #0ea5e9' : 'none',
                           }}
                         >
                           <span className="flex items-center gap-3">
                             <span
                               className="flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center"
                               style={{
-                                borderColor: isSelected ? '#6366f1' : 'rgba(255,255,255,0.2)',
-                                background: isSelected ? '#6366f1' : 'transparent',
+                                borderColor: isSelected ? '#0ea5e9' : '#cbd5e1',
+                                background: isSelected ? '#0ea5e9' : 'transparent',
                               }}
                             >
                               {isSelected && (
@@ -178,36 +179,37 @@ export default function AssessmentScreen({ answers, setAnswers, onComplete, onDi
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between mt-10 pt-6 border-t border-white/10">
+          <div
+            className="flex items-center justify-between mt-10 pt-6 border-t"
+            style={{ borderColor: '#e2e8f0' }}
+          >
             <button
               onClick={handleBack}
               disabled={currentDimIndex === 0}
-              className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all focus:outline-none"
+              className="px-5 py-2.5 rounded-lg text-sm font-medium transition-all focus:outline-none border"
               style={{
-                background: 'rgba(255,255,255,0.06)',
-                color: currentDimIndex === 0 ? '#334155' : '#94a3b8',
+                background: '#ffffff',
+                color: currentDimIndex === 0 ? '#cbd5e1' : '#64748b',
                 cursor: currentDimIndex === 0 ? 'not-allowed' : 'pointer',
-                border: '1px solid rgba(255,255,255,0.08)',
+                borderColor: '#e2e8f0',
               }}
             >
               ← Back
             </button>
 
-            <div className="text-xs" style={{ color: '#475569' }}>
+            <div className="text-xs" style={{ color: '#94a3b8' }}>
               {currentDim.questions.filter((q) => answers[q.id] !== undefined).length} / {currentDim.questions.length} answered
             </div>
 
             <button
               onClick={handleNext}
               disabled={!currentDimAnswered}
-              className="px-6 py-2.5 rounded-lg text-sm font-bold text-white transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="px-6 py-2.5 rounded-lg text-sm font-bold text-white transition-all focus:outline-none focus:ring-2 focus:ring-sky-400"
               style={{
-                background: currentDimAnswered
-                  ? 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)'
-                  : 'rgba(99,102,241,0.2)',
+                background: currentDimAnswered ? '#1e293b' : '#cbd5e1',
                 cursor: currentDimAnswered ? 'pointer' : 'not-allowed',
-                color: currentDimAnswered ? '#fff' : '#475569',
-                opacity: currentDimAnswered ? 1 : 0.6,
+                color: currentDimAnswered ? '#fff' : '#94a3b8',
+                opacity: currentDimAnswered ? 1 : 0.7,
               }}
             >
               {isLastDimension ? 'See Results →' : 'Next →'}

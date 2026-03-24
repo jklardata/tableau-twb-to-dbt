@@ -41,21 +41,23 @@ export default function CalculatingScreen({ onDone }) {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: '#0d1b2e' }}
+      style={{ background: '#f8fafc' }}
     >
       <div className="max-w-md w-full text-center fade-in">
         {/* Animated icon */}
         <div
-          className="w-16 h-16 rounded-2xl mx-auto mb-8 flex items-center justify-center"
+          className="w-16 h-16 rounded-2xl mx-auto mb-8 flex items-center justify-center border"
           style={{
-            background: 'linear-gradient(135deg, rgba(99,102,241,0.2), rgba(14,165,233,0.2))',
-            border: '1px solid rgba(99,102,241,0.3)',
+            background: '#f0f9ff',
+            borderColor: '#bae6fd',
           }}
         >
           <span className="text-3xl">🔍</span>
         </div>
 
-        <h2 className="text-2xl font-black text-white mb-2">Analyzing your responses...</h2>
+        <h2 className="text-2xl font-black mb-2" style={{ color: '#1e293b' }}>
+          Analyzing your responses...
+        </h2>
         <p className="text-sm mb-8" style={{ color: '#64748b' }}>
           Scoring across 5 governance dimensions
         </p>
@@ -63,23 +65,24 @@ export default function CalculatingScreen({ onDone }) {
         {/* Progress bar */}
         <div
           className="w-full h-2 rounded-full mb-8 overflow-hidden"
-          style={{ background: 'rgba(255,255,255,0.08)' }}
+          style={{ background: '#e2e8f0' }}
         >
           <div
             className="h-full rounded-full progress-fill"
             style={{
               width: `${progress}%`,
-              background: 'linear-gradient(90deg, #6366f1, #0ea5e9)',
+              background: '#0ea5e9',
             }}
           />
         </div>
 
         {/* Dimension checklist */}
         <div
-          className="rounded-2xl p-6 text-left space-y-3"
+          className="rounded-2xl p-6 text-left space-y-3 border"
           style={{
-            background: 'rgba(30,41,59,0.5)',
-            border: '1px solid rgba(255,255,255,0.08)',
+            background: '#ffffff',
+            borderColor: '#e2e8f0',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
           }}
         >
           {dimensions.map((dim, i) => {
@@ -89,19 +92,19 @@ export default function CalculatingScreen({ onDone }) {
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
                   style={{
-                    background: isDone ? '#10B981' : 'rgba(255,255,255,0.06)',
-                    border: isDone ? 'none' : '1px solid rgba(255,255,255,0.12)',
+                    background: isDone ? '#10B981' : '#f1f5f9',
+                    border: isDone ? 'none' : '1px solid #e2e8f0',
                   }}
                 >
                   {isDone ? (
                     <span className="text-white text-xs font-bold check-pop">✓</span>
                   ) : (
-                    <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
+                    <span className="w-2 h-2 rounded-full" style={{ background: '#cbd5e1' }} />
                   )}
                 </div>
                 <span
                   className="text-sm font-medium transition-colors duration-300"
-                  style={{ color: isDone ? '#e2e8f0' : '#475569' }}
+                  style={{ color: isDone ? '#1e293b' : '#94a3b8' }}
                 >
                   {dim.icon} {dim.name}
                 </span>

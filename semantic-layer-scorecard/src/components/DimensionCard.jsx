@@ -20,21 +20,22 @@ export default function DimensionCard({ dimId, score, tierColor, compact = false
       <div
         className="rounded-xl p-4 border"
         style={{
-          background: 'rgba(30,41,59,0.5)',
-          borderColor: 'rgba(255,255,255,0.08)',
+          background: '#ffffff',
+          borderColor: '#e2e8f0',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
         }}
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <span className="text-base">{dim.icon}</span>
-            <span className="text-xs font-semibold text-white">{dim.shortName}</span>
+            <span className="text-xs font-semibold" style={{ color: '#1e293b' }}>{dim.shortName}</span>
           </div>
           <span className="text-sm font-bold" style={{ color: barColor }}>
             {score}/18
           </span>
         </div>
         {/* Score bar */}
-        <div className="h-1.5 rounded-full mb-2" style={{ background: 'rgba(255,255,255,0.08)' }}>
+        <div className="h-1.5 rounded-full mb-2" style={{ background: '#e2e8f0' }}>
           <div
             className="h-full rounded-full"
             style={{ width: `${pct}%`, background: barColor }}
@@ -51,16 +52,17 @@ export default function DimensionCard({ dimId, score, tierColor, compact = false
     <div
       className="rounded-2xl p-5 border"
       style={{
-        background: 'rgba(30,41,59,0.5)',
-        borderColor: 'rgba(255,255,255,0.08)',
+        background: '#ffffff',
+        borderColor: '#e2e8f0',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
       }}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-xl">{dim.icon}</span>
           <div>
-            <div className="text-sm font-bold text-white">{dim.name}</div>
-            <div className="text-xs" style={{ color: '#64748b' }}>
+            <div className="text-sm font-bold" style={{ color: '#1e293b' }}>{dim.name}</div>
+            <div className="text-xs" style={{ color: '#94a3b8' }}>
               {dim.description}
             </div>
           </div>
@@ -69,19 +71,19 @@ export default function DimensionCard({ dimId, score, tierColor, compact = false
           <div className="text-xl font-black" style={{ color: barColor }}>
             {score}
           </div>
-          <div className="text-xs" style={{ color: '#475569' }}>/18</div>
+          <div className="text-xs" style={{ color: '#94a3b8' }}>/18</div>
         </div>
       </div>
 
       {/* Score bar */}
-      <div className="h-2 rounded-full mb-3" style={{ background: 'rgba(255,255,255,0.08)' }}>
+      <div className="h-2 rounded-full mb-3" style={{ background: '#e2e8f0' }}>
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${pct}%`, background: barColor }}
         />
       </div>
 
-      <p className="text-xs leading-relaxed" style={{ color: '#94a3b8' }}>
+      <p className="text-xs leading-relaxed" style={{ color: '#64748b' }}>
         {implication}
       </p>
     </div>

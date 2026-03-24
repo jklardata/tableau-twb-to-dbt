@@ -62,7 +62,7 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
       if (!element) return;
 
       const canvas = await html2canvas.default(element, {
-        backgroundColor: '#0d1b2e',
+        backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
         logging: false,
@@ -108,23 +108,27 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
   );
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0d1b2e' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#f8fafc' }}>
       {/* Header */}
       <header
-        className="border-b border-white/10 px-4 sm:px-6 py-3 flex items-center gap-3"
-        style={{ background: 'rgba(13,27,46,0.97)' }}
+        className="border-b px-4 sm:px-6 py-3 flex items-center gap-3"
+        style={{ background: '#ffffff', borderColor: '#e2e8f0' }}
       >
-        <a href="https://tableautodbt.com" className="text-sm font-bold text-white no-underline">
+        <a
+          href="https://tableautodbt.com"
+          className="text-sm font-bold no-underline"
+          style={{ color: '#1e293b' }}
+        >
           Tableau<span style={{ color: '#0ea5e9' }}>to</span>Dbt
         </a>
-        <span className="text-white/20 text-xs">·</span>
-        <span className="text-xs font-medium" style={{ color: '#94a3b8' }}>
+        <span style={{ color: '#cbd5e1' }} className="text-xs">·</span>
+        <span className="text-xs font-medium" style={{ color: '#64748b' }}>
           Semantic Layer Scorecard
         </span>
         <button
           onClick={onRestart}
-          className="ml-auto text-xs px-3 py-1.5 rounded-md transition-colors"
-          style={{ color: '#64748b', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          className="ml-auto text-xs px-3 py-1.5 rounded-md transition-colors border"
+          style={{ color: '#64748b', background: '#f8fafc', borderColor: '#e2e8f0' }}
         >
           ↩ Restart
         </button>
@@ -136,10 +140,10 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
           <div className="fade-in">
             <div className="text-center mb-8">
               <div className="text-4xl mb-4">📊</div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white mb-3">
+              <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ color: '#1e293b' }}>
                 Get Your Personalized Remediation Roadmap
               </h2>
-              <p className="text-sm leading-relaxed max-w-xl mx-auto" style={{ color: '#94a3b8' }}>
+              <p className="text-sm leading-relaxed max-w-xl mx-auto" style={{ color: '#64748b' }}>
                 Enter your name and email to unlock the full per-dimension action plan with specific
                 tools, frameworks, and prioritized steps to close your governance gaps.
               </p>
@@ -149,34 +153,44 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
             <div
               className="rounded-2xl p-5 border mb-8 flex flex-col sm:flex-row items-center gap-4"
               style={{
-                background: 'rgba(30,41,59,0.5)',
-                borderColor: 'rgba(255,255,255,0.08)',
+                background: '#ffffff',
+                borderColor: '#e2e8f0',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
               }}
             >
               <div className="text-center sm:text-left">
-                <div className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#64748b' }}>
+                <div
+                  className="text-xs font-semibold uppercase tracking-widest mb-1"
+                  style={{ color: '#94a3b8' }}
+                >
                   Your Score
                 </div>
                 <div className="text-4xl font-black" style={{ color: tier.color }}>
-                  {totalScore}<span className="text-lg font-normal text-slate-500">/90</span>
+                  {totalScore}<span className="text-lg font-normal" style={{ color: '#94a3b8' }}>/90</span>
                 </div>
               </div>
-              <div className="h-px w-full sm:h-12 sm:w-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <div className="h-px w-full sm:h-12 sm:w-px" style={{ background: '#e2e8f0' }} />
               <div className="text-center sm:text-left">
-                <div className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#64748b' }}>
+                <div
+                  className="text-xs font-semibold uppercase tracking-widest mb-1"
+                  style={{ color: '#94a3b8' }}
+                >
                   Tier
                 </div>
                 <div
                   className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold"
-                  style={{ background: `${tier.color}20`, color: tier.color, border: `1px solid ${tier.color}40` }}
+                  style={{ background: `${tier.color}15`, color: tier.color, border: `1px solid ${tier.color}30` }}
                 >
                   <span className="w-2 h-2 rounded-full" style={{ background: tier.color }} />
                   {tier.label}
                 </div>
               </div>
-              <div className="h-px w-full sm:h-12 sm:w-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
+              <div className="h-px w-full sm:h-12 sm:w-px" style={{ background: '#e2e8f0' }} />
               <div className="flex-1 text-center sm:text-left">
-                <div className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>
+                <div
+                  className="text-xs font-semibold uppercase tracking-widest mb-2"
+                  style={{ color: '#94a3b8' }}
+                >
                   Weakest Dimensions
                 </div>
                 <div className="flex flex-wrap gap-1 justify-center sm:justify-start">
@@ -185,9 +199,9 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                       key={dim.id}
                       className="text-xs px-2 py-1 rounded"
                       style={{
-                        background: 'rgba(239,68,68,0.1)',
-                        color: '#fca5a5',
-                        border: '1px solid rgba(239,68,68,0.2)',
+                        background: '#fef2f2',
+                        color: '#dc2626',
+                        border: '1px solid #fecaca',
                       }}
                     >
                       {dim.icon} {dim.shortName}: {dimensionScores[dim.id]}/18
@@ -202,13 +216,17 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
               onSubmit={handleSubmit}
               className="rounded-2xl p-6 sm:p-8 border"
               style={{
-                background: 'rgba(30,41,59,0.5)',
-                borderColor: 'rgba(255,255,255,0.08)',
+                background: '#ffffff',
+                borderColor: '#e2e8f0',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
               }}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                 <div>
-                  <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#94a3b8' }}>
+                  <label
+                    className="block text-xs font-semibold mb-2 uppercase tracking-wide"
+                    style={{ color: '#64748b' }}
+                  >
                     Your Name
                   </label>
                   <input
@@ -217,15 +235,19 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Jane Smith"
                     required
-                    className="w-full px-4 py-3 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                     style={{
-                      background: 'rgba(15,34,65,0.8)',
-                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      color: '#1e293b',
                     }}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: '#94a3b8' }}>
+                  <label
+                    className="block text-xs font-semibold mb-2 uppercase tracking-wide"
+                    style={{ color: '#64748b' }}
+                  >
                     Work Email
                   </label>
                   <input
@@ -234,29 +256,30 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="jane@company.com"
                     required
-                    className="w-full px-4 py-3 rounded-lg text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-3 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
                     style={{
-                      background: 'rgba(15,34,65,0.8)',
-                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      color: '#1e293b',
                     }}
                   />
                 </div>
               </div>
 
               {error && (
-                <p className="text-xs text-red-400 mb-4">{error}</p>
+                <p className="text-xs text-red-500 mb-4">{error}</p>
               )}
 
               <button
                 type="submit"
                 disabled={submitting || !name.trim() || !email.trim()}
                 className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                style={{ background: 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)' }}
+                style={{ background: '#1e293b' }}
               >
                 {submitting ? 'Sending...' : 'Send My Roadmap →'}
               </button>
 
-              <p className="text-xs text-center mt-3" style={{ color: '#475569' }}>
+              <p className="text-xs text-center mt-3" style={{ color: '#94a3b8' }}>
                 No spam. Unsubscribe anytime. Your data stays with tableautodbt.com.
               </p>
             </form>
@@ -266,26 +289,30 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
           <div className="fade-in">
             <div className="text-center mb-8">
               <div className="text-4xl mb-3">✅</div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+              <h2 className="text-2xl sm:text-3xl font-black mb-2" style={{ color: '#1e293b' }}>
                 Your Remediation Roadmap
               </h2>
-              <p className="text-sm" style={{ color: '#64748b' }}>
+              <p className="text-sm" style={{ color: '#94a3b8' }}>
                 Prioritized by your weakest dimensions first
               </p>
             </div>
 
             {/* PDF-exportable report */}
-            <div ref={reportRef} style={{ background: '#0d1b2e', padding: '8px' }}>
+            <div ref={reportRef} style={{ background: '#f8fafc', padding: '8px' }}>
               {/* Report header */}
               <div
                 className="rounded-2xl p-5 border mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
                 style={{
-                  background: 'rgba(30,41,59,0.5)',
-                  borderColor: 'rgba(255,255,255,0.08)',
+                  background: '#ffffff',
+                  borderColor: '#e2e8f0',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                 }}
               >
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#64748b' }}>
+                  <div
+                    className="text-xs font-semibold uppercase tracking-widest mb-1"
+                    style={{ color: '#94a3b8' }}
+                  >
                     Semantic Layer Readiness Scorecard
                   </div>
                   <div className="text-3xl font-black" style={{ color: tier.color }}>
@@ -295,7 +322,7 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                 <div className="flex-1" />
                 <div
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold"
-                  style={{ background: `${tier.color}20`, color: tier.color, border: `1px solid ${tier.color}40` }}
+                  style={{ background: `${tier.color}15`, color: tier.color, border: `1px solid ${tier.color}30` }}
                 >
                   <span className="w-2 h-2 rounded-full" style={{ background: tier.color }} />
                   {tier.label}
@@ -316,8 +343,9 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                     key={dim.id}
                     className="rounded-2xl p-5 sm:p-6 border mb-4"
                     style={{
-                      background: 'rgba(30,41,59,0.5)',
-                      borderColor: 'rgba(255,255,255,0.08)',
+                      background: '#ffffff',
+                      borderColor: '#e2e8f0',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                     }}
                   >
                     {/* Dimension header */}
@@ -325,20 +353,20 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                       <div className="flex items-center gap-2">
                         <span className="text-xl">{dim.icon}</span>
                         <div>
-                          <div className="text-sm font-bold text-white">{dim.name}</div>
-                          <div className="text-xs" style={{ color: '#64748b' }}>{dim.description}</div>
+                          <div className="text-sm font-bold" style={{ color: '#1e293b' }}>{dim.name}</div>
+                          <div className="text-xs" style={{ color: '#94a3b8' }}>{dim.description}</div>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0 ml-3">
                         <div className="text-xl font-black" style={{ color: barColor }}>
                           {dimScore}
                         </div>
-                        <div className="text-xs" style={{ color: '#475569' }}>/18</div>
+                        <div className="text-xs" style={{ color: '#94a3b8' }}>/18</div>
                       </div>
                     </div>
 
                     {/* Score bar */}
-                    <div className="h-2 rounded-full mb-4" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                    <div className="h-2 rounded-full mb-4" style={{ background: '#e2e8f0' }}>
                       <div
                         className="h-full rounded-full"
                         style={{ width: `${pct}%`, background: barColor }}
@@ -348,7 +376,10 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                     {/* Remediation items */}
                     {pct < 85 ? (
                       <div className="space-y-3">
-                        <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#64748b' }}>
+                        <div
+                          className="text-xs font-semibold uppercase tracking-wide mb-2"
+                          style={{ color: '#94a3b8' }}
+                        >
                           Action Items
                         </div>
                         {dim.remediation.map((item, idx) => (
@@ -356,19 +387,19 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                             key={idx}
                             className="rounded-xl p-4 border"
                             style={{
-                              background: 'rgba(15,34,65,0.5)',
-                              borderColor: 'rgba(255,255,255,0.06)',
+                              background: '#fffbeb',
+                              borderColor: '#fde68a',
                             }}
                           >
                             <div
                               className="text-xs font-semibold mb-1.5 flex items-center gap-2"
-                              style={{ color: '#fbbf24' }}
+                              style={{ color: '#d97706' }}
                             >
                               <span>⚠</span>
                               Gap: {item.gap}
                             </div>
-                            <div className="text-xs leading-relaxed" style={{ color: '#94a3b8' }}>
-                              <span className="font-semibold" style={{ color: '#6ee7b7' }}>Action: </span>
+                            <div className="text-xs leading-relaxed" style={{ color: '#64748b' }}>
+                              <span className="font-semibold" style={{ color: '#059669' }}>Action: </span>
                               {item.action}
                             </div>
                           </div>
@@ -378,12 +409,12 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
                       <div
                         className="rounded-xl p-4 border flex items-center gap-3"
                         style={{
-                          background: 'rgba(16,185,129,0.08)',
-                          borderColor: 'rgba(16,185,129,0.2)',
+                          background: '#f0fdf4',
+                          borderColor: '#bbf7d0',
                         }}
                       >
-                        <span className="text-emerald-400 text-lg">✓</span>
-                        <p className="text-xs" style={{ color: '#6ee7b7' }}>
+                        <span className="text-emerald-500 text-lg">✓</span>
+                        <p className="text-xs" style={{ color: '#059669' }}>
                           Strong score in this dimension. Focus on maintaining governance rigor as
                           agent usage scales.
                         </p>
@@ -397,13 +428,13 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
               <div
                 className="rounded-xl p-4 text-center border"
                 style={{
-                  background: 'rgba(30,41,59,0.3)',
-                  borderColor: 'rgba(255,255,255,0.06)',
+                  background: '#ffffff',
+                  borderColor: '#e2e8f0',
                 }}
               >
-                <p className="text-xs" style={{ color: '#475569' }}>
+                <p className="text-xs" style={{ color: '#94a3b8' }}>
                   Generated by{' '}
-                  <span style={{ color: '#6366f1' }}>tableautodbt.com/scorecard</span>
+                  <span style={{ color: '#0ea5e9' }}>tableautodbt.com/scorecard</span>
                   {' '}· Semantic Layer AI Readiness Scorecard
                 </p>
               </div>
@@ -414,7 +445,7 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
               <button
                 onClick={handleDownloadPDF}
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
-                style={{ background: 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)' }}
+                style={{ background: '#1e293b' }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -440,11 +471,11 @@ export default function EmailGateScreen({ results, onEmailSubmit, emailSubmitted
 
               <button
                 onClick={onRestart}
-                className="text-sm px-5 py-3 rounded-xl transition-colors"
+                className="text-sm px-5 py-3 rounded-xl transition-colors border"
                 style={{
                   color: '#64748b',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  background: '#ffffff',
+                  borderColor: '#e2e8f0',
                 }}
               >
                 ↩ Restart Assessment
